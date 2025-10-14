@@ -445,20 +445,511 @@
         highest: [31.31, 29.26, 35.0, 40.0], // Sample data, 40 LPA is from KB
         average: [3.0, 4.0, 4.5, 5.5], // Sample data
     };
+    
+    // --- STAFF CONTACTS (CONSOLIDATED DATABASE) ---
+    // This array is the single source of truth for all staff data provided across all 16 CSV sheets.
+    const STAFF_CONTACTS = [
+        // --- KEY PERSONNEL / MAIN LINES (from dept HoDs phone .csv) ---
+        { name: "Principal Sir", number: "9618787861", designation: "Principal" },
+        { name: "Hostel (Reception)", number: "9618787862", designation: "Reception" },
+        { name: "Discipline Officer", number: "9618787863", designation: "Discipline Officer" },
+        { name: "Adi Narayana (Discipline)", number: "9618787863", designation: "Discipline Officer" },
+        { name: "Sunil Raj (Transport)", number: "9618701133", designation: "Transport Coordinator" },
+        { name: "Xerox", number: "9848183369", designation: "Xerox Section" },
+        { name: "Civil Department", number: "9618757861", designation: "Civil HOD/Main Dept Line" },
+        { name: "EEE Department", number: "9618757862", designation: "EEE HOD/Main Dept Line" },
+        { name: "MECH Department", number: "9618757863", designation: "MECH HOD/Main Dept Line" },
+        { name: "ECE Department", number: "9618757864", designation: "ECE HOD/Main Dept Line" },
+        { name: "CSE Department", number: "9618757865", designation: "CSE HOD/Main Dept Line" },
+        { name: "IT Department", number: "9618757860", designation: "IT HOD/Main Dept Line" },
+        { name: "CSE (CS) Department", number: "7995313377", designation: "CSE (CS) Dept Line" },
+        { name: "CSE (DS) Department", number: "7995785588", designation: "CSE (DS) Dept Line" },
+        { name: "CSE (AI) Department", number: "7702842266", designation: "CSE (AI) Dept Line" },
+        { name: "CSE (AI&ML) Department", number: "9000195104", designation: "CSE (AI&ML) Dept Line" },
+        { name: "BS&H Department", number: "9618787860", designation: "BS&H HOD/Main Dept Line" },
+        
+        // --- CIVIL DEPARTMENT STAFF ---
+        { name: "Dr. K.Saroja Rani", number: "9502255765", designation: "Associate Professor, CIVIL" },
+        { name: "Mrs. V.Tanuja", number: "9703065276", designation: "Assistant Professor, CIVIL" },
+        { name: "Mr. B.Sri Kalyan", number: "7382781194", designation: "Assistant Professor, CIVIL" },
+        { name: "Mr. D.V.D.Prasad", number: "8008300313", designation: "Assistant Professor, CIVIL" },
+        { name: "Mr. V.Sai Kiran", number: "8008941069", designation: "Assistant Professor, CIVIL" },
+        { name: "Mr. B.Sri Datta Subramanyam", number: "9989803199", designation: "Assistant Professor, CIVIL" },
+        { name: "Mr. L.Praveen Kumar", number: "9573093908", designation: "Assistant Professor, CIVIL" },
+        { name: "Ms. V.Chandu", number: "8074782745", designation: "Lab Technician, CIVIL" },
+        { name: "Mrs. B. Kanaka Durga", number: "6281245488", designation: "DTP Operator, CIVIL" },
+        
+        // --- EEE DEPARTMENT STAFF ---
+        { name: "K.V. DURGA PRASAD", number: "7396066636", designation: "ASST. PROFESSOR, EEE" },
+        { name: "K. SIVA SANKAR", number: "9848555577", designation: "ASST. PROFESSOR, EEE" },
+        { name: "M. MANISANKAR", number: "9000681167", designation: "ASST. PROFESSOR, EEE" },
+        { name: "V.R.V.S. SAI VALLI", number: "9491222728", designation: "ASST. PROFESSOR, EEE" }, 
+        { name: "P. SANDHYA", number: "9603043462", designation: "ASST. PROFESSOR, EEE" },
+        { name: "D. PRAKASA RAO", number: "9866201153", designation: "ASST. PROFESSOR, EEE" },
+        { name: "P. VARALAKSHMI", number: "6305546589", designation: "ASST. PROFESSOR, EEE" },
+        { name: "S. NANI BABU", number: "9121607380", designation: "ASST. PROFESSOR, EEE" },
+        { name: "P. PUSHPA LATHA", number: "9553623123", designation: "ASST. PROFESSOR, EEE" },
+        { name: "P.V.V. RAMANA", number: "9989527134", designation: "ASST. PROFESSOR, EEE" },
+        { name: "K. TATABBAI", number: "8106288977", designation: "LAB TECHNICIAN, EEE" },
+        { name: "K. SRIRAM", number: "9393752388", designation: "LAB TECHNICIAN, EEE" },
+        { name: "Y.H.S.S. PHANEENDRA", number: "9030498804", designation: "LAB TECHNICIAN, EEE" },
+        { name: "Y. MANIKANTA", number: "9133609164", designation: "LAB TECHNICIAN, EEE" },
+        { name: "B. ARUNA KUMAR", number: "9182541906", designation: "JUNIOR ASSISTANT, EEE" },
+
+        // --- MECH DEPARTMENT STAFF ---
+        { name: "Dr Avinash G", number: "9866443604", designation: "HoD-ME, MECH" },
+        { name: "Mr. D.J. Johnson", number: "6305858826", designation: "Assoc. Prof, MECH" },
+        { name: "Mr. M. Sunil Raj", number: "9989798969", designation: "Assoc. Prof, MECH" },
+        { name: "Mrs. K. Aravinda", number: "9949183736", designation: "Asst. Prof, MECH" },
+        { name: "Mr. N. Raghuveer", number: "9177709223", designation: "Asst. Prof, MECH" },
+        { name: "Mr. V.V.N. Sarath", number: "9652299245", designation: "Asst. Prof, MECH" },
+        { name: "Mr. P. Ram Prasad", number: "9550731375", designation: "Asst. Prof, MECH" },
+        { name: "Mr. A. Phani Bhaskar", number: "8121412442", designation: "Asst. Prof, MECH" },
+        { name: "Mrs. P. Gayathri", number: "7702636534", designation: "Asst. Prof, MECH" },
+        { name: "Mr.A. Yeswanth", number: "9492511943", designation: "Asst. Prof, MECH" },
+        { name: "Mrs. K. Tulasi", number: "9959833497", designation: "Asst. Prof, MECH" },
+        { name: "Mr. K. Sree Ramachandra Murthy", number: "7799838226", designation: "Asst. Prof, MECH" },
+        { name: "Mr. B. Hari Krishna", number: "6281813597", designation: "Asst. Prof, MECH" },
+        { name: "Mr. B. Bharath Kumar", number: "9505550090", designation: "Asst. Prof, MECH" },
+        { name: "Mr. V. Murali Krishna", number: "9573062377", designation: "Lab Technician, MECH" },
+        { name: "Mr. G. Soma Raju", number: "9618971864", designation: "Lab Technician, MECH" },
+        { name: "Mr. Ch. Syam Pradeep Kumar", number: "7032089099", designation: "Lab Technician, MECH" },
+        { name: "Mr. A. Satyanarayana Murthy", number: "9676286042", designation: "Lab Technician, MECH" },
+        { name: "Mr. Ch. S S Bhaskara Rao", number: "7675915844", designation: "Lab Technician, MECH" },
+        { name: "Mrs. R.Vasundhara", number: "9542271769", designation: "Computer Operator, MECH" },
+
+        // --- ECE DEPARTMENT STAFF ---
+        { name: "Dr V Sailaja", number: "9491444434", designation: "Professor, ECE" },
+        { name: "Dr. Subodh Panda", number: "9337994245", designation: "Professor, ECE" },
+        { name: "Dr. V. Radhika", number: "9849755182", designation: "Professor, ECE" },
+        { name: "Dr. Sharon Rose Victor. J.", number: "7981230819", designation: "Associate Professor, ECE" },
+        { name: "Dr B N Srinivasarao", number: "8328181276", designation: "Associate Professor, ECE" },
+        { name: "Dr. Ch. Venkateswarlu", number: "8919359853", designation: "Associate Professor, ECE" },
+        { name: "Mr. V. Prasanth", number: "7660941116", designation: "Associate Professor, ECE" },
+        { name: "Mr. G.S. Sivakumar", number: "9949811979", designation: "Associate Professor, ECE" },
+        { name: "Mrs. B. Vasantha Lakshmi", number: "9912717447", designation: "Associate Professor, ECE" },
+        { name: "Mr. Ch. Satish", number: "9154889353", designation: "Assistant Professor, ECE" },
+        { name: "Mrs. L. Gaviramma", number: "9440427485", designation: "Assistant Professor, ECE" },
+        { name: "Ms. Rubia Tasneem", number: "9182874366", designation: "Assistant Professor, ECE" },
+        { name: "Mr. P. Krishna Chaitanya", number: "8309247775", designation: "Assistant Professor, ECE" },
+        { name: "Mrs. D.V.V. Lakshmi", number: "7729806111", designation: "Assistant Professor, ECE" },
+        { name: "Mrs. P. Ramya Krishna", number: "9533333596", designation: "Assistant Professor, ECE" },
+        { name: "Mr. T. Sekhar", number: "9542372399", designation: "Assistant Professor, ECE" },
+        { name: "Mr. M. Brahma Raju", number: "8639777764", designation: "Assistant Professor, ECE" },
+        { name: "Mrs. G Viranya", number: "8125922090", designation: "Assistant Professor, ECE" },
+        { name: "Mr. K. Akhil", number: "7382646821", designation: "Assistant Professor, ECE" },
+        { name: "Mr. B. Kalyan Charavarthy", number: "9703852614", designation: "Assistant Professor, ECE" },
+        { name: "Mr. G. Raju", number: "9000566313", designation: "Assistant Professor, ECE" },
+        { name: "Mr. Y. Vijay Kumar", number: "9480398751", designation: "Assistant Professor, ECE" },
+        { name: "Mrs. M. Geetha", number: "7287847289", designation: "Assistant Professor, ECE" },
+        { name: "Mrs. T. Subhasri", number: "9491447916", designation: "Assistant Professor, ECE" },
+        { name: "Mr. B T S S Srihari", number: "9182314528", designation: "Assistant Professor, ECE" },
+        { name: "Mr N.Swami Dattatreyachari", number: "8790611888", designation: "Assistant Professor, ECE" },
+        { name: "Mr.P.Ravi Sankar", number: "8125578099", designation: "Assistant Professor, ECE" },
+        { name: "Mrs.Jyothi", number: "9000088467", designation: "Assistant Professor, ECE" },
+        { name: "Ms K Prasanthi", number: "6281829439", designation: "Assistant Professor, ECE" },
+        { name: "Mrs K Dharma Ratnam", number: "9491104247", designation: "Assistant Professor, ECE" },
+        { name: "Ch Maheswara Rao", number: "9296050405", designation: "Lab Technician, ECE" },
+        { name: "V V S Vanisree", number: "9063381990", designation: "Lab Technician, ECE" },
+        { name: "G Rama Krishna", number: "9581382444", designation: "Lab Technician, ECE" },
+        { name: "N Ch Raghu Kishore", number: "8179517343", designation: "Lab Technician, ECE" },
+        { name: "P Sravanthi", number: "9912753555", designation: "Lab Technician, ECE" },
+        { name: "Lokesh", number: "9491353427", designation: "Lab Technician, ECE" },
+        { name: "B Deepthi", number: "8125715202", designation: "Lab Technician, ECE" },
+        { name: "M Lakshmi Durga", number: "7842807114", designation: "Operator, ECE" },
+        { name: "D Anand", number: "9381664179", designation: "Attender, ECE" },
+
+
+        // --- CSE DEPARTMENT STAFF (COMPLETELY UPDATED) ---
+        { name: "Dr. Y. Jayababu", number: "9948612244", designation: "Professor, CSE" },
+        { name: "Dr.M.Radhika Mani", number: "", designation: "Professor, CSE" },
+        { name: "Dr.D. V Manjula", number: "9492247662", designation: "HOD - CSE" },
+        { name: "Dr.M.Uma Devi", number: "9440896317", designation: "Associate Professor, CSE" },
+        { name: "Mr.K.Chandra Sekhar", number: "8008882777", designation: "Assistant Professor, CSE" },
+        { name: "Mr.G.Vijay Kumar", number: "8074454807", designation: "Assistant Professor, CSE" },
+        { name: "A.Avinash", number: "7780135919", designation: "Assistant Professor, CSE" },
+        { name: "Ms.A.Harini", number: "9705300711", designation: "Assistant Professor, CSE" },
+        { name: "Mr.KVV Subba Rao", number: "9550014927", designation: "Assistant Professor, CSE" },
+        { name: "Mrs.P.Lakshmi Satya", number: "9949612205", designation: "Assistant Professor, CSE" },
+        { name: "Mr.Ch.Manikanta Kalyan", number: "9849151430", designation: "Assistant Professor, CSE" },
+        { name: "Mr.S K Sankar", number: "9063270672", designation: "Assistant Professor, CSE" },
+        { name: "Mrs.T.N.V Durga", number: "9866439710", designation: "Assistant Professor, CSE" },
+        { name: "Mrs.Kanaka Tulasi", number: "7731086699", designation: "Assistant Professor, CSE" },
+        { name: "Mrs.Sowjanya", number: "7382400024", designation: "Assistant Professor, CSE" },
+        { name: "Mrs.K.Sham Sri", number: "8897058321", designation: "Assistant Professor, CSE" },
+        { name: "Sayantan Kar", number: "9877439792", designation: "Assistant Professor, CSE" },
+        { name: "I.Subbalakshmi", number: "7330720646", designation: "Computer Operator, CSE" },
+        { name: "Ch. Rajesh", number: "7801089037", designation: "System Administrator, CSE" },
+        { name: "Y.Veerababu", number: "7032428121", designation: "Lab Technician, CSE" },
+        { name: "M. Praveen Kumar", number: "8897191045", designation: "Lab Technician, CSE" },
+        { name: "V. Gangeswararao", number: "9951132122", designation: "Lab Technician, CSE" },
+        { name: "D. Gayatri", number: "7842875006", designation: "Programmer, CSE" },
+        { name: "Y. Gayatri", number: "8332904020", designation: "Programmer, CSE" },
+        { name: "R. Supriya", number: "8106453755", designation: "Programmer, CSE" },
+        { name: "U. Shankar Babu", number: "7013979715", designation: "System Admin, CSE" },
+        { name: "D. Kanaka Mahalakshmi Devi", number: "8331883748", designation: "Assistant Professor, CSE" },
+        { name: "Manas Kumar Yogi", number: "9966979279", designation: "Assistant Professor, CSE" },
+
+        // --- IT & CS DEPARTMENT STAFF ---
+        { name: "Mrs. T Ganga Bhavani", number: "8639777155", designation: "Assistant Professor, IT" },
+        { name: "Mr. G Satya Mohna Chowdary", number: "9959088282", designation: "Assistant Professor, IT" },
+        { name: "Mr. D Konda Babu", number: "9440410443", designation: "Assistant Professor, IT" },
+        { name: "Mrs. A Manga Devi", number: "9247191210", designation: "Assistant Professor, IT" },
+        { name: "Ms. J N S Kalyani", number: "7729084751", designation: "Assistant Professor, IT" },
+        { name: "Mrs. K Sreesha", number: "9052882133", designation: "Programmer, IT" },
+        { name: "Mr. V Kamesh", number: "7801009585", designation: "Lab Technician, IT" },
+        { name: "Mr. O yesoda Krishna ", number: "8886374613", designation: "Lab Technician, IT" },
+        { name: "Ms. Y Lakshmi Prasanna", number: "8341161550", designation: "Programmer, IT" },
+        { name: "Ms. P Gowthami", number: "9392745762", designation: "Computer Operator, IT" },
+        
+        // --- CSE (AI) DEPARTMENT STAFF ---
+        { name: "Mrs. K Lakshmi Viveka", number: "9642788777", designation: "Associate Prof & HoD, CSE (AI)" },
+        { name: "Mrs. T Tejasvi", number: "9505150735", designation: "Assistant Professor, CSE (AI)" },
+        { name: "Mr. M S V V Ramesh", number: "8639797917", designation: "Assistant Professor, CSE (AI)" },
+        { name: "Mr. M Veerababu", number: "9491629344", designation: "Assistant Professor, CSE (AI)" },
+        { name: "Mrs. Ch Sri Divya", number: "9492113320", designation: "Assistant Professor, CSE (AI)" },
+        { name: "Mr. S S V S Santosh Kumar", number: "9550742920", designation: "Assistant Professor, CSE (AI)" },
+        { name: "Mr. K Sri Hari", number: "9014032554", designation: "Programmer, CSE (AI)" },
+        { name: "Mr. G Raja Babu", number: "7396544538", designation: "Computer Operator, CSE (AI)" },
+        { name: "Mrs. P Vara Lakshmi", number: "8498921663", designation: "Attender, CSE (AI)" },
+
+        // --- CSE (DS) DEPARTMENT STAFF ---
+        { name: "Mr. M. V. Rajesh", number: "7702482324", designation: "Assoc Prof, CSE (DS)" },
+        { name: "Mrs. N.V.S. Sowjanya", number: "9705766038", designation: "Asst Prof, CSE (DS)" },
+        { name: "Mr. K. Srikanth", number: "9154020707", designation: "Asst Prof, CSE (DS)" },
+        { name: "Mrs. CH. Veera Gayathri", number: "9347397805", designation: "Asst Prof, CSE (DS)" },
+        { name: "Ms. Y Suma Chamundeswari", number: "8790429794", designation: "Asst Prof, CSE (DS)" },
+        { name: "Mrs. Lakshmi Sai Prasuna", number: "9014930523", designation: "Progarmmer, CSE (DS)" },
+        { name: "Mr. N. Sriram", number: "8985881277", designation: "Progarmmer, CSE (DS)" },
+        { name: "Mr. S. Bharadwaj", number: "9640892552", designation: "Technician, CSE (DS)" },
+        { name: "K. Vasantha", number: "9059779323", designation: "Computer Operator, CSE (DS)" },
+        { name: "K. Vara Lakshmi", number: "8498921663", designation: "Attender, CSE (DS)" },
+
+        // --- CSE (AI&ML) DEPARTMENT STAFF ---
+        { name: "Dr. A. Radha Krishna", number: "9440614466", designation: "Professor, CSE (AI&ML)" },
+        { name: "Mrs. V. Anantha Lakshmi", number: "9493568179", designation: "Asst. Prof, CSE (AI&ML)" },
+        { name: "Mr. A. Janardhana Rao", number: "6281866876", designation: "Asst. Prof, CSE (AI&ML)" },
+        { name: "Mrs. L. Yamuna", number: "8519997240", designation: "Asst. Prof, CSE (AI&ML)" },
+        { name: "Mrs. G. V .Rajeswari", number: "8142767655", designation: "Asst. Prof, CSE (AI&ML)" },
+        { name: "Mrs. G. Tejasri Devi", number: "7382407013", designation: "Asst. Prof, CSE (AI&ML)" },
+        { name: "Mrs. P. Satyavathi", number: "8179667416", designation: "Asst. Prof, CSE (AI&ML)" },
+        { name: "Mrs. M. Mani Deepika", number: "9550374458", designation: "Asst. Prof, CSE (AI&ML)" },
+        { name: "Mrs. A .Srujana Jyothi", number: "9347277603", designation: "Asst. Prof, CSE (AI&ML)" },
+        { name: "Mrs. K.S.R. Manjusha", number: "8074484878", designation: "Asst. Prof, CSE (AI&ML)" },
+        { name: "Ms. P. Pravallika", number: "7661996684", designation: "Computer Operator, CSE (AI&ML)" },
+        { name: "Ms. M. Nagalakshmi", number: "7386461221", designation: "Programmer, CSE (AI&ML)" },
+        { name: "Mr. K Chakra Rao", number: "7995161688", designation: "Attender, CSE (AI&ML)" },
+        
+        // --- BS&H DEPARTMENT STAFF ---
+        { name: "Dr. T. Satyanarayana", number: "9490480223", designation: "Assoc.Prof, BS&H" },
+        { name: "Mr. P. Madhu Babu", number: "9701756233", designation: "Asst.Prof, BS&H" },
+        { name: "Mr. A. Nagendra", number: "9666100897", designation: "Assoc.Prof, BS&H" },
+        { name: "Mrs. V. Indira Priyadarsini", number: "8919761836", designation: "Assoc.Prof, BS&H" },
+        { name: "Mrs. V. Durga Bhavani", number: "6302742858", designation: "Assoc.Prof, BS&H" },
+        { name: "Ms. V. Bhavani", number: "9705956576", designation: "Asst.Prof, BS&H" },
+        { name: "Mr. B. Akashay Deep", number: "8885902298", designation: "Asst.Prof, BS&H" },
+        { name: "Mrs. M. Iswarya", number: "9740544466", designation: "Asst.Prof, BS&H" },
+        { name: "Mr. K. V. Narayana", number: "8096156000", designation: "Assoc.Prof, BS&H" },
+        { name: "Mrs. M. Chandralekha", number: "", designation: "Assoc.Prof, BS&H" }, // Number Missing
+        { name: "Dr. J. D. Naidu", number: "9959375696", designation: "Assoc.Prof, BS&H" },
+        { name: "Dr. K. Chakrapani", number: "9392003335", designation: "Assoc.Prof, BS&H" },
+        { name: "Dr. S. Prasad", number: "9494437872", designation: "Assoc.Prof, BS&H" },
+
+        // --- CDC DEPARTMENT STAFF ---
+        { name: "Dr. M. Radhika Mani", number: "7702666337", designation: "Dean - CDC" },
+        { name: "Mr. Ch. Satish (Aptitude)", number: "9959679067", designation: "Aptitude Assistant Professor, CDC" },
+        { name: "Mr. P. Prasad Babu (Aptitude)", number: "9394521108", designation: "Aptitude Assistant Professor, CDC" },
+        { name: "Mr. D. Hanumantha Rao (Aptitude)", number: "6301994493", designation: "Aptitude Assistant Professor, CDC" },
+        { name: "Mr. K.T.K. Mohan (Technical)", number: "7995161698", designation: "Technical Assistant Professor, CDC" },
+        { name: "Mrs. M. Madhavi (Verbal Ability)", number: "8886584852", designation: "Verbal Ability Assistant Professor, CDC" },
+        { name: "Mr. G. Venkata Ratnam (Verbal)", number: "9177551009", designation: "Verbal Ability Assistant Professor, CDC" },
+        { name: "Dr. P. C. Viswanth (Verbal)", number: "9705932211", designation: "Verbal Ability Assistant Professor, CDC" },
+        { name: "Mrs. K.V. Sirisha Devi", number: "9704017194", designation: "Computer Operator, CDC" },
+        { name: "Mrs. N. Naga Swathi", number: "9703775871", designation: "Computer Operator, CDC" },
+        
+        // --- MEFA (MANAGEMENT) DEPARTMENT STAFF ---
+        { name: "Mr. KSVGK Murthy", number: "9618888058", designation: "Associate Professor, MEFA" },
+        { name: "Mr. K. Anand", number: "9133621114", designation: "Assistant Professor, MEFA" },
+        { name: "Mr. G. Prasanna Kumar", number: "8500812541", designation: "Assistant Professor, MEFA" },
+        { name: "Mr. PVS Swamy", number: "9704305964", designation: "Assistant Professor, MEFA" },
+        { name: "Mrs. G. Pavani", number: "9010319877", designation: "Assistant Professor, MEFA" },
+        { name: "Mrs. B. Lova Kumari", number: "9908846657", designation: "Assistant Professor, MEFA" },
+
+        // --- EXAM SECTION STAFF ---
+        { name: "Mr. P. Raja Kumar", number: "9502655666", designation: "Exam Section Staff" },
+        { name: "Mr. N.V. Satyanarayana", number: "9666704259", designation: "Computer Operator, Exam Section" },
+        { name: "Mr. M. Sateesh", number: "9640036111", designation: "Jr. Assistant, Exam Section" },
+        { name: "Mr. Ch.V.S.N. Vamsi", number: "7995183975", designation: "Jr. Assistant, Exam Section" },
+        { name: "Mr. B. Sandeep", number: "9133825167", designation: "Attender, Exam Section" },
+        
+        // --- ADMIN & NON-TEACHING STAFF ---
+        { name: "Mr. P Ram Mohan Rao", number: "9515831098", designation: "Office Supdt, Administrative Office" },
+        { name: "Mr. B Papa Rao", number: "9866172537", designation: "Sr. Asst., Administrative Office" },
+        { name: "Mr. K Hari Kumar", number: "9705177399", designation: "Sr. Asst., Administrative Office" },
+        { name: "Mr. K V Govind Babu", number: "9701201868", designation: "Sr. Asst., Administrative Office" },
+        { name: "Mr. Y Chandra Kumar", number: "9676913112", designation: "Sr. Asst., Administrative Office" },
+        { name: "Mrs. B Perim Devi", number: "9652067735", designation: "Sr. Asst., Administrative Office" },
+        { name: "Mr. K V Rama Krishna", number: "8125398706", designation: "Administrative Staff" },
+        { name: "Mr. K Ram Mohan Rao", number: "9550727417", designation: "Sr. Asst., Administrative Office" },
+        { name: "Mr. B Aruna Kumar", number: "9182541906", designation: "Jr. Asst., Administrative Office" },
+        { name: "Mr. K Suresh (Receptionist)", number: "9849664907", designation: "Jr. Asst. & Receptionist" },
+        { name: "Mr. S Baby", number: "9491540350", designation: "Staff Nurse" },
+        { name: "Mr. G Durga Prasad", number: "9391229061", designation: "Warden" },
+        { name: "Mr. P Atchyutha Kumar", number: "6300975587", designation: "Warden" },
+        { name: "Mr. Y Satyanarayana", number: "9989798969", designation: "Administrative Staff" }, // Note: This number overlaps with M. Sunil Raj Transport. Kept for completeness.
+        { name: "Mrs. S Anantha Lakshmi", number: "9701195749", designation: "Aaya" },
+        { name: "Mrs. I Satyaveni", number: "9100085853", designation: "Aaya" },
+        { name: "Mr. R Vinod", number: "8185816294", designation: "Attender" },
+        { name: "Mr. M Raviteja", number: "9177658648", designation: "Attender" },
+        { name: "Mr. P Seshu Kumar", number: "6301333147", designation: "Attender" },
+        { name: "Mr. V Nookaraju", number: "8008609308", designation: "Attender" },
+        { name: "Mr. Bolisetty Venkateswara Rao", number: "9494273448", designation: "Attender" },
+        { name: "Mr. D Anand", number: "9381664179", designation: "Attender" },
+        { name: "Mr. K Vishnu", number: "9490360273", designation: "Attender" },
+        { name: "Mrs. K Vara Lakshmi", number: "8498921663", designation: "Attender" },
+        { name: "Mr. B. Sandeep Kumar", number: "9133825167", designation: "Attender" },
+        { name: "Mr. P Surya Prakash", number: "7995042733", designation: "Attender" },
+        { name: "Mr. N V Bhadra Rao", number: "8897956282", designation: "Gardener" },
+        { name: "Mr. V Srinivas (Raghava)", number: "9666752807", designation: "Gardener" },
+        { name: "Mr. P. Dorababu", number: "9618908643", designation: "Gardener" },
+        
+        // --- SECURITY & MAINTENANCE STAFF ---
+        { name: "Mr. N Nageswara Rao", number: "8106879706", designation: "Security Staff, Maintenance Dept" },
+        { name: "Mr. S Sai Kumar", number: "9848304038", designation: "Security Staff, Maintenance Dept" },
+        { name: "Mr. M. Suresh", number: "9948098901", designation: "Security Staff, Maintenance Dept" },
+        { name: "Mr. Srinuvasu", number: "7842485141", designation: "Security Staff, Maintenance Dept" },
+        { name: "Mr. P V Prasad", number: "9640510888", designation: "Security Staff, Maintenance Dept" },
+        { name: "Mr. M Chinthamani", number: "8309200144", designation: "Security Staff, Maintenance Dept" },
+        { name: "Mr. S Uma Mahesh", number: "8179402772", designation: "Security Staff, Maintenance Dept" },
+        { name: "Mr. N Raju", number: "9652125719", designation: "Security Staff, Maintenance Dept" },
+        { name: "Mr. Y Murali Krishna", number: "9666775727", designation: "Security Staff, Maintenance Dept" },
+        { name: "Mr. S Laacha Babu", number: "8106945015", designation: "Security Staff, Maintenance Dept" },
+        { name: "Mr. D V V Sathyanarayana", number: "8985881480", designation: "Security Staff, Maintenance Dept" },
+        { name: "Mr. G Pentayya", number: "9951859174", designation: "Security Staff, Maintenance Dept" },
+        { name: "Mr. K Veeraju", number: "9652709034", designation: "Security Staff, Maintenance Dept" },
+        { name: "Mr. M Srinuvasu", number: "9014227041", designation: "Security Staff, Maintenance Dept" },
+        { name: "Mr. R Veera babu", number: "9550577741", designation: "Security Staff, Maintenance Dept" },
+    ];
+    // --- END STAFF CONTACTS ---
+
+    // --- DEPT SYNONYM MAPPER ---
+    const DEPT_MAP = {
+        'cse': 'CSE', 'comp': 'CSE', 'cs': 'CSE', 'computer science': 'CSE', 'computer': 'CSE',
+        'ece': 'ECE', 'e&c': 'ECE', 'electronics': 'ECE',
+        'eee': 'EEE', 'electrical': 'EEE',
+        'mech': 'MECH', 'mechanical': 'MECH',
+        'it': 'IT', 'information technology': 'IT',
+        'civil': 'CIVIL',
+        'bs&h': 'BS&H',
+        'cdc': 'CDC',
+        'mefa': 'MEFA', 'management studies': 'MEFA',
+        'exam': 'EXAM', 'exam section': 'EXAM',
+        'admin': 'Admin', 'administrator': 'Admin', 'system admin': 'Admin', 'system administrator': 'Admin', 'sysadmin': 'Admin',
+        'lab': 'Labs', 'lab technician': 'Labs', 'technician': 'Labs',
+        'security': 'Security', 'maint': 'Security', 'maintenance': 'Security',
+        'hostel': 'Hostel', 'warden': 'Hostel',
+        'transport': 'Transport',
+    };
+
+    // --- UTILITY FUNCTIONS ---
+    // Cleans name by removing punctuation, spaces, and converting to lowercase for comparison
+    const cleanString = (str) => {
+        return str.toLowerCase().replace(/[^\w\s]/g, '').replace(/\s+/g, '').trim();
+    };
+    
+    // Strips honorifics and converts to lowercase for primary name comparison
+    const normalizeName = (name) => {
+        return name.toLowerCase().replace(/^(dr|mr|mrs|ms)\.\s*/, '').replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    };
+
+    // --- DEDUPLICATION PASS (Runs once on initialization) ---
+    // Note: The raw STAFF_CONTACTS is already defined above and includes all provided data.
+    const deduplicateStaff = (staffList) => {
+        const uniqueNames = new Map();
+        
+        staffList.forEach(staff => {
+            // Use the cleaned name as the unique key
+            const cleanedKey = cleanString(staff.name);
+            
+            if (!uniqueNames.has(cleanedKey)) {
+                // If a name is unique, add the entire staff object
+                uniqueNames.set(cleanedKey, staff);
+            }
+        });
+        return Array.from(uniqueNames.values());
+    };
+
+    // Replace the raw STAFF_CONTACTS array with the deduplicated list
+    const DEDUPLICATED_STAFF_CONTACTS = deduplicateStaff(STAFF_CONTACTS);
+
+
+    // --- FUNCTION TO SEARCH LOCAL STAFF CONTACTS (FOLLOWS ALL 6 USER RULES) ---
+    const findStaffContact = (query) => {
+        const queryNormalized = query.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+        const queryParts = queryNormalized.split(' ').filter(p => p.length > 2);
+        
+        // 0. Akka/Special Case Check
+        if (queryNormalized.includes('akka')) {
+            return `📇 **Staff Contact Information:**\n\n**Name:** Akka\n**Designation:** Special Contact\n**Department:** N/A\n**Contact Number:** 79899 3489\n\n_For further assistance, please feel free to ask about any other staff member._`;
+        }
+
+        // 1. Identify Target Department (Canonical Name)
+        let targetDept = null;
+        for (const [key, value] of Object.entries(DEPT_MAP)) {
+            if (queryNormalized.includes(key)) {
+                targetDept = value;
+                break;
+            }
+        }
+        
+        let preliminaryMatches = [];
+
+        // --- TIER 1 & 2: NAME MATCHING (Exact, Partial) ---
+        for (const staff of DEDUPLICATED_STAFF_CONTACTS) {
+            const staffNameNormalized = normalizeName(staff.name);
+            
+            // A. Exact Full Name Match (Case and honorific insensitive)
+            if (staffNameNormalized === queryNormalized) {
+                preliminaryMatches = [staff];
+                break; // Found exact match, terminate name searching
+            }
+            
+            // B. Partial Name Match (Fuzzy match for names)
+            const isNamePartialMatch = queryParts.some(part => staffNameNormalized.includes(part));
+            
+            if (isNamePartialMatch) {
+                preliminaryMatches.push(staff);
+            }
+        }
+        
+        let finalMatches = [];
+
+        // --- TIER 3: FILTERING BY DEPARTMENT (STRICTLY) ---
+        if (preliminaryMatches.length > 0) {
+            
+            if (targetDept) {
+                // Filter the preliminary name matches down to the target department
+                finalMatches = preliminaryMatches.filter(staff => {
+                    const staffDesignationNormalized = normalizeName(staff.designation);
+                    // Check if department shortcut/name exists in the designation string
+                    return staffDesignationNormalized.includes(targetDept.toLowerCase());
+                });
+                
+                // If department filtering results in zero matches, revert to original name matches
+                if (finalMatches.length === 0) {
+                    finalMatches = preliminaryMatches;
+                }
+                
+            } else {
+                // No department was specified, keep all name matches
+                finalMatches = preliminaryMatches;
+            }
+        }
+        
+        // --- TIER 4: DESIGNATION ONLY MATCHES (If Tiers 1-3 yielded nothing or if only designation was searched) ---
+        if (finalMatches.length === 0) {
+             const titleKeywords = ['hod', 'dean', 'officer', 'administrator', 'technician', 'professor', 'admin', 'system admin', 'programmer'];
+             const isTitleQuery = titleKeywords.some(t => queryNormalized.includes(t));
+
+             if (isTitleQuery || !queryNormalized.split(' ').some(p => p.length > 3)) { // Check if it's primarily a title/role search
+                 finalMatches = DEDUPLICATED_STAFF_CONTACTS.filter(staff => 
+                     normalizeName(staff.designation).includes(queryNormalized) && 
+                     (!targetDept || normalizeName(staff.designation).includes(targetDept.toLowerCase()))
+                 );
+             }
+        }
+        
+        // --- TIER 5: FINAL RESULT PROCESSING (Using Strict Professional Formatting) ---
+
+        // Apply final unique filter (based on cleaned name)
+        const uniqueNames = new Map();
+        finalMatches.forEach(staff => {
+            const cleanedKey = cleanString(staff.name);
+            if (!uniqueNames.has(cleanedKey)) {
+                // Only map one instance of the person's name
+                uniqueNames.set(cleanedKey, staff);
+            }
+        });
+        const uniqueFinalMatches = Array.from(uniqueNames.values());
+            
+        // Helper function to format a single contact entry block
+        const formatContactBlock = (staff) => {
+            // Determine Department Display based on TIER 1 logic
+            const rawDeptPart = staff.designation.split(',').pop().trim();
+            let deptDisplay = rawDeptPart; 
+            
+            // Map the raw part to a known canonical name (for cleaner display)
+            for (const [key, value] of Object.entries(DEPT_MAP)) {
+                if (rawDeptPart.toLowerCase().includes(key)) {
+                    deptDisplay = value;
+                    break;
+                }
+            }
+            // Further clean up display string
+            if (deptDisplay.includes('Main Dept Line')) deptDisplay = deptDisplay.replace('HOD/', '').replace('Main Dept Line', 'Main Office Line');
+            if (deptDisplay.toUpperCase() === 'SECURITY STAFF') deptDisplay = 'MAINTENANCE / SECURITY';
+            
+            // Handle specific CSE designations for display clarity
+            if (staff.designation.includes('CSE (AI&ML)')) deptDisplay = 'CSE (AI&ML)';
+            if (staff.designation.includes('CSE (DS)')) deptDisplay = 'CSE (DS)';
+            if (staff.designation.includes('CSE (AI)')) deptDisplay = 'CSE (AI)';
+
+            const number = staff.number || "Not Provided";
+            
+            let block = `**Name:** ${staff.name}\n`;
+            block += `**Designation:** ${staff.designation}\n`;
+            block += `**Department:** ${deptDisplay.toUpperCase()}\n`;
+            block += `**Contact Number:** ${number}`;
+            return block;
+        };
+
+        // 1. Single Match Logic
+        if (uniqueFinalMatches.length === 1) {
+            const singleMatch = uniqueFinalMatches[0];
+            let response = `📇 **Staff Contact Information:**\n\n`;
+            response += formatContactBlock(singleMatch);
+            response += `\n\n_For further assistance, please feel free to ask about any other staff member._`;
+            return response;
+        }
+        
+        // 2. Multiple Matches Logic
+        if (uniqueFinalMatches.length > 1) {
+            
+            let response = `📋 **Matching Staff Members:**\n\n`;
+            
+            uniqueFinalMatches.slice(0, 5).forEach((staff, index) => {
+                response += `${index + 1}️⃣\n`;
+                response += formatContactBlock(staff);
+                response += `\n\n`;
+            });
+            
+            if (uniqueFinalMatches.length > 5) {
+                response += `(Plus ${uniqueFinalMatches.length - 5} more results. Please refine your search.)\n\n`;
+            }
+            
+            response += `_For further assistance, please feel free to ask about any other staff member._`;
+            return response.trim();
+        }
+
+        // 3. Fallback to the mandatory user rule for final fallback
+        return `No matching staff found. Please check spelling or provide department.`; 
+    };
+    // --- END STAFF CONTACTS LOGIC ---
 
     // --- GEMINI API CONFIGURATION ---
-    const API_KEY = "AIzaSyD0VriKBX6ekEN-hi6WM9VTuFrlxacGIqc"; // Replace with your actual API Key if running outside of a provided environment
+    // CORRECTED TYPO in generativelanguage
+    const API_KEY = "AIzaSyD0VriKBX6ekEN-hi6WM9VTuFrlxacGIqc"; // Place your actual API Key here
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${API_KEY}`;
     
     // --- KNOWLEDGE BASE FROM PRAGATI.AC.IN (Hardcoded stable links) ---
     const KNOWLEDGE_BASE = `
 --- Pragati Engineering College Official Data ---
 1. Accreditation: Approved by AICTE, Accredited by NBA, Accredited by NAAC with A+ Grade.
-2. Courses Offered (Departments): Electronics and Communication Engineering (ECE), Computer Science and Engineering (CSE), Mechanical Engineering (ME), Electrical and Electronics Engineering (EEE), Information Technology (IT), Civil Engineering, CSE (Data Science), CSE (Artificial Intelligence & Machine Learning), CSE (Artificial Intelligence), CSE (Cyber Security), Basic Sciences and Humanities (BSH). M.Tech programs are also available in CSE, PE&ED, VLSI, and CAD CAM.
+2. Courses Offered (Departments): Electronics and Communication Engineering (ECE), Computer Science and Engineering (CSE), Mechanical Engineering (ME), Electrical and Electronics Engineering (EEE), Information Technology (IT), Civil Engineering, CSE (Data Science), CSE (Artificial Intelligence & Machine Learning), CSE (Artificial Intelligence), CSE (Cyber Security), Basic Sciences and Humanities (BS&H). M.Tech programs are also available in CSE, PE&ED, VLSI, and CAD CAM.
 3. Admission Criteria (UG): Minimum 50% marks in Intermediate/10+2. Admission is primarily based on the Common Entrance Test EAPCET rank.
 4. College Codes: EAPCET & ECET Code: PRAG. PGCET Code: PRAG1.
 5. Placements (2025 as of May 31): Total 1625 placements. Highest Package: 40 LPA. Other notable packages: 29 LPA, 11 LPA, 6 LPA, 5.50 LPA, 3.60 LPA, 3.36-9.0 LPA.
-6. Contact Information: Address: 1-378, ADB Road, Surampalem, Near Peddapuram, Kakinada.Dist, A.P. (Pin 533437). Email: pragati@pragati.ac.in. Phone: +91 7330826667, 08852 252233.
+6. Contact Information (General): Address: 1-378, ADB Road, Surampalem, Near Peddapuram, Kakinada.Dist, A.P. (Pin 533437). Email: pragati@pragati.ac.in. Phone: +91 7330826667, 08852 252233.
 7. **Official Website Link (Home):** <a href="https://pragati.ac.in/" target="_blank">Pragati Engineering College Official Website</a>
 8. **Admissions Page Link:** <a href="https://pragati.ac.in/admissions/" target="_blank">Official Admissions Page</a>
 9. **Syllabus & Academic Documents Link:** <a href="https://pragati.ac.in/examination/course-structure-syllabus/" target="_blank">Download Syllabus & Academic Regulations PDF (Click Here to Select)</a>
@@ -466,6 +957,9 @@
 11. **Fee & Circulars Link:** <a href="https://pragati.ac.in/admissions/" target="_blank">View Admissions and Fee Details/Circulars</a>
 12. Academics: Every semester has a minimum of eight courses, including two labs. Four-year duration.
 13. Campus Life/Clubs: Features include Technical, Cultural, Literary, and Industrial Clubs, Sports (Basketball, Volleyball, Cricket, Gym), and SWAYAM NPTEL Local Chapter.
+14. **Previous Question Papers Link:** <a href="https://pragati.ac.in/examination/previous-question-papers/" target="_blank">Download Previous Year Question Papers (Click Here to Select)</a>
+15. **Campus Timings & Canteen:** The College Canteen is available on campus. Lunch timings are split: 1:00 PM to 1:30 PM for First-Year students, and 12:00 PM to 12:30 PM for Second-Year to Final-Year students.
+16. **Annual B.Tech Tuition Fee (Convener Quota):** The approved annual tuition fee for all B.Tech courses (EAPCET/Convener Quota) is **₹77,800**.
 --- End of Data ---
 `;
 
@@ -482,17 +976,18 @@ You are the 'Pragati Engineering College Insight Bot'. Your persona is that of a
 * You MUST wrap any structured output (lists, cards, multiple links, or multi-point answers) in a **single outer <div> with the class \`info-card\`** to ensure proper HTML rendering and professional appearance.
 * **DO NOT** use Markdown bullet points (*, -, +). When listing items, you MUST use standard HTML unordered lists (\`<ul>\` and \`<li>\`).
 * For **overviews (accreditation, courses, admission)**, structure the response using HTML unordered lists (\`<ul>\` and \`<li>\`) and classes like \`info-item\`. Ensure each department or long item is listed on a separate \`<li>\` item to prevent text overflow. Use emojis like ✅, 🎓, 📞, 📍, and 🔗 to act as "pictorial" elements to break up the text and categorize information clearly.
-* For **lists of links (Syllabus/M.Tech regulations)**, clearly list them using the \`link-list\` class. **For all syllabus, academic calendar, or regulations requests, provide only the stable main links found in data points 9 and 10.** * When providing the syllabus or academic calendar link, you must add the following **single, concise** instruction: "👉 **Click the link, then select the specific Regulation (R23/R20) and Year (I, II, III, IV) you need to download your PDF.**"
+* For **lists of links (Syllabus/M.Tech regulations)**, clearly list them using the \`link-list\` class. **For all syllabus, academic calendar, or regulations requests, provide only the stable main links found in data points 9, 10, and 14.** * When providing the syllabus or academic calendar link, you must add the following **single, concise** instruction: "👉 **Click the link, then select the specific Regulation (R23/R20) and Year (I, II, III, IV) you need to download your PDF.**"
 * Responses must be concise. Use **bold text** for male.
 
 **Knowledge Access Rules:**
-1.  **Special Rule (Placement Graph):** If the user asks for a **comparison, trend, or graph** regarding placement packages, you MUST respond with the exact phrase: "**I'd be happy to show you the trend!**" and then call the \`showPlacementGraph()\` JavaScript function.
-2.  **Prioritize Hardcoded Data:** Use the exact links and contact details provided in the 'Pragati Engineering College Official Data' immediately upon request.
-3.  **User Typo/Grammar Correction:** You must apply a high degree of tolerance for user misspellings, typos, and poor grammar (e.g., interpret "syallbus" as "syllabus" or "packege" as "package"). Always infer the intended query about Pragati Engineering College.
-4.  **Use Google Search Grounding:** For questions about **latest news, current staff members, recent placements (beyond the hardcoded list), or real-time circulars/notifications**, use the Google Search tool to find the most current information, ensuring the results are strictly limited to **Pragati Engineering College, Surampalem**. Use **🧑‍🏫** (Professor icon) next to any faculty/staff name and **💰** next to any placement package amount to make the response visually engaging.
-5.  **Out-of-Scope Queries:** If a query is NOT about Pragati Engineering College or its associated topics (academics, admissions, staff, placements, etc.), you MUST use the exact phrase: "**I am the Pragati Engineering College Insight Bot, and that query is out of my knowledge scope.**" Do not search the web or provide general knowledge answers for any other topic.
+1.  **Special Rule (Contact Data):** The user's request for a specific **name, phone number, or department main line** will be handled by the local \`findStaffContact()\` function. If the user asks for a contact or number, do NOT try to answer; rely on the search function.
+2.  **Special Rule (Placement Graph):** If the user asks for a **comparison, trend, or graph** regarding placement packages, you MUST respond with the exact phrase: "**I'd be happy to show you the trend!**" and then call the \`showPlacementGraph()\` JavaScript function.
+3.  **Prioritize Hardcoded Data:** Use the exact links and contact details provided in the 'Pragati Engineering College Official Data' immediately upon request.
+4.  **User Typo/Grammar Correction:** You must apply a high degree of tolerance for user misspellings, typos, and poor grammar. Always infer the intended query about Pragati Engineering College.
+5.  **Use Google Search Grounding:** For questions about **latest news, current placements (beyond the hardcoded list), or real-time circulars/notifications**, use the Google Search tool to find the most current information, ensuring the results are strictly limited to **Pragati Engineering College, Surampalem**. Use **🧑‍🏫** (Professor icon) next to any faculty/staff name and **💰** next to any placement package amount to make the response visually engaging.
+6.  **Out-of-Scope Queries:** If a query is NOT about Pragati Engineering College or its associated topics (academics, admissions, staff, placements, etc.), you MUST use the exact phrase: "**I am the Pragati Engineering College Insight Bot, and that query is out of my knowledge scope.**" Do not search the web or provide general knowledge answers for any other topic.
 
-**Crucial Custom Instruction:** When a user asks to call 'Akka' or needs contact info for 'Akka', you must provide the phone number: **79899 3489**.
+**Crucial Custom Instruction:** When a user asks to call 'Akka', you must provide the phone number: **79899 3489**.
 `;
 
     // --- DOM ELEMENTS AND UTILITIES ---
@@ -759,7 +1254,7 @@ You are the 'Pragati Engineering College Insight Bot'. Your persona is that of a
 
     // --- API CALL LOGIC WITH EXPONENTIAL BACKOFF ---
 
-    const fetchGeminiResponse = async (contents, maxRetries = 5, delay = 1000) => {
+    const fetchGeminiResponse = async (contents, maxRetries = 3, delay = 500) => { // Reduced retries to 3 and delay to 500ms
         const payload = {
             contents: contents,
             systemInstruction: {
@@ -783,7 +1278,7 @@ You are the 'Pragati Engineering College Insight Bot'. Your persona is that of a
                 } else if (response.status === 429 || response.status >= 500) {
                     console.warn(`API call failed (Status: ${response.status}). Retrying in ${delay / 1000}s...`);
                     await new Promise(resolve => setTimeout(resolve, delay));
-                    delay *= 2;
+                    delay *= 1.5; // Slightly less aggressive backoff
                 } else {
                     throw new Error(`API call failed with status: ${response.status}`);
                 }
@@ -793,7 +1288,7 @@ You are the 'Pragati Engineering College Insight Bot'. Your persona is that of a
                     throw new Error("I apologize, but I couldn't connect to the server. Please try again later.");
                 }
                 await new Promise(resolve => setTimeout(resolve, delay));
-                delay *= 2;
+                delay *= 1.5;
             }
         }
     };
@@ -808,7 +1303,33 @@ You are the 'Pragati Engineering College Insight Bot'. Your persona is that of a
         voiceButton.disabled = true;
         addMessage(messageText, true);
 
+        // --- NEW: Keyword Check for Contact Queries ---
+        const contactKeywords = /(call|number|phone|contact|line|hod|principal|dean|warden|discip|officer)/i;
+        const isContactQuery = contactKeywords.test(messageText) || /(professor|technician|admin|assistant)/i.test(messageText);
+        
+        // --- NEW: Keyword Check for Graph Queries (FIX) ---
+        const graphKeywords = /(graph|chart|comparison|trend|package|salary|placement)/i;
+        const isGraphQuery = graphKeywords.test(messageText);
+
         try {
+            // --- 1. GRAPH CHECK (INSTANT RESPONSE) ---
+            if (isGraphQuery) {
+                 hideLoading();
+                 showPlacementGraph();
+                 return; // Stop here, graph is shown
+            }
+
+            // --- 2. CONTACTS CHECK (INSTANT RESPONSE) ---
+            if (isContactQuery) {
+                const localContactResponse = findStaffContact(messageText);
+                if (localContactResponse && localContactResponse !== `No matching staff found. Please check spelling or provide department.`) {
+                    hideLoading();
+                    addMessage(localContactResponse, false);
+                    return; // Contact found locally, skip AI search
+                }
+            }
+            // --- END LOCAL CONTACTS CHECK ---
+
             const contents = [{ role: "user", parts: [{ text: messageText }] }];
             showTyping(); // Show typing indicator and update placeholder
 
@@ -817,7 +1338,7 @@ You are the 'Pragati Engineering College Insight Bot'. Your persona is that of a
             const botResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
             
             if (botResponse) {
-                // 1. Check for the special command to trigger the graph
+                // 1. Check for the special command to trigger the graph (Old/Backup Check - should not be needed)
                 if (botResponse.startsWith("I'd be happy to show you the trend!")) {
                     hideLoading();
                     addMessage(botResponse.replace("I'd be happy to show you the trend!", "I'd be happy to show you the trend! 🚀"), false);
@@ -832,13 +1353,16 @@ You are the 'Pragati Engineering College Insight Bot'. Your persona is that of a
                 addMessage(botResponse, false); 
             } else {
                 hideLoading();
+                // This generic fallback is kept just in case the API call fails entirely
                 addMessage("Oops! I hit a snag while looking that up. Please try again or rephrase your question. 🤔", false);
             }
 
         } catch (error) {
             console.error("Chat Error:", error);
             hideLoading();
-            addMessage(`**Error:** ${error.message || "An unexpected error occurred while fetching the response."}`, false);
+            // --- UPDATED ERROR MESSAGE FOR PROFESSIONAL TONE ---
+            addMessage(`I am unable to connect to the external information source right now. Please try again in a moment.`, false);
+            // ----------------------------------------------------
         } finally {
             sendButton.disabled = false;
             voiceButton.disabled = false;
