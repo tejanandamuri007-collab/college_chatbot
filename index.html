@@ -450,46 +450,6 @@
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
-        /* --- DOCUMENT HUB MODAL STYLES --- */
-        #document-hub-modal {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10;
-            visibility: hidden;
-            opacity: 0;
-            transition: visibility 0s, opacity 0.3s ease-in-out;
-        }
-        #document-hub-modal.open {
-            visibility: visible;
-            opacity: 1;
-        }
-        .modal-content {
-            background-color: white;
-            padding: 1.5rem;
-            border-radius: 1rem;
-            max-width: 90%;
-            width: 500px;
-            max-height: 90%;
-            overflow-y: auto;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            transform: scale(0.95);
-            transition: transform 0.3s ease-out;
-        }
-        #document-hub-modal.open .modal-content {
-            transform: scale(1);
-        }
-        .dark .modal-content {
-            background-color: #2e2e2e;
-            color: var(--text-color);
-        }
-
     </style>
 </head>
 <body>
@@ -572,19 +532,12 @@
                 <p class="text-xs opacity-80">24/7 Student Support Assistant</p>
             </div>
             
-            <!-- NEW DOCUMENT HUB TOGGLE BUTTON -->
-            <button id="docs-toggle" 
-                    onclick="toggleDocumentHub(true)"
-                    class="ml-auto p-2 rounded-full hover:bg-white/30 transition duration-150 button-click-animation"
-                    title="Open Document Hub">
-                <svg class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: white;"><path d="M4 19V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v2"/><path d="M4 19h16v2H4zM10 9h6M10 13h6M10 17h6"/></svg>
-            </button>
-
+            <!-- DOCUMENT HUB TOGGLE BUTTON REMOVED -->
 
             <!-- DARK MODE TOGGLE BUTTON -->
             <button id="mode-toggle" 
                     onclick="toggleDarkMode()"
-                    class="ml-3 p-2 rounded-full hover:bg-white/30 transition duration-150 button-click-animation"
+                    class="ml-auto p-2 rounded-full hover:bg-white/30 transition duration-150 button-click-animation"
                     title="Toggle Dark Mode">
                 <svg id="moon-icon" class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: white;"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                 <svg id="sun-icon" class="w-6 h-6 hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: white;"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
@@ -625,27 +578,7 @@
     </div>
 </div>
 
-<!-- DOCUMENT HUB MODAL (The new "Interface Page") -->
-<div id="document-hub-modal" onclick="toggleDocumentHub(false)">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <div class="flex justify-between items-center border-b pb-3 mb-4">
-            <h2 class="text-2xl font-bold text-[#006494] dark:text-[#00D2D3]">Official Document Hub 📚</h2>
-            <button onclick="toggleDocumentHub(false)" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#333] transition">
-                <svg class="w-6 h-6 text-gray-600 dark:text-gray-400" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" x2="6" y1="6" y2="18"/><line x1="6" x2="18" y1="6" y2="18"/></svg>
-            </button>
-        </div>
-
-        <div id="document-list-content">
-            <!-- Content will be rendered by JS function renderDocumentList() -->
-        </div>
-
-        <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-            <p class="text-xs text-gray-500 dark:text-gray-400">
-                **Note:** All download links direct you to the official Pragati College website for guaranteed file access.
-            </p>
-        </div>
-    </div>
-</div>
+<!-- DOCUMENT HUB MODAL REMOVED -->
 
 <script>
     // --- CONVERSATIONAL STATE MANAGEMENT ---
@@ -756,9 +689,7 @@
 
     const DEDUPLICATED_STAFF_CONTACTS = deduplicateStaff(STAFF_CONTACTS);
 
-    // --- NEW PQP DOWNLOAD MAP (Simulated Direct Download Links) ---
-    // Links are replaced with a safe javascript function to simulate the download action
-    // I B.Tech I Sem now links to the simulated individual file downloads based on the file structure provided.
+    // --- NEW PQP DOWNLOAD MAP ---
     const DOWNLOAD_MAP = {
         'BTECH-I-I': { 
             label: 'I B.Tech. I Sem', 
@@ -779,15 +710,13 @@
         'MTECH': { label: 'M.Tech. (All Years)', files: ['MTech PQP Archive'] },
     };
     
-    // NOTE: This function is no longer used for PQP links, but kept for clarity in the discussion
     const simulateDownloadLink = (filename) => {
-        // Now points directly to the official PQP link
         const officialPqpLink = 'https://pragati.ac.in/examination/previous-question-papers/';
-        return `${officialPqpLink}`; // Direct URL for functional downloads
+        return `${officialPqpLink}`; 
     };
 
 
-    // --- SYLLABUS HANDLER ---
+    // --- SYLLABUS HANDLER (REVERTED TO CHAT RESPONSE) ---
     const handleSyllabusQuery = () => {
         const syllabusLink = 'https://pragati.ac.in/examination/course-structure-syllabus/';
         const academicCalendarLink = 'https://pragati.ac.in/examinations/academic-calendars/';
@@ -867,7 +796,7 @@
         `;
     };
 
-    // --- UPDATED PQP HANDLER FOR DIRECT DOWNLOAD LINKS ---
+    // --- PQP HANDLER (REVERTED TO CHAT RESPONSE) ---
     const handlePaperQuery = (query) => {
         const queryLower = query.toLowerCase();
         
@@ -957,30 +886,82 @@
             }
         }
 
-        // --- Generate Final Response ---
+        // --- Generate Final Response (In-Chat List) ---
         const successIntros = [
-            "I've updated the **Document Hub** for you! Find the files there. 😉",
-            "Success! The **Document Hub** is open with your papers. Time to study! 🤩",
-            "Check the **Document Hub** (top right icon)! Your links are all set up.",
+            "Found 'em! Hope these save you some study time. 😉",
+            "Here are the papers you were hunting for! Good luck! 🤩",
+            "Files located! Time to crush those exams. 🚀",
         ];
         const successIntro = successIntros[Math.floor(Math.random() * successIntros.length)];
 
-        // Always redirect PQP queries to the modal, then give a short chat confirmation
-        toggleDocumentHub(true);
-
-        // If a specific key was requested, note it in the chat response
-        let specificNote = '';
         if (targetKey) {
-            specificNote = `The ${DOWNLOAD_MAP[targetKey].label} links are highlighted for you.`;
-        }
+            const data = DOWNLOAD_MAP[targetKey];
+            if (data) {
+                
+                let listItems = '';
+                let note = '';
+                
+                // If it's BTECH-I-I, list the individual files and set a clear note
+                if (targetKey === 'BTECH-I-I') {
+                    listItems = data.files.map(file => 
+                        // All links point to the official site to ensure functionality
+                        `<li><a href="${officialPqpLink}" target="_blank">📜 ${file} – [Official Site Download Link]</a></li>`
+                    ).join('');
+                    note = `💡 **Guaranteed Downloads:** Click any link above. They all take you directly to the **Official College Portal** where you can select and download the papers! 🎓`;
 
-        const html = `
+                } else {
+                    // For all other years/semesters, show the single set link
+                    listItems = `<li><a href="${officialPqpLink}" target="_blank">🔗 ${data.label} – [Official Site Download Link]</a></li>`;
+                    note = `💡 **Guaranteed Downloads:** Click the link above! It takes you to the **Official College Portal** where you can download the complete ${data.label} paper set. 🎓`;
+                }
+
+                const html = `
+                    <div class="info-card">
+                        <p class="font-semibold text-lg text-[#006494]">📂 ${title}</p>
+                        <p class="mt-2 text-sm">${successIntro}</p>
+                        <ul class="link-list flex flex-col mt-3">
+                            ${listItems}
+                        </ul>
+                        <div class="mt-4 pt-3 border-t border-gray-200">
+                            <p class="text-sm text-gray-600">${note}</p>
+                        </div>
+                    </div>
+                `;
+                return { success: true, html: html, isMissingBranch: false };
+            }
+        }
+        
+        // SCENARIO D: DEFAULT FALLBACK (Show all options) 
+        const fallbackIntros = [
+            "We can find this! Since you didn't specify the exact year/sem, here are all the options:",
+            "No problem! To give you the best set, choose from these categories:",
+            "Got it—you need exam files! Which bundle should I grab for you? 🧐",
+        ];
+        const fallbackIntro = fallbackIntros[Math.floor(Math.random() * fallbackIntros.length)];
+        
+        const listItems = Object.keys(DOWNLOAD_MAP).map(key => {
+            const data = DOWNLOAD_MAP[key];
+            // For general list, create a link that asks the user to refine the query
+            const clickQuery = data.label.replace(/\./g, '');
+            return `<li><a href="javascript:void(0);" onclick="document.getElementById('user-input').value='${clickQuery} papers'; sendMessage();">📘 ${data.label} – [Click to Select]</a></li>`;
+        }).join('');
+        
+        const fallbackHtml = `
             <div class="info-card">
-                <p class="font-semibold text-lg text-[#006494]">📂 Document Hub Opened!</p>
-                <p class="mt-2 text-sm">${successIntro} ${specificNote}</p>
+            <p class="font-semibold text-lg text-[#006494]">📂 Available B.Tech & M.Tech Question Paper Sets</p>
+            <p class="mt-2 text-sm">${fallbackIntro}</p>
+            <ul class="link-list flex flex-col mt-3">
+                ${listItems}
+            </ul>
+            <div class="mt-4 pt-3 border-t border-gray-200">
+                <p class="text-sm text-gray-600">
+                    💡 **Tip:** Click on a selection to submit the query. Or, use the official site for guaranteed downloads.
+                </p>
+                <a href="${officialPqpLink}" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block mt-1">🔗 **Pragati College Previous Question Papers (Official Site)**</a>
+            </div>
             </div>
         `;
-        return { success: true, html: html, isMissingBranch: false };
+        return { success: true, html: fallbackHtml, isMissingBranch: false };
     };
     
     // --- FUNCTION TO SEARCH LOCAL STAFF CONTACTS (FOLLOWS ALL 6 USER RULES) ---
@@ -1253,8 +1234,7 @@ You are the 'Pragati Engineering College Insight Bot'. Your persona is that of a
     const loginView = document.getElementById('login-view');
     const chatView = document.getElementById('chat-view');
     const suggestionArea = document.getElementById('suggestion-area'); // Restored element
-    const documentHubModal = document.getElementById('document-hub-modal'); // NEW ELEMENT
-    const documentListContent = document.getElementById('document-list-content'); // NEW ELEMENT
+    // Removed documentHubModal and documentListContent DOM references.
 
     let chatInitialized = false;
     let recognition = null;
@@ -1302,74 +1282,8 @@ You are the 'Pragati Engineering College Insight Bot'. Your persona is that of a
     };
     // --- END DARK MODE LOGIC ---
 
-
-    // --- NEW DOCUMENT HUB LOGIC ---
-    const renderDocumentList = () => {
-        const officialPqpLink = 'https://pragati.ac.in/examination/previous-question-papers/';
-        const syllabusLink = 'https://pragati.ac.in/examination/course-structure-syllabus/';
-        const academicCalendarLink = 'https://pragati.ac.in/examinations/academic-calendars/';
-        
-        let html = '';
-
-        // 1. Core Academic Links
-        html += `
-            <div class="mb-6">
-                <h3 class="text-xl font-bold text-[#00C9A7] mb-2">🎓 Core Academic Documents</h3>
-                <ul class="link-list space-y-2">
-                    <li><a href="${syllabusLink}" target="_blank">🔗 **Syllabus & Course Structure** (Select R-Set/Year)</a></li>
-                    <li><a href="${academicCalendarLink}" target="_blank">🔗 **Academic Calendars** (Important Dates)</a></li>
-                </ul>
-            </div>
-        `;
-
-        // 2. Previous Question Papers (PQP)
-        html += `
-            <div class="mb-6">
-                <h3 class="text-xl font-bold text-[#00C9A7] mb-2">📘 Previous Question Papers (PQP)</h3>
-                <p class="text-sm text-gray-700 dark:text-gray-400 mb-3">
-                    Click any link below to be taken directly to the **Official College Portal** for guaranteed downloads.
-                </p>
-                <ul class="link-list space-y-2">
-        `;
-        
-        // Loop through all PQP sets (General sets)
-        Object.keys(DOWNLOAD_MAP).forEach(key => {
-            const data = DOWNLOAD_MAP[key];
-            const isFirstSem = key === 'BTECH-I-I';
-            
-            if (isFirstSem) {
-                 // Special handling for I B.Tech I Sem (show detailed files)
-                html += `
-                    <li>
-                        <span class="font-bold text-[#006494] dark:text-[#00D2D3]">${data.label} (Detailed Sets)</span>
-                        <ul class="ml-4 mt-1 space-y-1">
-                            ${data.files.map(file => 
-                                `<li><a href="${officialPqpLink}" target="_blank">📜 ${file} – [Download Link]</a></li>`
-                            ).join('')}
-                        </ul>
-                    </li>
-                `;
-            } else {
-                // Standard single link for other years
-                html += `<li><a href="${officialPqpLink}" target="_blank">🔗 ${data.label} – [Download Link]</a></li>`;
-            }
-        });
-
-        html += `</ul></div>`;
-        documentListContent.innerHTML = html;
-    };
-
-    const toggleDocumentHub = (open) => {
-        if (open === true) {
-            renderDocumentList();
-            documentHubModal.classList.add('open');
-            // Ensure chat view is ready before trying to open the modal
-            if (chatView.style.display !== 'flex') startChat();
-        } else {
-            documentHubModal.classList.remove('open');
-        }
-    };
-    // --- END DOCUMENT HUB LOGIC ---
+    // --- REMOVED DOCUMENT HUB JS LOGIC (renderDocumentList and toggleDocumentHub) ---
+    // --- END REMOVED DOCUMENT HUB JS LOGIC ---
 
 
     // Scroll chat to the bottom
@@ -1699,7 +1613,7 @@ You are the 'Pragati Engineering College Insight Bot'. Your persona is that of a
             showSuggestions([
                 "What courses are offered?",
                 "Check Placement Trend",
-                "Open Document Hub" // New suggestion
+                "Who is the Principal?"
             ]);
 
             chatInitialized = true;
@@ -1823,19 +1737,9 @@ You are the 'Pragati Engineering College Insight Bot'. Your persona is that of a
 
             // --- 2. SYLLABUS CHECK (Handles Syllabus/Academic Calendar separately) ---
             if (isSyllabusQuery && !isPaperQuery) {
-                // Now, just open the modal and give a confirmation response
-                toggleDocumentHub(true);
+                // Now returns chat response directly (no modal)
                 hideLoading();
-                const intros = [
-                    "Awesome! I've opened the Document Hub for you. Check the top section for your syllabus links. 📚",
-                    "The Syllabus and Academic Calendar links are now available in the Document Hub (top right icon). Go grab 'em! ✨"
-                ];
-                addMessage(`
-                    <div class="info-card">
-                        <p class="font-semibold text-lg text-[#006494]">📚 Document Hub Opened!</p>
-                        <p class="mt-2 text-sm">${intros[Math.floor(Math.random() * intros.length)]}</p>
-                    </div>
-                `, false);
+                addMessage(handleSyllabusQuery(), false);
                  showSuggestions([
                     "Download Previous Papers",
                     "What courses are offered?",
@@ -1943,27 +1847,8 @@ You are the 'Pragati Engineering College Insight Bot'. Your persona is that of a
                 }
             }
             
-            // --- 7. HANDLE "OPEN DOCUMENT HUB" SUGGESTION ---
-            if (messageText.toLowerCase().includes('open document hub')) {
-                toggleDocumentHub(true);
-                hideLoading();
-                const intros = [
-                    "The Document Hub is open! Find all your papers and links there. 📚",
-                    "Document Hub activated! Check the modal for your syllabus and papers. ✨"
-                ];
-                addMessage(`
-                    <div class="info-card">
-                        <p class="font-semibold text-lg text-[#006494]">📚 Document Hub Opened!</p>
-                        <p class="mt-2 text-sm">${intros[Math.floor(Math.random() * intros.length)]}</p>
-                    </div>
-                `, false);
-                showSuggestions([
-                    "Download Previous Papers",
-                    "Check my syllabus",
-                    "Check Placement Trend"
-                ]);
-                return;
-            }
+            // --- 7. HANDLE "OPEN DOCUMENT HUB" (Removed logic) ---
+            
             // --- END LOCAL FUNCTIONS ---
 
             // --- 8. GENERAL AI QUERY (FALLBACK) ---
