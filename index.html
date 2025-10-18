@@ -577,7 +577,7 @@
     let lastStaffQuery = {
         originalQuery: null, 
         matches: [],         
-        state: 'idle',        // 'idle', 'prompting_for_clarification', 'awaiting_cs_specialization'
+        state: 'idle',        // 'idle', 'prompting_for_clarification'
         singleMatchFound: null, // Store single match result for simple follow-up (e.g., "his number")
         clarificationAttempts: 0 // NEW: Track clarification attempts
     };
@@ -1180,6 +1180,24 @@
         // For example, 'a. harini' -> ['a', 'harini']. Filter is applied only to non-initial-looking words.
         return nameNormalized.replace(/\./g, ' ').split(/\s+/).filter(word => word.length > 1 || /^[a-z]$/i.test(word));
     };
+    
+    // Helper to extract the core name from a query (removing keywords like number/contact/dept)
+    const extractCoreNameFromQuery = (query) => {
+        let name = query.toLowerCase();
+        
+        // Remove common contact/designation words
+        const keywords = ['number', 'contact', 'phone', 'call', 'hod', 'dean', 'sir', 'madam', 'professor', 'assistant', 'admin', 'warden', 'officer', 'technician'];
+        keywords.forEach(key => {
+            name = name.replace(new RegExp('\\b' + key + '\\b', 'g'), '');
+        });
+        
+        // Remove department abbreviations
+        Object.keys(DEPT_MAP).forEach(key => {
+             name = name.replace(new RegExp('\\b' + key + '\\b', 'g'), '');
+        });
+
+        return name.replace(/\s+/g, ' ').trim();
+    };
 
 
     // --- DEDUPLICATION PASS (Runs once on initialization) ---
@@ -1238,59 +1256,70 @@
 
 
     // --- NEW: Helper to filter matches based on user clarification (used inside handleStaffFollowUp) ---
-    // UPDATED: Added logic to suggest similar branches if the input is close but doesn't match perfectly.
-    const filterMatchesByNewQuery = (matches, newQuery) => {
+    const filterMatchesByNewQuery = (matches, newQuery, filterType) => {
         const queryNormalized = normalizeName(newQuery); 
         const queryParts = queryNormalized.split(' ').filter(p => p.length > 2);
         
         let filtered = [...matches]; 
 
-        // --- FILTER PASS 1: Name Match (Prioritizes name filtering) ---
-        let nameFiltered = filtered.filter(staff => {
-             const staffNameNormalized = normalizeName(staff.name);
-             // Check if any significant part of the new query matches the staff name
-             return queryParts.some(part => staffNameNormalized.includes(part));
-        });
-        
-        if (nameFiltered.length > 0 && nameFiltered.length < filtered.length) {
-            filtered = nameFiltered;
-        }
-
-        // --- FILTER PASS 2: Department/Branch Match (Strictly filters on Dept) ---
-        let newTargetDeptCanonical = null;
-        for (const [key, value] of Object.entries(DEPT_MAP)) {
-            if (queryNormalized.includes(key)) {
-                newTargetDeptCanonical = value;
-                // If it's a specific specialization, stop looking
-                if (value.startsWith('CSE (')) break;
-                // If it's a very clear, specific admin dept, stop looking
-                if (['LIBRARY', 'PE', 'CLASS_IV', 'XEROX'].includes(value)) break;
-            }
-        }
-        
-        if (newTargetDeptCanonical) {
-            let deptFiltered = filtered.filter(staff => {
-                const staffBranchCanonical = getCanonicalBranch(staff.designation);
-                
-                // Match exact specialization or general CSE if needed
-                if (newTargetDeptCanonical.startsWith('CSE (')) {
-                     return staffBranchCanonical === newTargetDeptCanonical;
-                } else if (newTargetDeptCanonical === 'CSE') {
-                    // Match general CSE or any CSE specialization
-                    return staffBranchCanonical.startsWith('CSE');
-                } else {
-                     return staffBranchCanonical === newTargetDeptCanonical;
+        // --- FILTER PASS 1: Department/Branch Match ---
+        if (filterType === 'department') {
+            let newTargetDeptCanonical = null;
+            for (const [key, value] of Object.entries(DEPT_MAP)) {
+                if (queryNormalized.includes(key)) {
+                    newTargetDeptCanonical = value;
+                    break;
                 }
-            });
+            }
+            
+            if (newTargetDeptCanonical) {
+                let deptFiltered = filtered.filter(staff => {
+                    const staffBranchCanonical = getCanonicalBranch(staff.designation);
+                    
+                    // Match exact specialization or general CSE if needed
+                    if (newTargetDeptCanonical.startsWith('CSE (')) {
+                         return staffBranchCanonical === newTargetDeptCanonical;
+                    } else if (newTargetDeptCanonical === 'CSE') {
+                        // Match general CSE or any CSE specialization
+                        return staffBranchCanonical.startsWith('CSE');
+                    } else {
+                         return staffBranchCanonical === newTargetDeptCanonical;
+                    }
+                });
 
-            // If department filter succeeded, return the highly filtered list
-            if (deptFiltered.length > 0) {
-                 return deptFiltered;
+                // If department filter succeeded, return the highly filtered list
+                if (deptFiltered.length > 0) {
+                     return deptFiltered;
+                }
             }
         }
         
+        // --- FILTER PASS 2: Full Name/Partial Name/Designation Match (Used for the 'Full Name Only' prompt) ---
+        if (filterType === 'name') {
+            
+            let nameFiltered = filtered.filter(staff => {
+                 const staffNameNormalized = normalizeName(staff.name);
+                 const staffNameWords = getSignificantWords(staffNameNormalized);
+                 
+                 // Check for overlap: require at least one match of a significant word (length > 2)
+                 const coreOverlap = staffNameWords.some(word => queryNormalized.includes(word));
+                 
+                 // If the user input is long, ensure the overlap is significant (e.g., at least 2 words)
+                 const isLongInput = queryParts.length >= 2;
+                 const longOverlap = staffNameWords.filter(word => queryNormalized.includes(word)).length >= 2;
+
+                 return coreOverlap && (!isLongInput || longOverlap);
+            });
+            
+            // Prioritize the best name matches only
+            if (nameFiltered.length > 0) {
+                 return nameFiltered;
+            }
+        }
+
+
         // Final fallback: return the best list we have
-        return filtered; 
+        return []; 
     };
 
     // --- Typo Suggestion Helper (Basic implementation) ---
@@ -1312,7 +1341,7 @@
     };
 
 
-    // --- NEW: Function to handle contextual follow-ups (FIXES THE LOOP) ---
+    // --- NEW: Function to handle contextual follow-ups (Iterative Fix) ---
     const handleStaffFollowUp = (followUpQuery) => {
         const followUpLower = followUpQuery.toLowerCase();
         
@@ -1379,15 +1408,32 @@
             const initialMatches = lastStaffQuery.matches;
             lastStaffQuery.clarificationAttempts++; // Increment attempt counter
             
-            // --- Check if the new query is 'CS' or a variation that requires the nested prompt ---
-            if (followUpLower === 'cs' || followUpLower === 'computer science') {
-                 // Transition to the nested state based on the specific rule
+            let filteredMatches = [];
+            let filterType = "";
+
+            // Determine filter type based on current attempt number
+            if (lastStaffQuery.clarificationAttempts === 1) {
+                 // First attempt: User provides Department/Branch
+                 filterType = 'department';
+            } else if (lastStaffQuery.clarificationAttempts >= 2 && lastStaffQuery.clarificationAttempts <= 3) {
+                 // Second/Third attempt: User provides Full Name only
+                 filterType = 'name';
+            }
+
+            // --- CS AMBIGUITY CHECK ---
+            if ((followUpLower === 'cs' || followUpLower.includes('computer science')) && lastStaffQuery.clarificationAttempts === 1) {
                  lastStaffQuery.state = 'awaiting_cs_specialization';
                  return `Do you mean **CSE (Computer Science and Engineering)** or **Cyber Security**?`;
             }
 
-            // --- Regular Filtering ---
-            const filteredMatches = filterMatchesByNewQuery(initialMatches, followUpQuery);
+
+            // --- Apply Filtering ---
+            if(filterType) {
+                filteredMatches = filterMatchesByNewQuery(initialMatches, followUpQuery, filterType);
+            } else {
+                // Should not happen if logic is correct, but fail-safe:
+                filteredMatches = initialMatches;
+            }
             
             if (filteredMatches.length === 1) {
                 // SUCCESS: Clarified to one match
@@ -1396,20 +1442,31 @@
                 return result;
             } else if (filteredMatches.length > 1) {
                 
-                // If it's the second or third fail, give the final improved message
-                if (lastStaffQuery.clarificationAttempts >= 2) { 
+                // --- HANDLE MULTIPLE MATCHES AFTER FILTERING ---
+                
+                if (lastStaffQuery.clarificationAttempts >= 3) { 
+                     // FINAL FAIL MESSAGE (After Department, then two Name attempts)
                      lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: null, clarificationAttempts: 0 }; 
                      return `I've tried multiple ways to narrow down the search, but I still see ${filteredMatches.length} matching contacts. **I'm resetting the search.** Please try again with the **full name AND specific branch** to find the correct contact immediately.`;
                 }
 
-                // STILL MULTIPLE MATCHES: Re-prompt (Attempt 1)
-                lastStaffQuery.matches = filteredMatches;
+                // Prepare for next clarification state
+                lastStaffQuery.matches = filteredMatches; // Keep the smaller set
                 
-                return `I still found multiple contacts matching that specific query. Please provide the **full name and branch** together to narrow it down further. (Attempt ${lastStaffQuery.clarificationAttempts} of 2)`;
+                if (lastStaffQuery.clarificationAttempts === 1) {
+                    // Fail on Department filter, move to Name filter
+                    lastStaffQuery.state = 'prompting_for_clarification'; 
+                    // NEW PROMPT (Based on new rule): Ask for Full Name only
+                    return `I still found multiple staff members even after filtering by department. Please provide the **full name** only to narrow it down further. (Try 1 of 2)`;
+                } else if (lastStaffQuery.clarificationAttempts === 2) {
+                    // Fail on first Name filter, ask for second/final Name filter
+                     lastStaffQuery.state = 'prompting_for_clarification';
+                     // NEW PROMPT (Based on new rule): Final Name Attempt
+                     return `I still found multiple contacts matching that name. Please re-enter the **full name** one more time to confirm the match. (Final Try)`;
+                }
             
             } else {
-                // ZERO MATCHES (Or department typo)
-                
+                // ZERO MATCHES (After filtering)
                 const suggestions = getSimilarBranches(followUpQuery);
                 let message = "Sorry, I couldn't find a staff member matching that specific combination of name and department in the remaining list.";
                 
@@ -1457,105 +1514,117 @@
             }
         }
         
-        let preliminaryMatches = [];
+        // --- STEP 1A: STRICT FULL NAME MATCH (Highest Priority Rule) ---
+        const coreNameInput = extractCoreNameFromQuery(query);
+        const coreNameInputWords = getSignificantWords(normalizeName(coreNameInput));
+        
+        // Check if the input looks like a full name (2 or more non-keyword words)
+        if (coreNameInputWords.length >= 2) { 
+            let exactNameMatches = [];
+            
+            for (const staff of DEDUPLICATED_STAFF_CONTACTS) {
+                const staffNameNormalized = normalizeName(staff.name);
+                const staffDeptCanonical = getCanonicalBranch(staff.designation);
 
-        // --- TIER 1: HIGH PRECISION MATCHES (Exact/Strong Name + Dept Match) ---
+                // Check if the staff member's full name is perfectly contained in the query input words.
+                const allStaffNameWordsPresent = getSignificantWords(staffNameNormalized)
+                    .every(word => coreNameInputWords.includes(word));
+                
+                // Check for department match if hinted
+                const deptMatches = !targetDeptCanonical || targetDeptCanonical === staffDeptCanonical;
+
+                if (allStaffNameWordsPresent && deptMatches) { 
+                    exactNameMatches.push(staff);
+                }
+            }
+
+            // Immediate resolution if a single, exact match is found
+            if (exactNameMatches.length === 1) {
+                lastStaffQuery.singleMatchFound = exactNameMatches[0];
+                lastStaffQuery.state = 'idle';
+                return getStrictContactOutput(exactNameMatches[0]);
+            }
+            
+            // If the full name was provided but resulted in multiple matches (e.g., duplicate names),
+            // we skip the generic scoring tier and jump straight to the ambiguity prompt using these matches.
+            if (exactNameMatches.length > 1) {
+                lastStaffQuery.matches = exactNameMatches;
+                lastStaffQuery.state = 'prompting_for_clarification';
+                return `I found multiple staff members with that name. Could you please specify the department or branch?`;
+            }
+        }
+        
+        
+        // --- TIER 1: SCORING BASED MATCHES (Used for partial name search) ---
+        let matchedStaffScores = [];
+
         for (const staff of DEDUPLICATED_STAFF_CONTACTS) {
             const staffNameNormalized = normalizeName(staff.name);
             const staffDeptCanonical = getCanonicalBranch(staff.designation);
-
-            // 1. Determine significant name components
             const staffNameWords = getSignificantWords(staffNameNormalized);
             
-            // 2. Check if ALL significant staff name components are present in the query
-            const allNameWordsInQuery = staffNameWords.every(word => queryNormalized.includes(word));
+            let score = 0;
             
-            // 3. Check if the department matches the query's department hint (or if no hint was given)
+            // Score 1: Name Word Overlap (Partial name matching logic)
+            const nameMatchCount = staffNameWords.filter(word => queryNormalized.includes(word)).length;
+            score += nameMatchCount * 3; // High weight for name match
+            
+            // Score 2: Department Match
             const deptMatches = !targetDeptCanonical || targetDeptCanonical === staffDeptCanonical;
+            if (deptMatches) {
+                score += 5; // Strong weight if department is correctly matched
+            }
 
-            if (allNameWordsInQuery && deptMatches) {
-                 preliminaryMatches.push(staff);
+            // Score 3: Designation Keywords (e.g., HOD, Dean, etc.)
+            const designationKeywords = normalizeName(staff.designation).split(' ');
+            const designationMatchCount = designationKeywords.filter(word => queryNormalized.includes(word)).length;
+            score += designationMatchCount * 2; // Medium weight for designation
+
+            // Score 4: Bonus for complete name inclusion (Less important now due to Tier 1A)
+            const staffNameWordsCount = staffNameWords.length;
+            if (staffNameWordsCount > 0 && staffNameWords.every(word => queryNormalized.includes(word))) {
+                score += 10; // Major bonus for matching the full name
+            }
+
+            // Apply a strict filter to the scoring list to remove very low relevance results.
+            if (score >= 8) { // Only consider high-confidence matches (8 or more points)
+                matchedStaffScores.push({ staff: staff, score: score });
             }
         }
         
-        // --- TIER 1.1: IMMEDIATE RESOLUTION ---
-        const uniqueHighPrecisionMatches = Array.from(new Set(preliminaryMatches.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
-        
-        if (uniqueHighPrecisionMatches.length === 1) {
-            // Set single match for display and potential one-word follow-up (e.g., "his number")
-            lastStaffQuery.singleMatchFound = uniqueHighPrecisionMatches[0];
-            lastStaffQuery.state = 'idle';
-            return getStrictContactOutput(uniqueHighPrecisionMatches[0]);
-        }
-        
-        // --- TIER 2: BROADER SEARCH (If TIER 1 found NO unique match) ---
-        if (uniqueHighPrecisionMatches.length === 0) {
+        // Sort by score (descending)
+        matchedStaffScores.sort((a, b) => b.score - a.score);
+
+        // --- TIER 1.1: RESOLUTION (Unambiguous High Score) ---
+        if (matchedStaffScores.length > 0) {
+            const topScore = matchedStaffScores[0].score;
+            // Identify all staff members who achieved the top score
+            const topMatches = matchedStaffScores.filter(s => s.score === topScore).map(s => s.staff);
             
-            // --- TIER 2.1: DESIGNATION ONLY MATCHES (HOD/Principal/etc.) ---
-             const titleKeywords = ['hod', 'dean', 'officer', 'principal', 'warden', 'security', 'transport', 'reception', 'xerox'];
-             const isTitleQuery = titleKeywords.some(t => queryNormalized.includes(t));
-
-             if (isTitleQuery) { 
-                 const designationMatches = DEDUPLICATED_STAFF_CONTACTS.filter(staff => 
-                     normalizeName(staff.designation).includes(queryNormalized) && 
-                     (!targetDeptCanonical || getCanonicalBranch(staff.designation) === targetDeptCanonical)
-                 );
-                 
-                 if (designationMatches.length === 1) {
-                     lastStaffQuery.singleMatchFound = designationMatches[0];
-                     lastStaffQuery.state = 'idle';
-                     return getStrictContactOutput(designationMatches[0]);
-                 }
-                 if (designationMatches.length > 1) {
-                    lastStaffQuery.matches = designationMatches;
-                    lastStaffQuery.state = 'prompting_for_clarification';
-                    return `I found multiple staff members with that name. Could you please specify the department or branch?`;
-                 }
-             }
-        }
-        
-        // --- TIER 3: FINAL MULTIPLE MATCH / FALLBACK LOGIC ---
-        let finalMatches = uniqueHighPrecisionMatches;
-
-        if (finalMatches.length === 0) {
-            // Re-run TIER 1 but with looser matching (partial name match) if we found absolutely nothing so far
-             for (const staff of DEDUPLICATED_STAFF_CONTACTS) {
-                const staffNameNormalized = normalizeName(staff.name);
-                const isNamePartialMatch = queryParts.some(part => staffNameNormalized.includes(part));
-                if (isNamePartialMatch) {
-                    preliminaryMatches.push(staff);
-                }
-            }
-
-            // Apply department filter to the partial matches if a department was hinted
-            if (preliminaryMatches.length > 0 && targetDeptCanonical) {
-                let deptFiltered = preliminaryMatches.filter(staff => getCanonicalBranch(staff.designation) === targetDeptCanonical);
-                if (deptFiltered.length > 0) {
-                     finalMatches = Array.from(new Set(deptFiltered.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
-                } else {
-                    finalMatches = Array.from(new Set(preliminaryMatches.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
-                }
-            } else {
-                finalMatches = Array.from(new Set(preliminaryMatches.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
-            }
-        }
-
-        // 3. Single Match after T3 filter
-        if (finalMatches.length === 1) {
-            lastStaffQuery.singleMatchFound = finalMatches[0];
-            lastStaffQuery.state = 'idle';
-            return getStrictContactOutput(finalMatches[0]);
-        }
-        
-        // 4. Multiple Matches Logic
-        if (finalMatches.length > 1) {
-            // Set context for follow-up
-            lastStaffQuery.matches = finalMatches;
-            lastStaffQuery.state = 'prompting_for_clarification';
+            // *** CRITICAL FIX IMPLEMENTATION ***
+            // If the query was very short (1-2 significant name words) AND multiple top matches exist, 
+            // OR if the top score is just an "okay" score (e.g., 8-12 points), we MUST force ambiguity.
+            const isPartialQuery = coreNameInputWords.length < 3;
+            const isLowScoreAmbiguous = topMatches.length > 1 && topScore <= 15;
             
-            // Return the mandatory ambiguity prompt
-            return `I found multiple staff members with that name. Could you please specify the department or branch?`;
+            if (topMatches.length === 1 && topScore >= 8 && !isLowScoreAmbiguous) { 
+                // Single, clear best match found (and it's not a questionable short name match)
+                lastStaffQuery.singleMatchFound = topMatches[0];
+                lastStaffQuery.state = 'idle';
+                return getStrictContactOutput(topMatches[0]);
+            }
+            
+            // --- TIER 3: MULTIPLE MATCHES (AMBIGUITY) ---
+            if (topMatches.length > 1 || isLowScoreAmbiguous) { // If there's ambiguity or the score is too low/risky
+                // Set context for follow-up, using the top-scoring ambiguous staff members
+                lastStaffQuery.matches = topMatches;
+                lastStaffQuery.state = 'prompting_for_clarification';
+                
+                // Return the mandatory ambiguity prompt
+                return `I found multiple staff members with that name. Could you please specify the department or branch?`;
+            }
         }
+
 
         // 5. Final Fallback: Contact not found
         lastStaffQuery.state = 'idle';
@@ -2055,7 +2124,7 @@
         // FIX: Ensure both views are defined before attempting to manipulate them
         if (!loginView || !chatView) {
              // Do not log a CONSOLE_ERROR here, as it might happen during initial load before setupDOMReferences runs fully
-             return;
+             return;;
         }
         
         if (viewId === 'login') {
