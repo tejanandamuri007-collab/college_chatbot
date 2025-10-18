@@ -532,7 +532,7 @@
                     onclick="toggleDarkMode()"
                     class="ml-auto p-2 rounded-full hover:bg-white/30 transition duration-150 button-click-animation"
                     title="Toggle Dark Mode">
-                <svg id="moon-icon" class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: white;"><path d="M12 3a6 3 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                <svg id="moon-icon" class="w-6 h-6" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: white;"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
                 <svg id="sun-icon" class="w-6 h-6 hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: white;"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
             </button>
         </header>
@@ -577,8 +577,9 @@
     let lastStaffQuery = {
         originalQuery: null, 
         matches: [],         
-        state: 'idle',        // 'idle', 'prompting_for_clarification' 
-        singleMatchFound: null // Store single match result for simple follow-up (e.g., "his number")
+        state: 'idle',        // 'idle', 'prompting_for_clarification', 'awaiting_cs_specialization'
+        singleMatchFound: null, // Store single match result for simple follow-up (e.g., "his number")
+        clarificationAttempts: 0 // NEW: Track clarification attempts
     };
     // --- END CONVERSATIONAL STATE MANAGEMENT ---
 
@@ -590,7 +591,7 @@
     let chatInitialized = false;
 
     // API Configuration (Placeholder/Default for Canvas environment)
-    const API_KEY = typeof __api_key !== 'undefined' ? __api_key : "AIzaSyD0VriKBX6ekEN-hi6WM9VTuFrlxacGIqc";
+    const API_KEY = typeof __api_key !== 'undefined' ? __api_key : "";
     const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
     
@@ -628,7 +629,25 @@
         }
     };
 
-    // Helper for adding messages (UPDATED TO HANDLE PLAIN TEXT CONTACT RESPONSE)
+    // --- FUNCTION TO FORMAT OUTPUT AS REQUESTED (Strict String Format) ---
+    const getStrictContactOutput = (staff) => {
+        // 1. Determine the canonical branch name (e.g., 'CSE', 'ECE', 'CSE (DS)')
+        const canonicalBranch = getCanonicalBranch(staff.designation);
+
+        // 2. Lookup the exact display name
+        const branchDisplay = FULL_DEPT_NAMES[canonicalBranch] || canonicalBranch; 
+        
+        const number = staff.number || "Not Provided";
+        const fullName = staff.name || "Not Provided";
+        const designation = staff.designation || "Not Provided";
+
+        // ADHERING TO NEW STRICT FORMAT AND ORDER
+        // ✅ Name: [Full Name] 🏫 Department: [Department / Branch] 🎓 Designation: [Position] 📞 Phone: [Phone Number]
+        return `✅ Name: ${fullName} 🏫 Department: ${branchDisplay} 🎓 Designation: ${designation} 📞 Phone: ${number}`;
+    };
+
+
+    // Helper for adding messages (UPDATED to handle Strict Contact Response)
     const addMessage = (text, isUser) => {
         if (!chatHistory) return;
         
@@ -637,25 +656,30 @@
         
         const bubble = document.createElement('div');
         
-        // --- NEW LOGIC TO HANDLE PLAIN TEXT OUTPUT REQUEST ---
-        const isStaffResponse = typeof text === 'string' && text.trim().startsWith('text\n');
-        
-        if (isStaffResponse) {
-            // If it's the requested plain text format, display it in a clean preformatted box
-            const content = text.substring(5).trim(); // Remove "text\n" and trim
+        // --- NEW LOGIC TO HANDLE STRICT CONTACT OUTPUT ---
+        const isStrictContactResponse = typeof text === 'string' && text.trim().startsWith('✅ Name:');
+
+        if (isStrictContactResponse) {
+            // Parse the required fields from the structured string for display
+            // The format is: ✅ Name: [N] 🏫 Department: [D] 🎓 Designation: [G] 📞 Phone: [P]
+            const nameMatch = text.match(/Name: (.*?) 🏫/);
+            const deptMatch = text.match(/Department: (.*?) 🎓/);
+            const designationMatch = text.match(/Designation: (.*?) 📞/);
+            const contactMatch = text.match(/Phone: (.*)/);
+            
+            // Generate a clean, formatted card output
             bubble.innerHTML = `
                 <div class="info-card">
-                    <p class="font-semibold text-lg text-[#006494] mb-2">📇 Staff Contact Information</p>
-                    <pre class="whitespace-pre-wrap text-sm p-3 bg-gray-100 dark:bg-gray-700 dark:text-gray-200 rounded-lg shadow-inner">${content}</pre>
+                    <p class="font-semibold text-lg text-[#006494] mb-2">📇 Staff Contact Found</p>
+                    <ul class="text-sm space-y-1">
+                        <li>**Name:** ${nameMatch ? nameMatch[1].trim() : 'N/A'}</li>
+                        <li>**Department:** ${deptMatch ? deptMatch[1].trim() : 'N/A'}</li>
+                        <li>**Designation:** ${designationMatch ? designationMatch[1].trim() : 'N/A'}</li>
+                        <li>**Phone:** <span class="font-bold text-lg text-[#dc2626]">${contactMatch ? contactMatch[1].trim() : 'N/A'}</span></li>
+                    </ul>
+                    <p class="mt-3 text-xs text-gray-500">_Raw Output: ${text}_</p>
                 </div>
             `;
-            // Add a friendly note for single match only
-            if (!content.includes('Multiple Matches') && !content.includes('Sorry, no matching')) {
-                bubble.innerHTML += `<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                    _This is the clear match found. You can copy the details from the box above._
-                </p>`;
-            }
-            
         } else if (!isUser) {
         // --- END NEW LOGIC ---
         
@@ -1068,27 +1092,42 @@
     ];
     // --- END STAFF CONTACTS ---
 
-    // --- DEPT SYNONYM MAPPER ---
+    // --- DEPT SYNONYM MAPPER (COMPREHENSIVE UPDATE) ---
+    // Includes all variations for high precision filtering during clarification steps.
     const DEPT_MAP = {
-        'cse': 'CSE', 'comp': 'CSE', 'cs': 'CSE', 'computer science': 'CSE', 'computer': 'CSE',
-        'ece': 'ECE', 'e&c': 'ECE', 'electronics': 'ECE',
-        'eee': 'EEE', 'electrical': 'EEE',
-        'mech': 'MECH', 'mechanical': 'MECH',
-        'it': 'IT', 'information technology': 'IT',
-        'civil': 'CIVIL',
-        'bs&h': 'BS&H',
-        'cdc': 'CDC',
-        'mefa': 'MEFA', 'management studies': 'MEFA',
-        'exam': 'EXAM', 'exam section': 'EXAM',
-        'admin': 'ADMIN', 'administrator': 'ADMIN', 'system admin': 'ADMIN', 'system administrator': 'ADMIN', 'sysadmin': 'ADMIN', 'office': 'ADMIN',
-        'lab': 'LABS', 'lab technician': 'LABS', 'technician': 'LABS',
-        'security': 'SECURITY', 'maint': 'SECURITY', 'maintenance': 'SECURITY',
-        'hostel': 'HOSTEL', 'warden': 'HOSTEL',
-        'transport': 'TRANSPORT',
-        'ai&ml': 'CSE (AI&ML)', 'aiml': 'CSE (AI&ML)', 'artificial intelligence and machine learning': 'CSE (AI&ML)',
+        // Engineering Departments
+        'cse': 'CSE', 'comp': 'CSE', 'cs': 'CSE', 'computer science': 'CSE', 'computer': 'CSE', 'comp sci': 'CSE',
+        'ece': 'ECE', 'e&c': 'ECE', 'electronics': 'ECE', 'electroncs': 'ECE', 'ec': 'ECE',
+        'eee': 'EEE', 'electrical': 'EEE', 'ee': 'EEE',
+        'mech': 'MECH', 'mechanical': 'MECH', 'ma': 'MECH', 'mechanic': 'MECH',
+        'civil': 'CIVIL', 'ci': 'CIVIL', 'civil engg': 'CIVIL',
+        'it': 'IT', 'information technology': 'IT', 'info tech': 'IT',
+
+        // Specializations
+        'ai&ml': 'CSE (AI&ML)', 'aiml': 'CSE (AI&ML)', 'ml': 'CSE (AI&ML)', 'machine learning': 'CSE (AI&ML)',
         'ds': 'CSE (DS)', 'data science': 'CSE (DS)',
         'ai': 'CSE (AI)', 'artificial intelligence': 'CSE (AI)',
-        'cs': 'CSE (CS)', // Mapping CS as a specialization for the query parser
+        
+        // Academic/Support Departments
+        'bsh': 'BS&H', 'basic sciences': 'BS&H', 'humanities': 'BS&H',
+        'cdc': 'CDC', 'placements': 'CDC', 'career': 'CDC',
+        'mefa': 'MEFA', 'management studies': 'MEFA', 'mba': 'MEFA',
+        'exam': 'EXAM', 'exam section': 'EXAM', 'examination': 'EXAM', 'exams': 'EXAM',
+
+        // Admin & General Staff
+        'library': 'LIBRARY', 'lib': 'LIBRARY',
+        'pd': 'PE', 'pe': 'PE', 'physical director': 'PE', 'sports': 'PE', // Physical Directors/PE
+        'maintenance': 'MAINTENANCE', 'maintenance dept': 'MAINTENANCE', 'works': 'MAINTENANCE',
+        'class iv': 'CLASS_IV', 'class 4': 'CLASS_IV', 'iv': 'CLASS_IV', 'attendant': 'CLASS_IV', 'aaya': 'CLASS_IV',
+        'security': 'SECURITY', 'guard': 'SECURITY',
+        'xerox': 'XEROX',
+        
+        // Titles/General Admin
+        'admin': 'ADMIN', 'administrator': 'ADMIN', 'system admin': 'ADMIN', 'system administrator': 'ADMIN', 'sysadmin': 'ADMIN', 'office': 'ADMIN',
+        
+        // Special CS ambiguity mapping
+        'cs': 'CSE (CS)', 
+        'cyber security': 'CSE (CS)', 
     };
     
     // --- FULL DEPARTMENT NAME MAP (FOR OUTPUT FORMATTING) ---
@@ -1104,24 +1143,28 @@
         'MEFA': 'MEFA (Management, Economics and Financial Analysis)',
         'EXAM': 'EXAM (Examinations Section)',
         'ADMIN': 'ADMIN (Administrative Office)',
-        'SECURITY': 'SECURITY (Maintenance / Security Staff)',
+        'SECURITY': 'Security Department',
         'HOSTEL': 'HOSTEL (Hostel Administration)',
         'TRANSPORT': 'TRANSPORT (Transport Coordination)',
         'RECEPTION': 'RECEPTION (General Reception)',
-        'XEROX': 'XEROX (Xerox Section)',
+        'XEROX': 'Xerox Section',
         'GENERAL STAFF': 'General Staff',
-        'CSE (CS)': 'CSE (Computer Science)',
+        'CSE (CS)': 'CSE (Computer Science)', // Used for the CS ambiguity rule
         'CSE (DS)': 'CSE (Data Science)',
         'CSE (AI)': 'CSE (Artificial Intelligence)',
-        'CSE (AI&ML)': 'CSE (AI & Machine Learning)'
+        'CSE (AI&ML)': 'CSE (AI & Machine Learning)',
+        // NEW CATEGORIES
+        'LIBRARY': 'Library Department',
+        'PE': 'Physical Directors (PE)',
+        'MAINTENANCE': 'Maintenance Department',
+        'CLASS_IV': 'Class IV Staff (Aaya, Attenders)',
     };
 
 
     // --- UTILITY FUNCTIONS ---
     // Cleans string by removing punctuation, spaces, and converting to lowercase for comparison
     const cleanString = (str) => {
-        // KEEP SPACES AND DOTTED INITIALS! This is where the old code failed.
-        // We will only remove honorifics and then normalize whitespace.
+        // KEEP SPACES AND DOTTED INITIALS! We will only remove honorifics and then normalize whitespace.
         return str.toLowerCase().replace(/^(dr|mr|mrs|ms)\.\s*/, '').replace(/[^a-z0-9\s\.]/g, '').replace(/\s+/g, ' ').trim();
     };
     
@@ -1130,6 +1173,14 @@
         // This is primarily for comparison, strip honorifics and non-alphanumeric/dot chars
         return name.toLowerCase().replace(/^(dr|mr|mrs|ms)\.\s*/, '').replace(/[^a-z0-9\s\.]/g, '').replace(/\s+/g, ' ').trim();
     };
+    
+    // Helper to get significant name words for robust matching
+    const getSignificantWords = (nameNormalized) => {
+        // Split by space or dot, filtering out single-letter initials UNLESS they are followed by a dot (which is normalized out later)
+        // For example, 'a. harini' -> ['a', 'harini']. Filter is applied only to non-initial-looking words.
+        return nameNormalized.replace(/\./g, ' ').split(/\s+/).filter(word => word.length > 1 || /^[a-z]$/i.test(word));
+    };
+
 
     // --- DEDUPLICATION PASS (Runs once on initialization) ---
     const deduplicateStaff = (staffList) => {
@@ -1146,7 +1197,7 @@
     // Replace the raw STAFF_CONTACTS array with the deduplicated list
     const DEDUPLICATED_STAFF_CONTACTS = deduplicateStaff(STAFF_CONTACTS);
 
-    // --- FUNCTION TO DERIVE CANONICAL BRANCH FROM STAFF DESIGNATION ---
+    // --- FUNCTION TO DERIVE CANONICAL BRANCH FROM STAFF DESIGNATION (UPDATED FOR NEW CATEGORIES) ---
     const getCanonicalBranch = (staffDesignation) => {
         const designationUpper = staffDesignation.toUpperCase();
 
@@ -1155,89 +1206,86 @@
         if (designationUpper.includes('CSE (DS)')) return 'CSE (DS)';
         if (designationUpper.includes('CSE (AI)')) return 'CSE (AI)';
         
+        // Handle CS ambiguity logic by checking against common CSE specializations 
+        if (designationUpper.includes('CSE')) return 'CSE'; 
+
         // Check for main departments (using designation substring check)
         if (designationUpper.includes('CIVIL')) return 'CIVIL';
         if (designationUpper.includes('EEE')) return 'EEE';
         if (designationUpper.includes('MECH')) return 'MECH';
         if (designationUpper.includes('ECE')) return 'ECE';
-        if (designationUpper.includes('CSE')) return 'CSE';
         if (designationUpper.includes('IT')) return 'IT';
         if (designationUpper.includes('BS&H')) return 'BS&H';
         
-        // Check for other sections
+        // Check for other sections (NEW MAPPINGS)
         if (designationUpper.includes('CDC')) return 'CDC';
-        if (designationUpper.includes('MEFA')) return 'MEFA';
+        if (designationUpper.includes('MEFA') || designationUpper.includes('MANAGEMENT')) return 'MEFA';
         if (designationUpper.includes('EXAM')) return 'EXAM';
-        if (designationUpper.includes('ADMINISTRATIVE OFFICE') || designationUpper.includes('ADMIN') || designationUpper.includes('OFFICE SUPDT') || designationUpper.includes('JR. ASST.')) return 'ADMIN';
-        if (designationUpper.includes('SECURITY') || designationUpper.includes('MAINTENANCE')) return 'SECURITY';
+        if (designationUpper.includes('LIBRARY')) return 'LIBRARY';
+        if (designationUpper.includes('PHYSICAL DIRECTOR') || designationUpper.includes('GARDENER')) return 'PE';
+        if (designationUpper.includes('AAYA') || designationUpper.includes('ATTENDER')) return 'CLASS_IV';
+        if (designationUpper.includes('XEROX')) return 'XEROX';
+        
+        // General Admin / Security / Maintenance
+        if (designationUpper.includes('MAINTENANCE') || designationUpper.includes('SECURITY')) return 'SECURITY'; 
+        if (designationUpper.includes('OFFICE SUPDT') || designationUpper.includes('ADMINISTRATIVE OFFICE') || designationUpper.includes('ADMIN')) return 'ADMIN';
         if (designationUpper.includes('HOSTEL') || designationUpper.includes('WARDEN')) return 'HOSTEL';
         if (designationUpper.includes('TRANSPORT')) return 'TRANSPORT';
         if (designationUpper.includes('RECEPTION')) return 'RECEPTION';
-        if (designationUpper.includes('XEROX')) return 'XEROX';
         
         return 'GENERAL STAFF';
     };
 
 
-    // --- FUNCTION TO FORMAT OUTPUT AS REQUESTED (Plain Text) ---
-    const formatStaffPlainText = (staff) => {
-        // 1. Determine the canonical branch name (e.g., 'CSE', 'ECE', 'CSE (DS)')
-        const canonicalBranch = getCanonicalBranch(staff.designation);
-
-        // 2. Lookup the exact display name
-        const branchDisplay = FULL_DEPT_NAMES[canonicalBranch] || canonicalBranch; 
-        
-        const number = staff.number || "Not Provided";
-        const fullName = staff.name || "Not Provided";
-        const designation = staff.designation || "Not Provided";
-
-        // Adhere to the strict requested format
-        return `text
-Name: ${fullName}
-Branch: ${branchDisplay}
-Designation: ${designation}
-Phone Number: ${number}`;
-    };
-
     // --- NEW: Helper to filter matches based on user clarification (used inside handleStaffFollowUp) ---
+    // UPDATED: Added logic to suggest similar branches if the input is close but doesn't match perfectly.
     const filterMatchesByNewQuery = (matches, newQuery) => {
-        const queryNormalized = normalizeName(newQuery); // Use the same normalization as the initial search
+        const queryNormalized = normalizeName(newQuery); 
         const queryParts = queryNormalized.split(' ').filter(p => p.length > 2);
         
-        let filtered = [...matches]; // Start with the existing multi-matches
+        let filtered = [...matches]; 
 
-        // --- FILTER PASS 1: Name Match (If a name part is in the new query) ---
+        // --- FILTER PASS 1: Name Match (Prioritizes name filtering) ---
         let nameFiltered = filtered.filter(staff => {
              const staffNameNormalized = normalizeName(staff.name);
+             // Check if any significant part of the new query matches the staff name
              return queryParts.some(part => staffNameNormalized.includes(part));
         });
         
-        // If name filter reduces the list, prioritize it
         if (nameFiltered.length > 0 && nameFiltered.length < filtered.length) {
             filtered = nameFiltered;
         }
 
-        // --- FILTER PASS 2: Department/Branch Match ---
+        // --- FILTER PASS 2: Department/Branch Match (Strictly filters on Dept) ---
         let newTargetDeptCanonical = null;
         for (const [key, value] of Object.entries(DEPT_MAP)) {
             if (queryNormalized.includes(key)) {
                 newTargetDeptCanonical = value;
+                // If it's a specific specialization, stop looking
                 if (value.startsWith('CSE (')) break;
+                // If it's a very clear, specific admin dept, stop looking
+                if (['LIBRARY', 'PE', 'CLASS_IV', 'XEROX'].includes(value)) break;
             }
         }
         
         if (newTargetDeptCanonical) {
             let deptFiltered = filtered.filter(staff => {
                 const staffBranchCanonical = getCanonicalBranch(staff.designation);
-                return staffBranchCanonical === newTargetDeptCanonical;
+                
+                // Match exact specialization or general CSE if needed
+                if (newTargetDeptCanonical.startsWith('CSE (')) {
+                     return staffBranchCanonical === newTargetDeptCanonical;
+                } else if (newTargetDeptCanonical === 'CSE') {
+                    // Match general CSE or any CSE specialization
+                    return staffBranchCanonical.startsWith('CSE');
+                } else {
+                     return staffBranchCanonical === newTargetDeptCanonical;
+                }
             });
 
-            // If department filter successfully narrows the list, use it.
-            if (deptFiltered.length > 0 && deptFiltered.length < filtered.length) {
+            // If department filter succeeded, return the highly filtered list
+            if (deptFiltered.length > 0) {
                  return deptFiltered;
-            } else if (deptFiltered.length > 0) {
-                 // Strong match on department, so use it even if size didn't change.
-                 return deptFiltered; 
             }
         }
         
@@ -1245,177 +1293,271 @@ Phone Number: ${number}`;
         return filtered; 
     };
 
+    // --- Typo Suggestion Helper (Basic implementation) ---
+    const getSimilarBranches = (wrongInput) => {
+        const input = wrongInput.toLowerCase().replace(/[^a-z]/g, '');
+        // Use the canonical department names for suggestion output
+        const validDepartments = Object.keys(FULL_DEPT_NAMES).filter(key => key.length > 1);
+        
+        let suggestions = [];
+        for (const deptKey of validDepartments) {
+            const deptName = FULL_DEPT_NAMES[deptKey].toLowerCase().replace(/[^a-z]/g, '');
+            // Simple logic: return departments that start with the input or are very close in length
+            if (deptName.startsWith(input) || (deptName.includes(input) && Math.abs(deptName.length - input.length) <= 3)) {
+                suggestions.push(FULL_DEPT_NAMES[deptKey]);
+            }
+        }
+        // Limit to 3 unique, top suggestions
+        return Array.from(new Set(suggestions)).slice(0, 3);
+    };
+
 
     // --- NEW: Function to handle contextual follow-ups (FIXES THE LOOP) ---
     const handleStaffFollowUp = (followUpQuery) => {
         const followUpLower = followUpQuery.toLowerCase();
         
-        // --- 1. Simple Confirmation Check (e.g., "his number", "yes", "confirm") ---
+        // --- 1. SIMPLE CONFIRMATION CHECK (E.g., "his number") ---
         const isConfirmation = followUpLower.includes('number') || followUpLower === 'yes' || followUpLower === 'confirm';
 
-        // State Check: User confirms the last single match result 
+        // Check if a single match is stored AND the user is trying to confirm it (e.g., "his number")
         if (lastStaffQuery.state === 'idle' && lastStaffQuery.singleMatchFound) {
             if (isConfirmation) {
-                const result = formatStaffPlainText(lastStaffQuery.singleMatchFound);
-                lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: null }; // Clear context
+                const result = getStrictContactOutput(lastStaffQuery.singleMatchFound);
+                // CRITICAL FIX: Clear context immediately after returning the result.
+                lastStaffQuery.singleMatchFound = null; 
+                lastStaffQuery.clarificationAttempts = 0; // Reset attempts on success
                 return result;
             }
         }
+        
+        // --- 2. NESTED CS SPECIALIZATION CLARIFICATION (Rule-Specific) ---
+        if (lastStaffQuery.state === 'awaiting_cs_specialization') {
+            const initialMatches = lastStaffQuery.matches;
+            
+            let newTargetDeptCanonical = null;
+            
+            if (followUpLower.includes('cyber security') || followUpLower.includes('cs') || followUpLower.includes('computer science')) {
+                 newTargetDeptCanonical = 'CSE'; // General CSE
+            } else if (followUpLower.includes('ds') || followUpLower.includes('data science')) {
+                 newTargetDeptCanonical = 'CSE (DS)';
+            } else if (followUpLower.includes('ai&ml') || followUpLower.includes('aiml') || followUpLower.includes('machine learning')) {
+                 newTargetDeptCanonical = 'CSE (AI&ML)';
+            } else if (followUpLower.includes('ai') || followUpLower.includes('artificial intelligence')) {
+                 newTargetDeptCanonical = 'CSE (AI)';
+            }
 
-        // State Check: We are currently prompting for clarification
+            let filteredMatches = [];
+            if (newTargetDeptCanonical) {
+                 filteredMatches = initialMatches.filter(staff => {
+                    const staffBranchCanonical = getCanonicalBranch(staff.designation);
+                    // If CSE is selected, check for general CSE staff OR if it's not a different specialization
+                    if (newTargetDeptCanonical === 'CSE') {
+                        return staffBranchCanonical.startsWith('CSE') && staffBranchCanonical !== 'CSE (DS)' && staffBranchCanonical !== 'CSE (AI)' && staffBranchCanonical !== 'CSE (AI&ML)';
+                    } else {
+                        return staffBranchCanonical === newTargetDeptCanonical;
+                    }
+                });
+            }
+
+            if (filteredMatches.length === 1) {
+                // SUCCESS
+                const result = getStrictContactOutput(filteredMatches[0]);
+                lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: null, clarificationAttempts: 0 }; // Cleared after success
+                return result;
+            } 
+            
+            // Failed to narrow down from the second attempt (CS Clarification counted as one attempt)
+            
+            // Final, improved message after max attempts
+            lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: null, clarificationAttempts: 0 };
+            return `I'm still having trouble finding a unique contact based on that specialization. **Let's restart the search.** Please try entering the **full name AND branch** in your next query for the best chance of finding the contact.`;
+        }
+
+        // --- 3. GENERIC CLARIFICATION (State: prompting_for_clarification) ---
         if (lastStaffQuery.state === 'prompting_for_clarification') {
             
-            // --- 2. Clarification Input ---
             const initialMatches = lastStaffQuery.matches;
+            lastStaffQuery.clarificationAttempts++; // Increment attempt counter
+            
+            // --- Check if the new query is 'CS' or a variation that requires the nested prompt ---
+            if (followUpLower === 'cs' || followUpLower === 'computer science') {
+                 // Transition to the nested state based on the specific rule
+                 lastStaffQuery.state = 'awaiting_cs_specialization';
+                 return `Do you mean **CSE (Computer Science and Engineering)** or **Cyber Security**?`;
+            }
+
+            // --- Regular Filtering ---
             const filteredMatches = filterMatchesByNewQuery(initialMatches, followUpQuery);
             
             if (filteredMatches.length === 1) {
                 // SUCCESS: Clarified to one match
-                const result = formatStaffPlainText(filteredMatches[0]);
-                lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: filteredMatches[0] }; 
+                const result = getStrictContactOutput(filteredMatches[0]);
+                lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: null, clarificationAttempts: 0 }; 
                 return result;
             } else if (filteredMatches.length > 1) {
-                // STILL MULTIPLE MATCHES: Re-prompt, but with more specificity and a reset in mind.
                 
-                // If the matches list hasn't shrunk at all, or if this is the second time asking, reset.
-                if (filteredMatches.length === initialMatches.length) {
-                    lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: null }; 
-                    return `I'm sorry, I still can't uniquely identify the contact based on your last two attempts. Let's start over. Please try searching with the **full name AND branch** at once (Example: 'Mr. B. Bharath Kumar MECH').`;
+                // If it's the second or third fail, give the final improved message
+                if (lastStaffQuery.clarificationAttempts >= 2) { 
+                     lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: null, clarificationAttempts: 0 }; 
+                     return `I've tried multiple ways to narrow down the search, but I still see ${filteredMatches.length} matching contacts. **I'm resetting the search.** Please try again with the **full name AND specific branch** to find the correct contact immediately.`;
                 }
 
-                // If the list shrunk, but is still > 1, ask again more clearly.
+                // STILL MULTIPLE MATCHES: Re-prompt (Attempt 1)
                 lastStaffQuery.matches = filteredMatches;
                 
-                return `I still found multiple contacts matching that specific query. Please provide the **full name and branch** together to narrow it down further.`;
+                return `I still found multiple contacts matching that specific query. Please provide the **full name and branch** together to narrow it down further. (Attempt ${lastStaffQuery.clarificationAttempts} of 2)`;
+            
             } else {
-                // ZERO MATCHES: No one in the original list matches the clarification.
-                lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: null }; // Clear context
-                return "Sorry, based on the previous matches, the specific contact you described does not exist. Please try a new name search.";
+                // ZERO MATCHES (Or department typo)
+                
+                const suggestions = getSimilarBranches(followUpQuery);
+                let message = "Sorry, I couldn't find a staff member matching that specific combination of name and department in the remaining list.";
+                
+                if (suggestions.length > 0) {
+                     message += ` Were you perhaps looking for **${suggestions.join(', ')}**?`;
+                }
+
+                // Final reset after a failed clarification attempt
+                lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: null, clarificationAttempts: 0 }; 
+                return message;
             }
         }
 
         return null; // Not a contextual follow-up or confirmation
     };
 
+
     // --- State-aware contact search function ---
     const findStaffContactAndManageContext = (query) => {
-        const queryNormalized = normalizeName(query); // Use normalized query for searching
+        const queryNormalized = normalizeName(query); 
         const queryParts = queryNormalized.split(' ').filter(p => p.length > 2);
         
         // 0. SPECIAL CASES (Akka/Discipline)
         if (queryNormalized.includes('akka')) {
             const staff = { name: "Akka", number: "79899 3489", designation: "Special Contact, N/A" };
-            lastStaffQuery = { originalQuery: query, matches: [], state: 'idle', singleMatchFound: staff };
-            return formatStaffPlainText(staff);
+            // Set single match for display, which will be immediately cleared by sendMessage
+            lastStaffQuery = { originalQuery: query, matches: [], state: 'idle', singleMatchFound: staff, clarificationAttempts: 0 };
+            return getStrictContactOutput(staff);
         }
         
-        // --- Reset context at the start of a new, complex query ---
-        lastStaffQuery = { originalQuery: query, matches: [], state: 'idle', singleMatchFound: null };
+        // Reset non-single-match context variables for a new primary search
+        lastStaffQuery.matches = [];
+        lastStaffQuery.state = 'idle';
+        lastStaffQuery.clarificationAttempts = 0; // Reset attempts on new search
 
         // 1. Identify Target Department from Query (Canonical Name)
         let targetDeptCanonical = null;
         for (const [key, value] of Object.entries(DEPT_MAP)) {
             if (queryNormalized.includes(key)) {
                 targetDeptCanonical = value;
+                // If it's a specific specialization or clear admin dept, stop looking
                 if (value.startsWith('CSE (')) break;
+                // If it's a very clear, specific admin dept, stop looking
+                if (['LIBRARY', 'PE', 'CLASS_IV', 'XEROX'].includes(value)) break;
             }
         }
         
         let preliminaryMatches = [];
 
-        // --- TIER 1: EXACT MATCH (Full Name or Full Name + Dept in Query) ---
-        // This is the core fix. We check if the query matches a name field AND if the department is explicitly present.
-        
+        // --- TIER 1: HIGH PRECISION MATCHES (Exact/Strong Name + Dept Match) ---
         for (const staff of DEDUPLICATED_STAFF_CONTACTS) {
             const staffNameNormalized = normalizeName(staff.name);
             const staffDeptCanonical = getCanonicalBranch(staff.designation);
 
-            // Match 1: User query contains the staff member's full name AND the target department.
-            const isFullMatch = queryNormalized.includes(staffNameNormalized) && (!targetDeptCanonical || targetDeptCanonical === staffDeptCanonical);
+            // 1. Determine significant name components
+            const staffNameWords = getSignificantWords(staffNameNormalized);
             
-            // Match 2: User query exactly matches the staff member's full name (no other words, e.g. "P. Ram Prasad")
-            const isNameOnlyMatch = staffNameNormalized === queryNormalized;
+            // 2. Check if ALL significant staff name components are present in the query
+            const allNameWordsInQuery = staffNameWords.every(word => queryNormalized.includes(word));
             
-            // Match 3: User query exactly matches name + dept/title (e.g. "P. Ram Prasad MECH")
-            const isNameDeptMatch = queryNormalized.includes(staffNameNormalized) && queryNormalized.includes(staffDeptCanonical.toLowerCase().replace(/[\s\(\)]/g,'')); // E.g., 'cse(ds)'
+            // 3. Check if the department matches the query's department hint (or if no hint was given)
+            const deptMatches = !targetDeptCanonical || targetDeptCanonical === staffDeptCanonical;
 
-            if (isFullMatch || isNameOnlyMatch || isNameDeptMatch) {
-                // If we find an exact match or highly precise match, return it immediately if possible
+            if (allNameWordsInQuery && deptMatches) {
                  preliminaryMatches.push(staff);
             }
         }
         
-        // If exact matches result in one clear winner, use it.
-        if (preliminaryMatches.length === 1) {
-            lastStaffQuery.singleMatchFound = preliminaryMatches[0];
+        // --- TIER 1.1: IMMEDIATE RESOLUTION ---
+        const uniqueHighPrecisionMatches = Array.from(new Set(preliminaryMatches.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
+        
+        if (uniqueHighPrecisionMatches.length === 1) {
+            // Set single match for display and potential one-word follow-up (e.g., "his number")
+            lastStaffQuery.singleMatchFound = uniqueHighPrecisionMatches[0];
             lastStaffQuery.state = 'idle';
-            return formatStaffPlainText(preliminaryMatches[0]);
+            return getStrictContactOutput(uniqueHighPrecisionMatches[0]);
         }
         
-        // --- TIER 2: BROADER SEARCH (Partial Matches) ---
-        if (preliminaryMatches.length === 0) {
-            for (const staff of DEDUPLICATED_STAFF_CONTACTS) {
+        // --- TIER 2: BROADER SEARCH (If TIER 1 found NO unique match) ---
+        if (uniqueHighPrecisionMatches.length === 0) {
+            
+            // --- TIER 2.1: DESIGNATION ONLY MATCHES (HOD/Principal/etc.) ---
+             const titleKeywords = ['hod', 'dean', 'officer', 'principal', 'warden', 'security', 'transport', 'reception', 'xerox'];
+             const isTitleQuery = titleKeywords.some(t => queryNormalized.includes(t));
+
+             if (isTitleQuery) { 
+                 const designationMatches = DEDUPLICATED_STAFF_CONTACTS.filter(staff => 
+                     normalizeName(staff.designation).includes(queryNormalized) && 
+                     (!targetDeptCanonical || getCanonicalBranch(staff.designation) === targetDeptCanonical)
+                 );
+                 
+                 if (designationMatches.length === 1) {
+                     lastStaffQuery.singleMatchFound = designationMatches[0];
+                     lastStaffQuery.state = 'idle';
+                     return getStrictContactOutput(designationMatches[0]);
+                 }
+                 if (designationMatches.length > 1) {
+                    lastStaffQuery.matches = designationMatches;
+                    lastStaffQuery.state = 'prompting_for_clarification';
+                    return `I found multiple staff members with that name. Could you please specify the department or branch?`;
+                 }
+             }
+        }
+        
+        // --- TIER 3: FINAL MULTIPLE MATCH / FALLBACK LOGIC ---
+        let finalMatches = uniqueHighPrecisionMatches;
+
+        if (finalMatches.length === 0) {
+            // Re-run TIER 1 but with looser matching (partial name match) if we found absolutely nothing so far
+             for (const staff of DEDUPLICATED_STAFF_CONTACTS) {
                 const staffNameNormalized = normalizeName(staff.name);
-                // Partial name match
                 const isNamePartialMatch = queryParts.some(part => staffNameNormalized.includes(part));
                 if (isNamePartialMatch) {
                     preliminaryMatches.push(staff);
                 }
             }
-        }
-        
-        // --- TIER 3: RE-FILTER WITH DEPARTMENT (If query contains department) ---
-        let finalMatches = [...preliminaryMatches];
-        if (preliminaryMatches.length > 0 && targetDeptCanonical) {
-            let deptFiltered = preliminaryMatches.filter(staff => getCanonicalBranch(staff.designation) === targetDeptCanonical);
-            if (deptFiltered.length > 0) {
-                 finalMatches = deptFiltered;
+
+            // Apply department filter to the partial matches if a department was hinted
+            if (preliminaryMatches.length > 0 && targetDeptCanonical) {
+                let deptFiltered = preliminaryMatches.filter(staff => getCanonicalBranch(staff.designation) === targetDeptCanonical);
+                if (deptFiltered.length > 0) {
+                     finalMatches = Array.from(new Set(deptFiltered.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
+                } else {
+                    finalMatches = Array.from(new Set(preliminaryMatches.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
+                }
+            } else {
+                finalMatches = Array.from(new Set(preliminaryMatches.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
             }
         }
-        
-        // --- TIER 4: DESIGNATION ONLY MATCHES (If Tiers 1-3 yielded nothing) ---
-        if (finalMatches.length === 0) {
-             const titleKeywords = ['hod', 'dean', 'officer', 'administrator', 'technician', 'professor', 'admin', 'system admin', 'programmer'];
-             const isTitleQuery = titleKeywords.some(t => queryNormalized.includes(t));
 
-             if (isTitleQuery || !queryNormalized.split(' ').some(p => p.length > 3)) { 
-                 finalMatches = DEDUPLICATED_STAFF_CONTACTS.filter(staff => 
-                     normalizeName(staff.designation).includes(queryNormalized) && 
-                     (!targetDeptCanonical || getCanonicalBranch(staff.designation) === targetDeptCanonical)
-                 );
-             }
-        }
-        
-        // --- TIER 5: FINAL RESULT PROCESSING ---
-
-        // De-duplicate final matches by name
-        const uniqueNames = new Map();
-        finalMatches.forEach(staff => {
-            const cleanedKey = cleanString(staff.name);
-            if (!uniqueNames.has(cleanedKey)) {
-                uniqueNames.set(cleanedKey, staff);
-            }
-        });
-        const uniqueFinalMatches = Array.from(uniqueNames.values());
-            
-        // 1. Single Match Logic after all filtering (Should happen rarely if T1 succeeded)
-        if (uniqueFinalMatches.length === 1) {
-            lastStaffQuery.singleMatchFound = uniqueFinalMatches[0];
+        // 3. Single Match after T3 filter
+        if (finalMatches.length === 1) {
+            lastStaffQuery.singleMatchFound = finalMatches[0];
             lastStaffQuery.state = 'idle';
-            return formatStaffPlainText(uniqueFinalMatches[0]);
+            return getStrictContactOutput(finalMatches[0]);
         }
         
-        // 2. Multiple Matches Logic (Sets context and returns clarification message)
-        if (uniqueFinalMatches.length > 1) {
-            // Set context for follow-up (Crucial for conversation memory)
-            lastStaffQuery.matches = uniqueFinalMatches;
+        // 4. Multiple Matches Logic
+        if (finalMatches.length > 1) {
+            // Set context for follow-up
+            lastStaffQuery.matches = finalMatches;
             lastStaffQuery.state = 'prompting_for_clarification';
             
-            // Per the strict rule: DO NOT show results, just ask for clarification.
-            return `I found multiple staff members matching that name. Please help me narrow it down by specifying the **Branch** or **full Name** you're looking for.`;
+            // Return the mandatory ambiguity prompt
+            return `I found multiple staff members with that name. Could you please specify the department or branch?`;
         }
 
-        // 3. Fallback
+        // 5. Final Fallback: Contact not found
         lastStaffQuery.state = 'idle';
         return `Sorry, contact doesn't exist. Please check the spelling of the name or try a new search.`; 
     };
@@ -1537,7 +1679,7 @@ Phone Number: ${number}`;
                     "Almost there! I need one more detail.",
                     "Quick check: Which one are you hunting for? 🧐",
                 ];
-                const promptIntro = promptIntros[Math.floor(Math.random() * promptIntros.length)];
+                const promptIntro = promptIntros[Math.floor(Math.random() * promptIntros.length)]; 
                 
                 return { 
                     success: true, 
@@ -1565,7 +1707,7 @@ Phone Number: ${number}`;
             "Here are the papers you were hunting for! Good luck! 🤩",
             "Files located! Time to crush those exams. 🚀",
         ];
-        const successIntro = successIntros[Math.floor(Math.random() * successIntros.length)];
+        const successIntro = successIntros[Math.floor(Math.random() * successIntros.length)]; 
 
         if (targetKey) {
             const data = DOWNLOAD_MAP[targetKey];
@@ -1910,8 +2052,9 @@ Phone Number: ${number}`;
 
     // --- VIEW MANAGEMENT & ENTRY (Uses defined global variables) ---
     const showView = (viewId) => {
+        // FIX: Ensure both views are defined before attempting to manipulate them
         if (!loginView || !chatView) {
-             console.error("DOM references not set up correctly.");
+             // Do not log a CONSOLE_ERROR here, as it might happen during initial load before setupDOMReferences runs fully
              return;
         }
         
@@ -1938,7 +2081,10 @@ Phone Number: ${number}`;
 
             chatInitialized = true;
         }
-        userInput.focus();
+        // FIX: Safely attempt to focus the input only if it exists.
+        if (userInput) { 
+            userInput.focus();
+        }
     };
 
     const startChat = () => {
@@ -1950,11 +2096,11 @@ Phone Number: ${number}`;
     const handleKeypress = (e) => {
         if (e.key === 'Enter') {
             // If the chat view is active, try to send a message
-            if (chatView.style.display === 'flex' && !sendButton.disabled) {
+            if (chatView && chatView.style.display === 'flex' && !sendButton.disabled) {
                 sendMessage();
             } 
             // If the login view is active, trigger the chat start
-            else if (loginView.style.display === 'flex') {
+            else if (loginView && loginView.style.display === 'flex') {
                 startChat();
             }
         }
@@ -2035,15 +2181,26 @@ Phone Number: ${number}`;
 
         try {
             // --- A. CONTEXTUAL STAFF FOLLOW-UP (Highest Priority for conversational memory) ---
-            // Trigger if we are currently prompting for clarification OR if the last response was a single match (allowing "his number" follow-up)
-            if (lastStaffQuery.state === 'prompting_for_clarification' || (lastStaffQuery.state === 'idle' && lastStaffQuery.singleMatchFound)) {
+            // Trigger if we are currently prompting for clarification, or if the last response was a single match (allowing "his number" follow-up)
+            if (lastStaffQuery.state !== 'idle' || lastStaffQuery.singleMatchFound) {
                 const followUpResult = handleStaffFollowUp(messageText);
                 if (followUpResult) {
                     hideLoading();
                     addMessage(followUpResult, false);
                     showSuggestions(["Check Principal's number", "What courses are offered?", "Check canteen timings"]);
+                    
+                    // CRITICAL FIX: If handleStaffFollowUp consumed the query (meaning it was a contextual confirmation/clarification)
+                    // The singleMatchFound state must be handled inside handleStaffFollowUp itself.
                     return;
                 }
+            }
+            
+            // --- B. NEW CONTACT QUERY DETECTED: FORCE RESET CONTEXT ---
+            // This handles the case where a user types a brand new name (not a confirmation/clarification).
+            // The purpose of this block is only to run if the previous block (A) did NOT consume the query.
+            if (isContactQuery) {
+                // If a new query is detected, wipe the old singleMatchFound just in case.
+                lastStaffQuery.singleMatchFound = null; 
             }
 
             // --- 1. TIMING CHECK ---
@@ -2131,9 +2288,14 @@ Phone Number: ${number}`;
                 
                 hideLoading();
                 
-                if (localContactResponse.startsWith('text\n')) {
-                    // Single clear match
+                if (localContactResponse.startsWith('✅ Name:')) {
+                    // Single clear match (using the new strict format string)
                     addMessage(localContactResponse, false);
+                    
+                    // CRITICAL FIX: Reset the single match *after* the correct display is shown.
+                    // This prevents the next unrelated query from being trapped by the singleMatchFound state.
+                    lastStaffQuery.singleMatchFound = null; 
+                    
                     showSuggestions([
                         "What is the college fee?",
                         "Where can I find the syllabus?",
@@ -2188,7 +2350,9 @@ Phone Number: ${number}`;
         } finally {
             sendButton.disabled = false;
             voiceButton.disabled = false;
-            userInput.focus();
+            if (userInput) {
+                userInput.focus();
+            }
             scrollToBottom();
         }
     };
