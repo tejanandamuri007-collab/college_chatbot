@@ -342,7 +342,7 @@
             position: relative;
         }
         .link-list li::before {
-            content: "🔗";
+            content: "ðŸ”—";
             position: absolute;
             left: 0;
             top: 0;
@@ -577,7 +577,7 @@
     let lastStaffQuery = {
         originalQuery: null, 
         matches: [],         
-        state: 'idle',        // 'idle', 'prompting_for_clarification'
+        state: 'idle',        // 'idle', 'prompting_for_clarification', 'awaiting_cs_specialization'
         singleMatchFound: null, // Store single match result for simple follow-up (e.g., "his number")
         clarificationAttempts: 0 // NEW: Track clarification attempts
     };
@@ -642,8 +642,8 @@
         const designation = staff.designation || "Not Provided";
 
         // ADHERING TO NEW STRICT FORMAT AND ORDER
-        // ✅ Name: [Full Name] 🏫 Department: [Department / Branch] 🎓 Designation: [Position] 📞 Phone: [Phone Number]
-        return `✅ Name: ${fullName} 🏫 Department: ${branchDisplay} 🎓 Designation: ${designation} 📞 Phone: ${number}`;
+        // âœ… Name: [Full Name] ðŸ« Department: [Department / Branch] ðŸŽ“ Designation: [Position] ðŸ“ž Phone: [Phone Number]
+        return `âœ… Name: ${fullName} ðŸ« Department: ${branchDisplay} ðŸŽ“ Designation: ${designation} ðŸ“ž Phone: ${number}`;
     };
 
 
@@ -657,20 +657,20 @@
         const bubble = document.createElement('div');
         
         // --- NEW LOGIC TO HANDLE STRICT CONTACT OUTPUT ---
-        const isStrictContactResponse = typeof text === 'string' && text.trim().startsWith('✅ Name:');
+        const isStrictContactResponse = typeof text === 'string' && text.trim().startsWith('âœ… Name:');
 
         if (isStrictContactResponse) {
             // Parse the required fields from the structured string for display
-            // The format is: ✅ Name: [N] 🏫 Department: [D] 🎓 Designation: [G] 📞 Phone: [P]
-            const nameMatch = text.match(/Name: (.*?) 🏫/);
-            const deptMatch = text.match(/Department: (.*?) 🎓/);
-            const designationMatch = text.match(/Designation: (.*?) 📞/);
+            // The format is: âœ… Name: [N] ðŸ« Department: [D] ðŸŽ“ Designation: [G] ðŸ“ž Phone: [P]
+            const nameMatch = text.match(/Name: (.*?) ðŸ«/);
+            const deptMatch = text.match(/Department: (.*?) ðŸŽ“/);
+            const designationMatch = text.match(/Designation: (.*?) ðŸ“ž/);
             const contactMatch = text.match(/Phone: (.*)/);
             
             // Generate a clean, formatted card output
             bubble.innerHTML = `
                 <div class="info-card">
-                    <p class="font-semibold text-lg text-[#006494] mb-2">📇 Staff Contact Found</p>
+                    <p class="font-semibold text-lg text-[#006494] mb-2">ðŸ“‡ Staff Contact Found</p>
                     <ul class="text-sm space-y-1">
                         <li>**Name:** ${nameMatch ? nameMatch[1].trim() : 'N/A'}</li>
                         <li>**Department:** ${deptMatch ? deptMatch[1].trim() : 'N/A'}</li>
@@ -1180,24 +1180,6 @@
         // For example, 'a. harini' -> ['a', 'harini']. Filter is applied only to non-initial-looking words.
         return nameNormalized.replace(/\./g, ' ').split(/\s+/).filter(word => word.length > 1 || /^[a-z]$/i.test(word));
     };
-    
-    // Helper to extract the core name from a query (removing keywords like number/contact/dept)
-    const extractCoreNameFromQuery = (query) => {
-        let name = query.toLowerCase();
-        
-        // Remove common contact/designation words
-        const keywords = ['number', 'contact', 'phone', 'call', 'hod', 'dean', 'sir', 'madam', 'professor', 'assistant', 'admin', 'warden', 'officer', 'technician'];
-        keywords.forEach(key => {
-            name = name.replace(new RegExp('\\b' + key + '\\b', 'g'), '');
-        });
-        
-        // Remove department abbreviations
-        Object.keys(DEPT_MAP).forEach(key => {
-             name = name.replace(new RegExp('\\b' + key + '\\b', 'g'), '');
-        });
-
-        return name.replace(/\s+/g, ' ').trim();
-    };
 
 
     // --- DEDUPLICATION PASS (Runs once on initialization) ---
@@ -1256,70 +1238,59 @@
 
 
     // --- NEW: Helper to filter matches based on user clarification (used inside handleStaffFollowUp) ---
-    const filterMatchesByNewQuery = (matches, newQuery, filterType) => {
+    // UPDATED: Added logic to suggest similar branches if the input is close but doesn't match perfectly.
+    const filterMatchesByNewQuery = (matches, newQuery) => {
         const queryNormalized = normalizeName(newQuery); 
         const queryParts = queryNormalized.split(' ').filter(p => p.length > 2);
         
         let filtered = [...matches]; 
 
-        // --- FILTER PASS 1: Department/Branch Match ---
-        if (filterType === 'department') {
-            let newTargetDeptCanonical = null;
-            for (const [key, value] of Object.entries(DEPT_MAP)) {
-                if (queryNormalized.includes(key)) {
-                    newTargetDeptCanonical = value;
-                    break;
-                }
-            }
-            
-            if (newTargetDeptCanonical) {
-                let deptFiltered = filtered.filter(staff => {
-                    const staffBranchCanonical = getCanonicalBranch(staff.designation);
-                    
-                    // Match exact specialization or general CSE if needed
-                    if (newTargetDeptCanonical.startsWith('CSE (')) {
-                         return staffBranchCanonical === newTargetDeptCanonical;
-                    } else if (newTargetDeptCanonical === 'CSE') {
-                        // Match general CSE or any CSE specialization
-                        return staffBranchCanonical.startsWith('CSE');
-                    } else {
-                         return staffBranchCanonical === newTargetDeptCanonical;
-                    }
-                });
+        // --- FILTER PASS 1: Name Match (Prioritizes name filtering) ---
+        let nameFiltered = filtered.filter(staff => {
+             const staffNameNormalized = normalizeName(staff.name);
+             // Check if any significant part of the new query matches the staff name
+             return queryParts.some(part => staffNameNormalized.includes(part));
+        });
+        
+        if (nameFiltered.length > 0 && nameFiltered.length < filtered.length) {
+            filtered = nameFiltered;
+        }
 
-                // If department filter succeeded, return the highly filtered list
-                if (deptFiltered.length > 0) {
-                     return deptFiltered;
-                }
+        // --- FILTER PASS 2: Department/Branch Match (Strictly filters on Dept) ---
+        let newTargetDeptCanonical = null;
+        for (const [key, value] of Object.entries(DEPT_MAP)) {
+            if (queryNormalized.includes(key)) {
+                newTargetDeptCanonical = value;
+                // If it's a specific specialization, stop looking
+                if (value.startsWith('CSE (')) break;
+                // If it's a very clear, specific admin dept, stop looking
+                if (['LIBRARY', 'PE', 'CLASS_IV', 'XEROX'].includes(value)) break;
             }
         }
         
-        // --- FILTER PASS 2: Full Name/Partial Name/Designation Match (Used for the 'Full Name Only' prompt) ---
-        if (filterType === 'name') {
-            
-            let nameFiltered = filtered.filter(staff => {
-                 const staffNameNormalized = normalizeName(staff.name);
-                 const staffNameWords = getSignificantWords(staffNameNormalized);
-                 
-                 // Check for overlap: require at least one match of a significant word (length > 2)
-                 const coreOverlap = staffNameWords.some(word => queryNormalized.includes(word));
-                 
-                 // If the user input is long, ensure the overlap is significant (e.g., at least 2 words)
-                 const isLongInput = queryParts.length >= 2;
-                 const longOverlap = staffNameWords.filter(word => queryNormalized.includes(word)).length >= 2;
-
-                 return coreOverlap && (!isLongInput || longOverlap);
+        if (newTargetDeptCanonical) {
+            let deptFiltered = filtered.filter(staff => {
+                const staffBranchCanonical = getCanonicalBranch(staff.designation);
+                
+                // Match exact specialization or general CSE if needed
+                if (newTargetDeptCanonical.startsWith('CSE (')) {
+                     return staffBranchCanonical === newTargetDeptCanonical;
+                } else if (newTargetDeptCanonical === 'CSE') {
+                    // Match general CSE or any CSE specialization
+                    return staffBranchCanonical.startsWith('CSE');
+                } else {
+                     return staffBranchCanonical === newTargetDeptCanonical;
+                }
             });
-            
-            // Prioritize the best name matches only
-            if (nameFiltered.length > 0) {
-                 return nameFiltered;
+
+            // If department filter succeeded, return the highly filtered list
+            if (deptFiltered.length > 0) {
+                 return deptFiltered;
             }
         }
-
-
+        
         // Final fallback: return the best list we have
-        return []; 
+        return filtered; 
     };
 
     // --- Typo Suggestion Helper (Basic implementation) ---
@@ -1341,7 +1312,7 @@
     };
 
 
-    // --- NEW: Function to handle contextual follow-ups (Iterative Fix) ---
+    // --- NEW: Function to handle contextual follow-ups (FIXES THE LOOP) ---
     const handleStaffFollowUp = (followUpQuery) => {
         const followUpLower = followUpQuery.toLowerCase();
         
@@ -1408,32 +1379,15 @@
             const initialMatches = lastStaffQuery.matches;
             lastStaffQuery.clarificationAttempts++; // Increment attempt counter
             
-            let filteredMatches = [];
-            let filterType = "";
-
-            // Determine filter type based on current attempt number
-            if (lastStaffQuery.clarificationAttempts === 1) {
-                 // First attempt: User provides Department/Branch
-                 filterType = 'department';
-            } else if (lastStaffQuery.clarificationAttempts >= 2 && lastStaffQuery.clarificationAttempts <= 3) {
-                 // Second/Third attempt: User provides Full Name only
-                 filterType = 'name';
-            }
-
-            // --- CS AMBIGUITY CHECK ---
-            if ((followUpLower === 'cs' || followUpLower.includes('computer science')) && lastStaffQuery.clarificationAttempts === 1) {
+            // --- Check if the new query is 'CS' or a variation that requires the nested prompt ---
+            if (followUpLower === 'cs' || followUpLower === 'computer science') {
+                 // Transition to the nested state based on the specific rule
                  lastStaffQuery.state = 'awaiting_cs_specialization';
                  return `Do you mean **CSE (Computer Science and Engineering)** or **Cyber Security**?`;
             }
 
-
-            // --- Apply Filtering ---
-            if(filterType) {
-                filteredMatches = filterMatchesByNewQuery(initialMatches, followUpQuery, filterType);
-            } else {
-                // Should not happen if logic is correct, but fail-safe:
-                filteredMatches = initialMatches;
-            }
+            // --- Regular Filtering ---
+            const filteredMatches = filterMatchesByNewQuery(initialMatches, followUpQuery);
             
             if (filteredMatches.length === 1) {
                 // SUCCESS: Clarified to one match
@@ -1442,31 +1396,20 @@
                 return result;
             } else if (filteredMatches.length > 1) {
                 
-                // --- HANDLE MULTIPLE MATCHES AFTER FILTERING ---
-                
-                if (lastStaffQuery.clarificationAttempts >= 3) { 
-                     // FINAL FAIL MESSAGE (After Department, then two Name attempts)
+                // If it's the second or third fail, give the final improved message
+                if (lastStaffQuery.clarificationAttempts >= 2) { 
                      lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: null, clarificationAttempts: 0 }; 
                      return `I've tried multiple ways to narrow down the search, but I still see ${filteredMatches.length} matching contacts. **I'm resetting the search.** Please try again with the **full name AND specific branch** to find the correct contact immediately.`;
                 }
 
-                // Prepare for next clarification state
-                lastStaffQuery.matches = filteredMatches; // Keep the smaller set
+                // STILL MULTIPLE MATCHES: Re-prompt (Attempt 1)
+                lastStaffQuery.matches = filteredMatches;
                 
-                if (lastStaffQuery.clarificationAttempts === 1) {
-                    // Fail on Department filter, move to Name filter
-                    lastStaffQuery.state = 'prompting_for_clarification'; 
-                    // NEW PROMPT (Based on new rule): Ask for Full Name only
-                    return `I still found multiple staff members even after filtering by department. Please provide the **full name** only to narrow it down further. (Try 1 of 2)`;
-                } else if (lastStaffQuery.clarificationAttempts === 2) {
-                    // Fail on first Name filter, ask for second/final Name filter
-                     lastStaffQuery.state = 'prompting_for_clarification';
-                     // NEW PROMPT (Based on new rule): Final Name Attempt
-                     return `I still found multiple contacts matching that name. Please re-enter the **full name** one more time to confirm the match. (Final Try)`;
-                }
+                return `I still found multiple contacts matching that specific query. Please provide the **full name and branch** together to narrow it down further. (Attempt ${lastStaffQuery.clarificationAttempts} of 2)`;
             
             } else {
-                // ZERO MATCHES (After filtering)
+                // ZERO MATCHES (Or department typo)
+                
                 const suggestions = getSimilarBranches(followUpQuery);
                 let message = "Sorry, I couldn't find a staff member matching that specific combination of name and department in the remaining list.";
                 
@@ -1514,117 +1457,105 @@
             }
         }
         
-        // --- STEP 1A: STRICT FULL NAME MATCH (Highest Priority Rule) ---
-        const coreNameInput = extractCoreNameFromQuery(query);
-        const coreNameInputWords = getSignificantWords(normalizeName(coreNameInput));
-        
-        // Check if the input looks like a full name (2 or more non-keyword words)
-        if (coreNameInputWords.length >= 2) { 
-            let exactNameMatches = [];
-            
-            for (const staff of DEDUPLICATED_STAFF_CONTACTS) {
-                const staffNameNormalized = normalizeName(staff.name);
-                const staffDeptCanonical = getCanonicalBranch(staff.designation);
+        let preliminaryMatches = [];
 
-                // Check if the staff member's full name is perfectly contained in the query input words.
-                const allStaffNameWordsPresent = getSignificantWords(staffNameNormalized)
-                    .every(word => coreNameInputWords.includes(word));
-                
-                // Check for department match if hinted
-                const deptMatches = !targetDeptCanonical || targetDeptCanonical === staffDeptCanonical;
-
-                if (allStaffNameWordsPresent && deptMatches) { 
-                    exactNameMatches.push(staff);
-                }
-            }
-
-            // Immediate resolution if a single, exact match is found
-            if (exactNameMatches.length === 1) {
-                lastStaffQuery.singleMatchFound = exactNameMatches[0];
-                lastStaffQuery.state = 'idle';
-                return getStrictContactOutput(exactNameMatches[0]);
-            }
-            
-            // If the full name was provided but resulted in multiple matches (e.g., duplicate names),
-            // we skip the generic scoring tier and jump straight to the ambiguity prompt using these matches.
-            if (exactNameMatches.length > 1) {
-                lastStaffQuery.matches = exactNameMatches;
-                lastStaffQuery.state = 'prompting_for_clarification';
-                return `I found multiple staff members with that name. Could you please specify the department or branch?`;
-            }
-        }
-        
-        
-        // --- TIER 1: SCORING BASED MATCHES (Used for partial name search) ---
-        let matchedStaffScores = [];
-
+        // --- TIER 1: HIGH PRECISION MATCHES (Exact/Strong Name + Dept Match) ---
         for (const staff of DEDUPLICATED_STAFF_CONTACTS) {
             const staffNameNormalized = normalizeName(staff.name);
             const staffDeptCanonical = getCanonicalBranch(staff.designation);
+
+            // 1. Determine significant name components
             const staffNameWords = getSignificantWords(staffNameNormalized);
             
-            let score = 0;
+            // 2. Check if ALL significant staff name components are present in the query
+            const allNameWordsInQuery = staffNameWords.every(word => queryNormalized.includes(word));
             
-            // Score 1: Name Word Overlap (Partial name matching logic)
-            const nameMatchCount = staffNameWords.filter(word => queryNormalized.includes(word)).length;
-            score += nameMatchCount * 3; // High weight for name match
-            
-            // Score 2: Department Match
+            // 3. Check if the department matches the query's department hint (or if no hint was given)
             const deptMatches = !targetDeptCanonical || targetDeptCanonical === staffDeptCanonical;
-            if (deptMatches) {
-                score += 5; // Strong weight if department is correctly matched
-            }
 
-            // Score 3: Designation Keywords (e.g., HOD, Dean, etc.)
-            const designationKeywords = normalizeName(staff.designation).split(' ');
-            const designationMatchCount = designationKeywords.filter(word => queryNormalized.includes(word)).length;
-            score += designationMatchCount * 2; // Medium weight for designation
-
-            // Score 4: Bonus for complete name inclusion (Less important now due to Tier 1A)
-            const staffNameWordsCount = staffNameWords.length;
-            if (staffNameWordsCount > 0 && staffNameWords.every(word => queryNormalized.includes(word))) {
-                score += 10; // Major bonus for matching the full name
-            }
-
-            // Apply a strict filter to the scoring list to remove very low relevance results.
-            if (score >= 8) { // Only consider high-confidence matches (8 or more points)
-                matchedStaffScores.push({ staff: staff, score: score });
+            if (allNameWordsInQuery && deptMatches) {
+                 preliminaryMatches.push(staff);
             }
         }
         
-        // Sort by score (descending)
-        matchedStaffScores.sort((a, b) => b.score - a.score);
+        // --- TIER 1.1: IMMEDIATE RESOLUTION ---
+        const uniqueHighPrecisionMatches = Array.from(new Set(preliminaryMatches.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
+        
+        if (uniqueHighPrecisionMatches.length === 1) {
+            // Set single match for display and potential one-word follow-up (e.g., "his number")
+            lastStaffQuery.singleMatchFound = uniqueHighPrecisionMatches[0];
+            lastStaffQuery.state = 'idle';
+            return getStrictContactOutput(uniqueHighPrecisionMatches[0]);
+        }
+        
+        // --- TIER 2: BROADER SEARCH (If TIER 1 found NO unique match) ---
+        if (uniqueHighPrecisionMatches.length === 0) {
+            
+            // --- TIER 2.1: DESIGNATION ONLY MATCHES (HOD/Principal/etc.) ---
+             const titleKeywords = ['hod', 'dean', 'officer', 'principal', 'warden', 'security', 'transport', 'reception', 'xerox'];
+             const isTitleQuery = titleKeywords.some(t => queryNormalized.includes(t));
 
-        // --- TIER 1.1: RESOLUTION (Unambiguous High Score) ---
-        if (matchedStaffScores.length > 0) {
-            const topScore = matchedStaffScores[0].score;
-            // Identify all staff members who achieved the top score
-            const topMatches = matchedStaffScores.filter(s => s.score === topScore).map(s => s.staff);
-            
-            // *** CRITICAL FIX IMPLEMENTATION ***
-            // If the query was very short (1-2 significant name words) AND multiple top matches exist, 
-            // OR if the top score is just an "okay" score (e.g., 8-12 points), we MUST force ambiguity.
-            const isPartialQuery = coreNameInputWords.length < 3;
-            const isLowScoreAmbiguous = topMatches.length > 1 && topScore <= 15;
-            
-            if (topMatches.length === 1 && topScore >= 8 && !isLowScoreAmbiguous) { 
-                // Single, clear best match found (and it's not a questionable short name match)
-                lastStaffQuery.singleMatchFound = topMatches[0];
-                lastStaffQuery.state = 'idle';
-                return getStrictContactOutput(topMatches[0]);
+             if (isTitleQuery) { 
+                 const designationMatches = DEDUPLICATED_STAFF_CONTACTS.filter(staff => 
+                     normalizeName(staff.designation).includes(queryNormalized) && 
+                     (!targetDeptCanonical || getCanonicalBranch(staff.designation) === targetDeptCanonical)
+                 );
+                 
+                 if (designationMatches.length === 1) {
+                     lastStaffQuery.singleMatchFound = designationMatches[0];
+                     lastStaffQuery.state = 'idle';
+                     return getStrictContactOutput(designationMatches[0]);
+                 }
+                 if (designationMatches.length > 1) {
+                    lastStaffQuery.matches = designationMatches;
+                    lastStaffQuery.state = 'prompting_for_clarification';
+                    return `I found multiple staff members with that name. Could you please specify the department or branch?`;
+                 }
+             }
+        }
+        
+        // --- TIER 3: FINAL MULTIPLE MATCH / FALLBACK LOGIC ---
+        let finalMatches = uniqueHighPrecisionMatches;
+
+        if (finalMatches.length === 0) {
+            // Re-run TIER 1 but with looser matching (partial name match) if we found absolutely nothing so far
+             for (const staff of DEDUPLICATED_STAFF_CONTACTS) {
+                const staffNameNormalized = normalizeName(staff.name);
+                const isNamePartialMatch = queryParts.some(part => staffNameNormalized.includes(part));
+                if (isNamePartialMatch) {
+                    preliminaryMatches.push(staff);
+                }
             }
-            
-            // --- TIER 3: MULTIPLE MATCHES (AMBIGUITY) ---
-            if (topMatches.length > 1 || isLowScoreAmbiguous) { // If there's ambiguity or the score is too low/risky
-                // Set context for follow-up, using the top-scoring ambiguous staff members
-                lastStaffQuery.matches = topMatches;
-                lastStaffQuery.state = 'prompting_for_clarification';
-                
-                // Return the mandatory ambiguity prompt
-                return `I found multiple staff members with that name. Could you please specify the department or branch?`;
+
+            // Apply department filter to the partial matches if a department was hinted
+            if (preliminaryMatches.length > 0 && targetDeptCanonical) {
+                let deptFiltered = preliminaryMatches.filter(staff => getCanonicalBranch(staff.designation) === targetDeptCanonical);
+                if (deptFiltered.length > 0) {
+                     finalMatches = Array.from(new Set(deptFiltered.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
+                } else {
+                    finalMatches = Array.from(new Set(preliminaryMatches.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
+                }
+            } else {
+                finalMatches = Array.from(new Set(preliminaryMatches.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
             }
         }
 
+        // 3. Single Match after T3 filter
+        if (finalMatches.length === 1) {
+            lastStaffQuery.singleMatchFound = finalMatches[0];
+            lastStaffQuery.state = 'idle';
+            return getStrictContactOutput(finalMatches[0]);
+        }
+        
+        // 4. Multiple Matches Logic
+        if (finalMatches.length > 1) {
+            // Set context for follow-up
+            lastStaffQuery.matches = finalMatches;
+            lastStaffQuery.state = 'prompting_for_clarification';
+            
+            // Return the mandatory ambiguity prompt
+            return `I found multiple staff members with that name. Could you please specify the department or branch?`;
+        }
 
         // 5. Final Fallback: Contact not found
         lastStaffQuery.state = 'idle';
@@ -1659,22 +1590,22 @@
         const academicCalendarLink = 'https://pragati.ac.in/examinations/academic-calendars/';
         
         const intros = [
-            "You got it! Time to dive into the academics. 🤓",
+            "You got it! Time to dive into the academics. ðŸ¤“",
             "Sure thing! Here are the official links for checking the coursework.",
-            "Absolutely! Get ready to explore your academic journey. 🚀",
+            "Absolutely! Get ready to explore your academic journey. ðŸš€",
         ];
 
         return `
             <div class="info-card">
-                <p class="font-semibold text-lg text-[#006494]">📚 Academic Documents & Syllabus</p>
+                <p class="font-semibold text-lg text-[#006494]">ðŸ“š Academic Documents & Syllabus</p>
                 <p class="mt-2 text-sm">${intros[Math.floor(Math.random() * intros.length)]}</p>
                 <p class="mt-2 text-sm">You can find the official **Course Structure, Syllabus, and Academic Regulations** directly on the college website using the link below:</p>
                 <ul class="link-list flex flex-col mt-3">
-                    <li><a href="${syllabusLink}" target="_blank">🔗 Course Structure & Syllabus Page</a></li>
-                    <li><a href="${academicCalendarLink}" target="_blank">🔗 Latest Academic Calendars Page</a></li>
+                    <li><a href="${syllabusLink}" target="_blank">ðŸ”— Course Structure & Syllabus Page</a></li>
+                    <li><a href="${academicCalendarLink}" target="_blank">ðŸ”— Latest Academic Calendars Page</a></li>
                 </ul>
                 <p class="mt-4 text-sm text-gray-600">
-                    👉 **Click the link, then select the specific Regulation (R23/R20) and Year (I, II, III, IV) you need to download your PDF.**
+                    ðŸ‘‰ **Click the link, then select the specific Regulation (R23/R20) and Year (I, II, III, IV) you need to download your PDF.**
                 </p>
             </div>
         `;
@@ -1744,9 +1675,9 @@
                 const missingPart = yearNum ? 'semester (I or II)' : 'year (I, II, III, or IV)';
                 
                 const promptIntros = [
-                    "Whoa, hold up! We need to narrow that down. 😅",
+                    "Whoa, hold up! We need to narrow that down. ðŸ˜…",
                     "Almost there! I need one more detail.",
-                    "Quick check: Which one are you hunting for? 🧐",
+                    "Quick check: Which one are you hunting for? ðŸ§",
                 ];
                 const promptIntro = promptIntros[Math.floor(Math.random() * promptIntros.length)]; 
                 
@@ -1754,14 +1685,14 @@
                     success: true, 
                     html: `
                         <div class="info-card">
-                            <p class="font-semibold text-lg text-[#006494]">🔍 Need More Detail!</p>
+                            <p class="font-semibold text-lg text-[#006494]">ðŸ” Need More Detail!</p>
                             <p class="mt-2 text-sm">
                                 ${promptIntro} I see you're looking for B.Tech papers, but I'm missing the **${missingPart}**.<br>
                                 Could you please specify the full set you need? For example: **I B.Tech. I Sem** or **III B.Tech. II Sem**.
                             </p>
                             <div class="mt-4 pt-3 border-t border-gray-200">
                                 <p class="text-xs font-semibold text-gray-700">Official Download Page:</p>
-                                <a href="${officialPqpLink}" target="_blank" class="text-xs text-blue-500 underline hover:text-blue-700 block mt-1">🔗 Pragati College Previous Question Papers (Official Site)</a>
+                                <a href="${officialPqpLink}" target="_blank" class="text-xs text-blue-500 underline hover:text-blue-700 block mt-1">ðŸ”— Pragati College Previous Question Papers (Official Site)</a>
                             </div>
                         </div>
                     `,
@@ -1772,9 +1703,9 @@
 
         // --- Generate Final Response (In-Chat List) ---
         const successIntros = [
-            "Found 'em! Hope these save you some study time. 😉",
-            "Here are the papers you were hunting for! Good luck! 🤩",
-            "Files located! Time to crush those exams. 🚀",
+            "Found 'em! Hope these save you some study time. ðŸ˜‰",
+            "Here are the papers you were hunting for! Good luck! ðŸ¤©",
+            "Files located! Time to crush those exams. ðŸš€",
         ];
         const successIntro = successIntros[Math.floor(Math.random() * successIntros.length)]; 
 
@@ -1789,19 +1720,19 @@
                 if (targetKey === 'BTECH-I-I') {
                     listItems = data.files.map(file => 
                         // All links point to the official site to ensure functionality
-                        `<li><a href="${officialPqpLink}" target="_blank">📜 ${file} – [Official Site Download Link]</a></li>`
+                        `<li><a href="${officialPqpLink}" target="_blank">ðŸ“œ ${file} â€“ [Official Site Download Link]</a></li>`
                     ).join('');
-                    note = `💡 **Guaranteed Downloads:** Click any link above. They all take you directly to the **Official College Portal** where you can select and download the papers! 🎓`;
+                    note = `ðŸ’¡ **Guaranteed Downloads:** Click any link above. They all take you directly to the **Official College Portal** where you can select and download the papers! ðŸŽ“`;
 
                 } else {
                     // For all other years/semesters, show the single set link
-                    listItems = `<li><a href="${officialPqpLink}" target="_blank">🔗 ${data.label} – [Official Site Download Link]</a></li>`;
-                    note = `💡 **Guaranteed Downloads:** Click the link above! It takes you to the **Official College Portal** where you can download the complete ${data.label} paper set. 🎓`;
+                    listItems = `<li><a href="${officialPqpLink}" target="_blank">ðŸ”— ${data.label} â€“ [Official Site Download Link]</a></li>`;
+                    note = `ðŸ’¡ **Guaranteed Downloads:** Click the link above! It takes you to the **Official College Portal** where you can download the complete ${data.label} paper set. ðŸŽ“`;
                 }
 
                 const html = `
                     <div class="info-card">
-                        <p class="font-semibold text-lg text-[#006494]">📂 ${title}</p>
+                        <p class="font-semibold text-lg text-[#006494]">ðŸ“‚ ${title}</p>
                         <p class="mt-2 text-sm">${successIntro}</p>
                         <ul class="link-list flex flex-col mt-3">
                             ${listItems}
@@ -1819,7 +1750,7 @@
         const fallbackIntros = [
             "We can find this! Since you didn't specify the exact year/sem, here are all the options:",
             "No problem! To give you the best set, choose from these categories:",
-            "Got it—you need exam files! Which bundle should I grab for you? 🧐",
+            "Got itâ€”you need exam files! Which bundle should I grab for you? ðŸ§",
         ];
         const fallbackIntro = fallbackIntros[Math.floor(Math.random() * fallbackIntros.length)];
         
@@ -1827,21 +1758,21 @@
             const data = DOWNLOAD_MAP[key];
             // For general list, create a link that asks the user to refine the query
             const clickQuery = data.label.replace(/\./g, '');
-            return `<li><a href="javascript:void(0);" onclick="document.getElementById('user-input').value='${clickQuery} papers'; sendMessage();">📘 ${data.label} – [Click to Select]</a></li>`;
+            return `<li><a href="javascript:void(0);" onclick="document.getElementById('user-input').value='${clickQuery} papers'; sendMessage();">ðŸ“˜ ${data.label} â€“ [Click to Select]</a></li>`;
         }).join('');
         
         const fallbackHtml = `
             <div class="info-card">
-            <p class="font-semibold text-lg text-[#006494]">📂 Available B.Tech & M.Tech Question Paper Sets</p>
+            <p class="font-semibold text-lg text-[#006494]">ðŸ“‚ Available B.Tech & M.Tech Question Paper Sets</p>
             <p class="mt-2 text-sm">${fallbackIntro}</p>
             <ul class="link-list flex flex-col mt-3">
                 ${listItems}
             </ul>
             <div class="mt-4 pt-3 border-t border-gray-200">
                 <p class="text-sm text-gray-600">
-                    💡 **Tip:** Click on a selection to submit the query. Or, use the official site for guaranteed downloads.
+                    ðŸ’¡ **Tip:** Click on a selection to submit the query. Or, use the official site for guaranteed downloads.
                 </p>
-                <a href="${officialPqpLink}" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block mt-1">🔗 **Pragati College Previous Question Papers (Official Site)**</a>
+                <a href="${officialPqpLink}" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block mt-1">ðŸ”— **Pragati College Previous Question Papers (Official Site)**</a>
             </div>
             </div>
         `;
@@ -1855,15 +1786,15 @@
         let title, content;
         
         const intros = [
-            "On it! Gotta keep those energy levels up. 😉",
+            "On it! Gotta keep those energy levels up. ðŸ˜‰",
             "Sure thing! Let's check the dining schedule.",
-            "Absolutely! Here's the scoop on when and where to eat. 🍕",
+            "Absolutely! Here's the scoop on when and where to eat. ðŸ•",
         ];
         const intro = intros[Math.floor(Math.random() * intros.length)];
         
         if (queryLower.includes('hostel') || queryLower.includes('hostler') || queryLower.includes('dinner') || queryLower.includes('breakfast')) {
             // Hosteler timings
-            title = 'Hostel Food Timings 🍽️';
+            title = 'Hostel Food Timings ðŸ½ï¸';
             content = `
                 <p class="mt-2 text-sm">${intro}</p>
                 <p class="mt-2 text-sm">Here are the meal timings for **Hostelers**:</p>
@@ -1875,7 +1806,7 @@
             `;
         } else if (queryLower.includes('canteen') || queryLower.includes('day scholar') || queryLower.includes('lunch')) {
             // Day Scholar timings (Canteen/Lunch)
-            title = 'Canteen & Lunch Timings 🥪';
+            title = 'Canteen & Lunch Timings ðŸ¥ª';
             content = `
                 <p class="mt-2 text-sm">${intro}</p>
                 <p class="mt-2 text-sm">Here are the timings for the **Canteen** and **Day Scholars**:</p>
@@ -1909,27 +1840,27 @@
         const officialLink = 'https://pragati.ac.in/placements/';
         
         const intros = [
-            "These numbers are looking sharp! Check out the highlights: 🚀",
-            "Here's the latest placement snapshot! Keep grinding for these roles. ✨",
-            "Got the placement stats! Take a look at the key data points: 💰",
+            "These numbers are looking sharp! Check out the highlights: ðŸš€",
+            "Here's the latest placement snapshot! Keep grinding for these roles. âœ¨",
+            "Got the placement stats! Take a look at the key data points: ðŸ’°",
         ];
         const intro = intros[Math.floor(Math.random() * intros.length)];
 
 
         return `
             <div class="info-card">
-                <p class="font-semibold text-lg text-[#006494]">💰 Placement Highlights (${latestYear})</p>
+                <p class="font-semibold text-lg text-[#006494]">ðŸ’° Placement Highlights (${latestYear})</p>
                 <p class="mt-2 text-sm">${intro}</p>
                 <ul class="mt-2 text-sm space-y-1 pl-4">
-                    <li>✨ **Highest Package:** **${latestHighest} LPA**</li>
-                    <li>📈 **Average Package:** **${latestAverage} LPA**</li>
-                    <li>🎓 **Total Placements (as of May 31):** **1625** offers.</li>
+                    <li>âœ¨ **Highest Package:** **${latestHighest} LPA**</li>
+                    <li>ðŸ“ˆ **Average Package:** **${latestAverage} LPA**</li>
+                    <li>ðŸŽ“ **Total Placements (as of May 31):** **1625** offers.</li>
                 </ul>
                 <div class="mt-4 pt-3 border-t border-gray-200">
                     <p class="text-sm text-gray-600">
                         Want to see the trend over time? Just ask for the "**Placement Graph**"!
                     </p>
-                    <a href="${officialLink}" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block mt-1">🔗 **View Official Placements Page**</a>
+                    <a href="${officialLink}" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block mt-1">ðŸ”— **View Official Placements Page**</a>
                 </div>
             </div>
         `;
@@ -1945,9 +1876,9 @@
              placementChart.destroy();
         } else {
             const graphIntros = [
-                "Here comes the visual data! Watch that trend line climb! 📈",
-                "I'd be happy to show you the trend! Get ready for the graph view. 📊",
-                "Time for some data visualization! This shows our continuous growth. 🤩",
+                "Here comes the visual data! Watch that trend line climb! ðŸ“ˆ",
+                "I'd be happy to show you the trend! Get ready for the graph view. ðŸ“Š",
+                "Time for some data visualization! This shows our continuous growth. ðŸ¤©",
             ];
             const intro = graphIntros[Math.floor(Math.random() * graphIntros.length)];
             addMessage(`${intro}`, false);
@@ -1983,9 +1914,9 @@
 
         summaryDiv.innerHTML = `
             <h4 class="font-bold text-lg mb-2 text-gray-800">Key Trends (2022 - 2025):</h4>
-            <p>✅ <strong>Highest Package:</strong> The peak package has shown strong growth, climbing from <strong>${firstHighest} LPA in ${PLACEMENT_DATA.years[0]}</strong> to a current high of <strong>${latestHighest} LPA</strong> (a massive <strong>${highestGrowth}% growth</strong>).</p>
-            <p>📈 <strong>Average Package Trend:</strong> The average package has maintained a steady upward trend, reaching <strong>${latestAverage} LPA</strong> in the ongoing ${PLACEMENT_DATA.years[PLACEMENT_DATA.years.length - 1]} batch. This is an increase of <strong>${averageGrowth}%</strong> over the previous year!</p>
-            <p>🚀 <strong>Action:</strong> These numbers indicate a strong focus on high-value placements, especially in specialized IT and CSE roles. Make sure to attend the <strong>Career Development Cell</strong> workshops! 🎓</p>
+            <p>âœ… <strong>Highest Package:</strong> The peak package has shown strong growth, climbing from <strong>${firstHighest} LPA in ${PLACEMENT_DATA.years[0]}</strong> to a current high of <strong>${latestHighest} LPA</strong> (a massive <strong>${highestGrowth}% growth</strong>).</p>
+            <p>ðŸ“ˆ <strong>Average Package Trend:</strong> The average package has maintained a steady upward trend, reaching <strong>${latestAverage} LPA</strong> in the ongoing ${PLACEMENT_DATA.years[PLACEMENT_DATA.years.length - 1]} batch. This is an increase of <strong>${averageGrowth}%</strong> over the previous year!</p>
+            <p>ðŸš€ <strong>Action:</strong> These numbers indicate a strong focus on high-value placements, especially in specialized IT and CSE roles. Make sure to attend the <strong>Career Development Cell</strong> workshops! ðŸŽ“</p>
         `;
         
         chartWrapper.appendChild(summaryDiv);
@@ -2064,7 +1995,7 @@
 
     const startVoiceInput = () => {
         if (!('webkitSpeechRecognition' in window)) {
-            addMessage("❌ **Error:** Speech recognition is not supported in this browser. Please use Chrome or a Chromium-based browser.", false);
+            addMessage("âŒ **Error:** Speech recognition is not supported in this browser. Please use Chrome or a Chromium-based browser.", false);
             return;
         }
 
@@ -2084,7 +2015,7 @@
             voiceButton.classList.add('mic-active');
             voiceButton.disabled = false; // Enable the button to allow stopping
             sendButton.disabled = true;
-            userInput.placeholder = "👂 Listening... Speak now!";
+            userInput.placeholder = "ðŸ‘‚ Listening... Speak now!";
         };
 
         recognition.onresult = (event) => {
@@ -2124,7 +2055,7 @@
         // FIX: Ensure both views are defined before attempting to manipulate them
         if (!loginView || !chatView) {
              // Do not log a CONSOLE_ERROR here, as it might happen during initial load before setupDOMReferences runs fully
-             return;;
+             return;
         }
         
         if (viewId === 'login') {
@@ -2139,7 +2070,7 @@
     const initializeChat = () => {
         if (!chatInitialized) {
             // Add the initial welcome message only once
-            addMessage("Hello! I'm the **Pragati Engineering College Insight Bot**. I am an official assistant ready to help you with questions about admissions, courses (B.Tech/M.Tech), campus life, and more, specific to our Surampalem campus. How can I assist you? ✨", false);
+            addMessage("Hello! I'm the **Pragati Engineering College Insight Bot**. I am an official assistant ready to help you with questions about admissions, courses (B.Tech/M.Tech), campus life, and more, specific to our Surampalem campus. How can I assist you? âœ¨", false);
             
             // Show initial suggestions
             showSuggestions([
@@ -2357,7 +2288,7 @@
                 
                 hideLoading();
                 
-                if (localContactResponse.startsWith('✅ Name:')) {
+                if (localContactResponse.startsWith('âœ… Name:')) {
                     // Single clear match (using the new strict format string)
                     addMessage(localContactResponse, false);
                     
@@ -2395,7 +2326,7 @@
             if (botResponse) {
                 if (botResponse.startsWith("I'd be happy to show you the trend!")) {
                     hideLoading();
-                    addMessage(botResponse.replace("I'd be happy to show you the trend!", "I'd be happy to show you the trend! 🚀"), false);
+                    addMessage(botResponse.replace("I'd be happy to show you the trend!", "I'd be happy to show you the trend! ðŸš€"), false);
                     showPlacementGraph();
                     return; 
                 }
@@ -2408,7 +2339,7 @@
 
             } else {
                 hideLoading();
-                addMessage("Oops! I hit a snag while looking that up. Please try again or rephrase your question. 🤔", false);
+                addMessage("Oops! I hit a snag while looking that up. Please try again or rephrase your question. ðŸ¤”", false);
                 showSuggestions(["What courses are offered?", "Contact General Office", "Check Placement Trend"]);
             }
 
