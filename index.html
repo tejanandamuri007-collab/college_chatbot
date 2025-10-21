@@ -16,15 +16,15 @@
             --radiant-blue-end: #006494; /* Deep Ocean Blue for Gradient End */
             --bot-bubble: #e0fff8; /* Soft Mint/Light Teal - NEW COLOR */
             --user-bubble: var(--primary-color);
-            --text-color-light-default: #374151; /* Dark Gray for high contrast in Light Mode */
-            --text-color-dark-default: #d1d5db; /* Light Gray for high contrast in Dark Mode */
+            --text-color-light-default: #1f2937; /* Dark Gray for high contrast in Light Mode (Changed from #374151) */
+            --text-color-dark-default: #e5e7eb; /* Light Gray for high contrast in Dark Mode (Changed from #d1d5db) */
         }
         
         /* --- DARK MODE VARIABLES AND BASE STYLES --- */
         .dark {
-            --background-color: #121212; /* Deep Dark Background */
+            --background-color: #0d0d0d; /* Even Deeper Dark Background */
             --surface-color: #1f1f1f; /* Darker Surface */
-            --bot-bubble: #333333; /* Darker grey for bot bubble */
+            --bot-bubble: #282828; /* Darker grey for bot bubble */
             --text-color: var(--text-color-dark-default);
             --link-color: #00D2D3;
         }
@@ -36,31 +36,34 @@
         }
 
         .dark body::before {
-            background-color: rgba(0, 0, 0, 0.7);
+            background-color: rgba(0, 0, 0, 0.8); /* Stronger overlay */
         }
 
         .dark body::after {
-            color: rgba(0, 168, 135, 0.08); /* Fainter watermark */
+            color: rgba(0, 168, 135, 0.06); /* Even Fainter watermark */
         }
 
         .dark .card-container {
-            background: linear-gradient(145deg, var(--radiant-blue-end) 0%, var(--radiant-blue-start) 100%); /* Reverse gradient for visual distinction */
-            border-color: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 40px rgba(0, 201, 167, 0.3); /* Softer glow */
+            background: linear-gradient(145deg, #004d73 0%, #00a09a 100%); /* Adjusted dark gradient */
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 30px rgba(0, 201, 167, 0.4); /* Softer glow */
         }
 
         .dark #login-card {
-            background-color: rgba(31, 31, 31, 0.95);
-            border-color: rgba(255, 255, 255, 0.15);
-            box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.5);
+            background-color: rgba(31, 31, 31, 0.98); /* Near opaque */
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.7);
         }
 
         .dark h2, .dark p, .dark .feature-item p, .dark .chat-header h1, .dark .chat-header p, .dark .graph-summary h4, .dark .graph-summary p {
             color: var(--text-color); /* Light text color for dark mode */
         }
         .dark .feature-item {
-            background-color: rgba(40, 40, 40, 0.7);
+            background-color: rgba(40, 40, 40, 0.8);
             border-color: rgba(255, 255, 255, 0.1);
+        }
+        .dark #chat-history { /* Brighter chat history in dark mode for better separation */
+            background-color: #1a1a1a;
         }
         /* --- END DARK MODE BASE STYLES --- */
 
@@ -199,11 +202,11 @@
             flex-grow: 1;
             overflow-y: auto;
             padding: 1rem;
-            background-color: white; 
+            background-color: #f7fcfc; /* Very light mint background for light mode */
             scroll-behavior: smooth;
         }
         .dark #chat-history {
-            background-color: var(--surface-color);
+            background-color: #1a1a1a; /* Dark gray for dark mode */
         }
 
         /* Input Area update - kept white for contrast */
@@ -283,14 +286,14 @@
         }
         .bot-message {
             background-color: var(--bot-bubble);
-            color: #111827; /* Darker Gray text for high contrast */
+            color: var(--text-color-light-default); /* Darker Gray text for high contrast */
             margin-right: auto;
             border-bottom-left-radius: 0.25rem;
             white-space: pre-wrap;
         }
         .dark .bot-message {
             background-color: var(--bot-bubble); /* Darker bot bubble */
-            color: var(--text-color); /* Light text in dark mode */
+            color: var(--text-color-dark-default); /* Light text in dark mode */
         }
 
         /* Style for anchor tags in the bot's response to make them stand out */
@@ -430,16 +433,7 @@
         /* ------------------------------------- */
 
         /* --- NEW LOADING ANIMATION (Branded Pulsing Ring) --- */
-        .loading-logo-wrapper {
-            position: relative;
-            width: 2.5rem; /* 40px */
-            height: 2.5rem; /* 40px */
-            /* This div itself acts as the bubble, so zero margin/padding inherited */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        /* The container for the logo, sized precisely to sit alone */
+        /* The container for the entire loading logo block (Acts as the bubble frame) */
         #loading-indicator-container {
              background-color: var(--bot-bubble);
              border-radius: 1.25rem;
@@ -452,6 +446,16 @@
              box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1);
         }
 
+        /* Wrapper for the logo and the ring */
+        .loading-logo-wrapper {
+            position: relative;
+            width: 2.5rem; /* 40px */
+            height: 2.5rem; /* 40px */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         .loading-logo {
             width: 100%;
             height: 100%;
@@ -460,6 +464,16 @@
             z-index: 2;
             position: relative;
         }
+        
+        /* The actual rotating ring element */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes pulse-ring {
+            from { opacity: 0.7; transform: scale(1.0); }
+            to { opacity: 1.0; transform: scale(1.05); } 
+        }
+
         .loading-ring {
             position: absolute;
             top: -2px;
@@ -467,21 +481,16 @@
             right: -2px;
             bottom: -2px;
             border-radius: 50%;
-            border: 3px solid transparent; /* Slightly thicker ring */
-            border-top-color: var(--primary-color);
-            border-right-color: var(--primary-color);
+            /* FIX: Set all borders to transparent first, then overwrite only top for clean spin */
+            border: 3px solid transparent; 
+            border-top-color: var(--primary-color); /* Isolate color to top section */
             z-index: 1;
-            animation: spin 1s infinite linear, pulse-ring 1s infinite alternate;
+            /* Apply the spin animation */
+            animation: spin 1s infinite linear; 
+            /* Optional: Add a subtle color pulse for engagement without disrupting the spin */
+            box-shadow: 0 0 10px rgba(0, 201, 167, 0.5); 
         }
         
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        @keyframes pulse-ring {
-            from { opacity: 0.7; transform: scale(1.0); }
-            to { opacity: 1.0; transform: scale(1.05); } /* Reduced pulse size */
-        }
-
         /* Remove the generic bubble styling for the specific loading message */
         #loading-indicator .bot-message {
             padding: 0 !important; /* Zero padding on inner bubble */
@@ -722,6 +731,11 @@
         singleMatchFound: null, // Store single match result for simple follow-up (e.g., "his number")
         clarificationAttempts: 0 // Track clarification attempts (Max 2 after initial ambiguity)
     };
+    // --- NEW: Conversational Flow State (For linking question/answer) ---
+    let conversationFlow = {
+        state: 'idle', // 'idle', 'awaiting_confirmation', 'awaiting_redirect'
+        targetQuery: null, // The query to execute if confirmed (e.g., "Dean CDC contact")
+    };
     // --- END CONVERSATIONAL STATE MANAGEMENT ---
 
     // --- GLOBAL VARIABLES & UTILITIES (FIXES ReferenceError) ---
@@ -791,13 +805,13 @@
     const getGeneralRoleOutput = (staffName, designation) => {
         // Output format: Name (Designation)
         const intros = [
-            "You got it! The current person holding that position is:",
-            "Great question! I've confirmed the name for that role:",
-            "Here is the name of the official currently in that position:",
+            "Awesome! I've verified the name you need:",
+            "Confirmed! The current official in that position is:",
+            "Great question! Here is the name of the designated person:",
         ];
         const intro = intros[Math.floor(Math.random() * intros.length)];
         
-        return `${intro} The ${designation} is **${staffName}**.`;
+        return `${intro} The ${designation} is **${staffName}**. Is there anything else I can look up for you? 🧐`;
     };
 
 
@@ -1319,7 +1333,8 @@
     // --- VERIFIED ROLE NAMES (UPDATED based on search results) ---
     // This map ensures high-priority roles are always accurately named and ONLY used for General Role inquiries.
     const VERIFIED_ROLE_NAMES = {
-        'principal': { name: "Dr. G. Naresh", designation: "Principal" }, // Updated based on search result (Snippet 1.5, 3.4)
+        'principal': { name: "Dr. G. Naresh", designation: "Principal" }, // Current Principal
+        'former principal': { name: "Dr. K. Satyanarayana", designation: "Former Principal / Director (Academics)" }, // Former Principal for history check
         'hod cse': { name: "Dr. D. V Manjula", designation: "HOD, CSE" },
         'dean cdc': { name: "Dr. M. Radhika Mani", designation: "Dean - CDC" },
         'hod mech': { name: "Dr Avinash G", designation: "HOD, MECH" },
@@ -1688,6 +1703,29 @@
         return null; // Not a contextual follow-up or confirmation
     };
 
+    // --- NEW: Function to handle conversational bridge (yes/no/redirect) ---
+    const handleConversationalBridge = (queryLowerNormalized) => {
+        
+        if (conversationFlow.state === 'awaiting_redirect') {
+            const isConfirmation = queryLowerNormalized.includes('yes') || queryLowerNormalized.includes('yup') || queryLowerNormalized.includes('sure') || queryLowerNormalized.includes('contact');
+            const isDenial = queryLowerNormalized.includes('no') || queryLowerNormalized.includes('nope') || queryLowerNormalized.includes('next');
+            
+            const targetQuery = conversationFlow.targetQuery;
+            conversationFlow = { state: 'idle', targetQuery: null }; // Reset context immediately
+
+            if (isConfirmation && targetQuery) {
+                // Execute the stored query (e.g., 'Contact Dean CDC')
+                return targetQuery;
+            } else if (isDenial) {
+                return "Got it! No problem at all. What other information can I look up for you? ✨";
+            }
+            // If neither confirmed nor denied, just let the main flow handle the input as a new query
+            return null;
+        }
+
+        return null;
+    };
+
 
     // --- State-aware contact search function ---
     const findStaffContactAndManageContext = (query) => {
@@ -1719,8 +1757,23 @@
         // Handles queries like "who is the principal" or "hod number"
         const roleKeywords = ['principal', 'hod', 'dean', 'warden', 'discipline officer', 'reception', 'xerox'];
         let matchedRole = null;
+        let matchedRoleKey = null; // Store the key (e.g., 'principal', 'former principal')
+
+        // CRITICAL: Check for 'former' / 'current' context
+        const isHistoricalQuery = queryLower.includes('former') || queryLower.includes('previous') || queryLower.includes('past');
+        
         for (const role of roleKeywords) {
+            // Check for explicit 'former' role query first
+            if (isHistoricalQuery && role === 'principal') {
+                 if (queryLower.includes(role) || queryLower.includes('former principal')) {
+                     matchedRoleKey = 'former principal';
+                     matchedRole = 'principal';
+                     break;
+                 }
+            }
+            // Check for generic role query
             if (queryLower.includes(role)) {
+                matchedRoleKey = role;
                 matchedRole = role;
                 break;
             }
@@ -1729,38 +1782,38 @@
         // Determine if the user asked for a NUMBER/CONTACT (strict) or just WHO (general)
         const isContactRequest = queryLower.includes('number') || queryLower.includes('contact') || queryLower.includes('phone');
 
-        if (matchedRole) {
-             let roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes(matchedRole));
-             if (roleCandidate) {
-                
-                if (isContactRequest) {
-                    lastStaffQuery.singleMatchFound = roleCandidate;
-                    return getStrictContactOutput(roleCandidate);
-                } else {
-                    // General query (Who is X?) -> Defer to local VERIFIED_ROLE_NAMES map (FIXED)
-                    // Match the key (e.g., 'hod cse') for high precision.
-                    const exactRoleKey = roleKeywords.find(r => queryLower.includes(r)); 
-                    const candidate = VERIFIED_ROLE_NAMES[exactRoleKey] || null;
-
-                    // *** CRITICAL CHANGE HERE: ONLY RETURN GENERAL ROLE OUTPUT IF IT'S EXPLICITLY ASKED FOR ***
-                    // The main sender logic now handles whether this section should even run based on isGeneralRoleInquiry
-                    if(candidate) {
-                        return getGeneralRoleOutput(candidate.name, candidate.designation);
-                    }
-                    
-                    // Final fallback for general query is Gemini
-                    return null;
-                }
-             }
-             // If a role was matched (e.g., 'principal') but no candidate found in STAFF_CONTACTS, 
-             // AND it's a general 'Who is' query, try VERIFIED_ROLE_NAMES then defer to Gemini.
+        if (matchedRoleKey) {
+             // 1. Handle General Role Inquiry (Who is X?) -> CRITICAL CHECK HERE
              if (!isContactRequest) {
-                 const exactRoleKey = roleKeywords.find(r => queryLower.includes(r)); 
-                 const candidate = VERIFIED_ROLE_NAMES[exactRoleKey] || null;
+                 // Tighter check for key roles like Dean CDC
+                 if (queryLower.includes('dean cdc') || (queryLower.includes('dean') && (queryLower.includes('cdc') || queryLower.includes('career')))) {
+                     matchedRoleKey = 'dean cdc';
+                 } else if (queryLower.includes('hod cse') || (queryLower.includes('hod') && queryLower.includes('cse'))) {
+                     matchedRoleKey = 'hod cse';
+                 }
+                 
+                 const candidate = VERIFIED_ROLE_NAMES[matchedRoleKey] || null;
                  if(candidate) {
                      return getGeneralRoleOutput(candidate.name, candidate.designation);
                  }
-                 return null;
+                 // If not in verified list (e.g. 'director'), defer to Gemini below
+             }
+             
+             // 2. Handle Contact Request (X number?) - Use STAFF_CONTACTS
+             if (isContactRequest) {
+                // For a contact query, we only use the CURRENT role holder unless explicitly former contact is stored
+                const contactRoleKey = (matchedRoleKey === 'former principal') ? 'principal' : matchedRoleKey;
+                let roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes(contactRoleKey));
+
+                // If they asked for the contact of the former Principal, we should still return the actual former principal data (if available in staff contacts)
+                if (matchedRoleKey === 'former principal') {
+                     roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.name.toLowerCase().includes('k. satyanarayana'));
+                }
+
+                if (roleCandidate) {
+                    lastStaffQuery.singleMatchFound = roleCandidate;
+                    return getStrictContactOutput(roleCandidate);
+                }
              }
         }
         // --- END TIER 0 ---
@@ -1867,23 +1920,33 @@
         const syllabusLink = 'https://pragati.ac.in/examination/course-structure-syllabus/';
         const academicCalendarLink = 'https://pragati.ac.in/examinations/academic-calendars/';
         
+        const contentHTML = `
+            <p class="text-sm contact-designation-text">Find the complete curriculum and academic schedule here:</p>
+            <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
+                <li class="contact-designation-text">**Course Structure:** Select your **Regulation** (R23/R20) and **Year** (I-IV) to download the full syllabus PDF.</li>
+                <li class="contact-designation-text">**Key Dates:** All **Mid-Exam** and **End-Exam** dates are available in the Academic Calendar.</li>
+            </ul>
+            <div class="info-divider">
+                <ul class="link-list flex flex-col">
+                    <li><a href="${syllabusLink}" target="_blank">🔗 Official Course Structure & Syllabus</a></li>
+                    <li><a href="${academicCalendarLink}" target="_blank">🔗 Latest Academic Calendars</a></li>
+                </ul>
+            </div>
+            <p class="mt-3 text-sm font-bold accent-highlight">
+                Need the **Exam Section** number for quick clarifications? 🤔
+            </p>
+        `;
+        
+        // Set conversational redirect state
+        conversationFlow = {
+            state: 'awaiting_redirect',
+            targetQuery: 'Contact the Exam Section number',
+        };
+        
         return `
             <div class="info-card">
                 <p class="font-semibold text-lg text-[#006494] mb-1">📚 Academic Docs & Syllabus</p>
-                <p class="text-sm contact-designation-text">Find the complete curriculum and academic schedule here:</p>
-                <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
-                    <li class="contact-designation-text">**Course Structure:** Select your **Regulation** (R23/R20) and **Year** (I-IV) to download the full syllabus PDF.</li>
-                    <li class="contact-designation-text">**Key Dates:** All **Mid-Exam** and **End-Exam** dates are available in the Academic Calendar.</li>
-                </ul>
-                <div class="info-divider">
-                    <ul class="link-list flex flex-col">
-                        <li><a href="${syllabusLink}" target="_blank">🔗 Official Course Structure & Syllabus</a></li>
-                        <li><a href="${academicCalendarLink}" target="_blank">🔗 Latest Academic Calendars</a></li>
-                    </ul>
-                </div>
-                <p class="mt-3 text-sm font-bold accent-highlight">
-                    Need the **Exam Section** number for quick clarifications? 🤔
-                </p>
+                ${contentHTML}
             </div>
         `;
     };
@@ -1944,9 +2007,9 @@
                     success: true, 
                     html: `
                         <div class="info-card">
-                            <p class="font-semibold text-lg text-[#006494]">🔍 Need More Detail!</p>
+                            <p class="font-semibold text-lg text-[#006494]">🔍 Need More Detail! 🧐</p>
                             <p class="mt-2 text-sm contact-designation-text">
-                                Almost there! I'm missing the **${missingPart}** for the B.Tech papers. Could you specify? 😅
+                                Almost there! I'm missing the **${missingPart}** for the B.Tech papers. Could you specify the full set?
                             </p>
                             <div class="info-divider">
                                 <a href="${officialPqpLink}" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block mt-1">🔗 Official PQP Download Page</a>
@@ -1972,7 +2035,7 @@
                  listItems = data.files.map(file => 
                         `<li><a href="${officialPqpLink}" target="_blank">📜 ${file} – [Official Site Link]</a></li>`
                     ).join('');
-                 finalMessage = `💡 **Guaranteed Downloads:** Click the link(s) above. They take you directly to the **Official College Portal** to download the ${data.label} papers.`;
+                 finalMessage = `🎉 **Success!** Click the link(s) above. They take you directly to the **Official College Portal** to download the ${data.label} papers.`;
             } else { // Scenario D: Fallback to show all options
                 title = "📂 Available Question Paper Sets";
                 listItems = Object.keys(DOWNLOAD_MAP).map(key => {
@@ -1982,6 +2045,12 @@
                 }).join('');
                 finalMessage = `💡 **Tip:** Click on a set to proceed to download, or visit the official page directly!`;
             }
+            
+            // Set conversational redirect state
+             conversationFlow = {
+                state: 'awaiting_redirect',
+                targetQuery: 'Contact the Exam Section number', // Suggesting follow-up to PQP/Exam queries
+            };
 
             const html = `
                 <div class="info-card">
@@ -2006,74 +2075,86 @@
     // --- GENERAL COLLEGE QUERY HANDLER (REFACTORED for maximum content density) ---
     const handleGeneralCollegeQuery = (query) => {
         const queryLower = query.toLowerCase();
-        let title, content, nextQuestion;
+        let title, content, nextQuestion, redirectQuery;
 
         // --- 1. ADMISSIONS PROCESS ---
         if (queryLower.includes('admission') || queryLower.includes('how to join') || queryLower.includes('eligibility')) {
-            title = '🎓 Admission Process';
+            title = '🚀 Ready to Join? Admission Process';
             content = `
                 <p class="text-sm contact-designation-text">Getting admitted is primarily through the state-level **EAPCET** exam.</p>
                 <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
-                    <li class="contact-designation-text">**Route:** EAPCET Counselling or **Management Quota**.</li>
+                    <li class="contact-designation-text">**Main Route:** **EAPCET Counselling** (based on rank).</li>
+                    <li class="contact-designation-text">**Alternative:** Direct **Management Quota** seats available.</li>
                     <li class="contact-designation-text">**Eligibility:** Min **45%** in PCM (10+2).</li>
-                    <li class="contact-designation-text">**Dates:** Counselling typically starts in **August/September**.</li>
                 </ul>
                 <div class="info-divider">
                     <a href="https://pragati.ac.in/admissions/eligibility/" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block">🔗 View Official Eligibility Details</a>
                 </div>
             `;
-            nextQuestion = `What **courses** are offered here? 📚`;
+            nextQuestion = `What exciting **courses** are offered here? 📚`;
+            redirectQuery = 'What courses are offered?';
         }
         // --- 2. COLLEGE FEE STRUCTURE (UPDATED FOR ACCURACY) ---
         else if (queryLower.includes('fee') || queryLower.includes('fees') || queryLower.includes('tuition')) {
-            title = '💵 Tuition Fee Structure';
+            title = '💰 Your Investment: Tuition Fee Structure';
             content = `
-                <p class="text-sm contact-designation-text">Fees are state-regulated, covering **tuition** and **development** charges.</p>
+                <p class="text-sm contact-designation-text">Fees are set by the State Government, covering tuition and development charges.</p>
                 <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
-                    <li class="contact-designation-text">**Annual Tuition:** Approx. **₹77,000 - ₹77,800** p.a. (Set by APSCHE).</li>
-                    <li class="contact-designation-text">**Scholarship:** Eligible for **Jagananna Vidya Deevena** (Fee Reimbursement).</li>
-                    <li class="contact-designation-text">**Hostel/Mess:** Separate fees apply (approx. **₹1,00,000 - ₹1,20,000** p.a. for food/stay).</li>
+                    <li class="contact-designation-text">**Annual Tuition (EAPCET):** Approx. **₹77,000 - ₹77,800** p.a. </li>
+                    <li class="contact-designation-text">**Scholarship Perk:** Eligible for **Jagananna Vidya Deevena** (Fee Reimbursement).</li>
+                    <li class="contact-designation-text">**Hostel/Mess:** Separate costs (approx. **₹1,00,000 - ₹1,20,000** p.a.).</li>
                 </ul>
                 <div class="info-divider">
-                    <p class="text-xs font-semibold accent-highlight">⚠️ For the *exact* current fee amount, contact the **Administrative Office** directly.</p>
+                    <p class="text-xs font-semibold accent-highlight">⚠️ **Quick Tip:** For the *absolute exact* amount, contact the **Administrative Office** directly.</p>
                 </div>
             `;
             nextQuestion = `Can you provide the **Administrative Office contact**? 📞`;
+            redirectQuery = 'Contact the Administrative Office number';
         }
         // --- 3. COURSES OFFERED ---
         else if (queryLower.includes('course') || queryLower.includes('branch') || queryLower.includes('stream')) {
-            title = '🏛️ B.Tech Courses Offered';
+            title = '🏛️ Explore Our B.Tech Courses!';
             content = `
-                <p class="text-sm contact-designation-text">We offer a wide range of B.Tech. and M.Tech. programs:</p>
+                <p class="text-sm contact-designation-text">We offer a full spectrum of engineering programs to match your ambition:</p>
                 <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
-                    <li class="contact-designation-text">**B.Tech Core:** CSE, ECE, EEE, MECH, CIVIL, IT.</li>
+                    <li class="contact-designation-text">**Core Branches:** CSE, ECE, EEE, MECH, CIVIL, IT.</li>
                     <li class="contact-designation-text">**Specializations:** CSE (DS), CSE (AI), CSE (AI&ML), CSE (CS).</li>
-                    <li class="contact-designation-text">**Post-Grad:** Various **M.Tech** programs are available.</li>
+                    <li class="contact-designation-text">**Post-Grad:** Various **M.Tech** programs also available.</li>
                 </ul>
                 <div class="info-divider">
                     <a href="https://pragati.ac.in/departments/" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block">🔗 View All Departments</a>
                 </div>
             `;
             nextQuestion = `Tell me about **placements** at Pragati? 💰`;
+            redirectQuery = 'Check latest Placement Trend';
         }
         // --- 4. AFFILIATION/RANKING ---
         else if (queryLower.includes('affiliate') || queryLower.includes('rank') || queryLower.includes('rating')) {
-            title = '🏅 Affiliation & Recognition';
+            title = '🏆 Accreditation & Recognition';
             content = `
-                <p class="text-sm contact-designation-text">Pragati maintains top-tier accreditation and status:</p>
+                <p class="text-sm contact-designation-text">We maintain top-tier recognition for academic excellence:</p>
                 <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
                     <li class="contact-designation-text">**Status:** **UGC Autonomous** College.</li>
                     <li class="contact-designation-text">**Accreditation:** **NAAC 'A' Grade** and approved by **AICTE**.</li>
                     <li class="contact-designation-text">**Affiliation:** Affiliated to **JNTUK (Kakinada)**.</li>
-                    <li class="contact-designation-text">**Campus:** Located on a sprawling **25-acre** campus in Surampalem.</li>
                 </ul>
+                <div class="info-divider">
+                    <p class="text-xs font-semibold accent-highlight">Campus is located on a sprawling **25-acre** site in Surampalem.</p>
+                </div>
             `;
             nextQuestion = `What are the **hostel timings**? ⏰`;
+            redirectQuery = 'What are the hostel timings?';
         }
         else {
             return null;
         }
 
+        // Set conversational redirect state
+        conversationFlow = {
+            state: 'awaiting_redirect',
+            targetQuery: redirectQuery,
+        };
+        
         return `
             <div class="info-card">
                 <p class="font-semibold text-lg text-[#006494] mb-1">${title}</p>
@@ -2089,40 +2170,46 @@
     const handleTimingQuery = (query) => {
         const queryLower = query.toLowerCase();
         
-        let title, content, nextQuestion;
+        let title, content, nextQuestion, redirectQuery;
         
         if (queryLower.includes('hostel') || queryLower.includes('hostler') || queryLower.includes('dinner') || queryLower.includes('breakfast')) {
             // Hosteler timings
             title = 'Hostel & College Timings ⏰';
             content = `
-                <p class="text-sm contact-designation-text">Here are the essential daily timings:</p>
+                <p class="text-sm contact-designation-text">Stay on schedule with the essential timings:</p>
                 <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
-                    <li class="contact-designation-text">**Classes:** **9:30 AM to 4:00 PM** (Main academic hours).</li>
-                    <li class="contact-designation-text">**Canteen:** **9:00 AM to 4:00 PM**.</li>
-                    <li class="contact-designation-text">**Hostel Breakfast:** **8:00 AM**.</li>
-                    <li class="contact-designation-text">**Hostel Dinner:** **7:30 PM** onwards.</li>
-                    <li class="contact-designation-text">**Library:** Typically **8:00 AM to 5:00 PM**.</li>
+                    <li class="contact-designation-text">**Classes:** **9:30 AM to 4:00 PM** (Daily).</li>
+                    <li class="contact-designation-text">**Hostel Breakfast:** Served at **8:00 AM**.</li>
+                    <li class="contact-designation-text">**Hostel Dinner:** Starts at **7:30 PM**.</li>
+                    <li class="contact-designation-text">**Canteen:** Open **9:00 AM to 4:00 PM**.</li>
                 </ul>
             `;
-            nextQuestion = `Need the **Warden's contact number**? 📞`;
-        } else if (queryLower.includes('canteen') || queryLower.includes('day scholar') || queryLower.includes('lunch')) {
+            nextQuestion = `Need the **Warden's contact number** for the hostel? 📞`;
+            redirectQuery = 'Contact the Warden number';
+        } else if (queryLower.includes('canteen') || queryLower.includes('day scholar') || queryLower.includes('lunch') || queryLower.includes('office')) {
             // Day Scholar timings (Canteen/Lunch)
             title = 'Lunch & College Timings 🥪';
             content = `
-                <p class="text-sm contact-designation-text">Here are the essential daily timings for day scholars:</p>
+                <p class="text-sm contact-designation-text">Here is the daily schedule for day scholars:</p>
                 <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
-                    <li class="contact-designation-text">**Classes Start:** **9:30 AM** daily.</li>
-                    <li class="contact-designation-text">**Canteen Hours:** **9:00 AM to 4:00 PM**.</li>
-                    <li class="contact-designation-text">**Senior Lunch (II, III, IV Year):** **12:00 PM - 12:30 PM**.</li>
+                    <li class="contact-designation-text">**Classes Start:** **9:30 AM** sharp.</li>
+                    <li class="contact-designation-text">**Senior Lunch (II-IV Year):** **12:00 PM - 12:30 PM**.</li>
                     <li class="contact-designation-text">**First Year Lunch (I Year):** **1:00 PM - 1:30 PM**.</li>
                     <li class="contact-designation-text">**College Closes:** **4:00 PM**.</li>
                 </ul>
             `;
             nextQuestion = `What about the **Admin Office** working hours? 🏛️`;
+            redirectQuery = 'Contact the Administrative Office number';
         } else {
             return null;
         }
 
+        // Set conversational redirect state
+        conversationFlow = {
+            state: 'awaiting_redirect',
+            targetQuery: redirectQuery,
+        };
+        
         return `
             <div class="info-card">
                 <p class="font-semibold text-lg text-[#006494] mb-1">${title}</p>
@@ -2141,22 +2228,32 @@
         const latestYear = PLACEMENT_DATA.years[PLACEMENT_DATA.years.length - 1];
         const officialLink = 'https://pragati.ac.in/placements/';
         
+        const contentHTML = `
+            <p class="text-sm contact-designation-text">The CDC team delivers strong recruitment results:</p>
+            <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
+                <li class="contact-designation-text">✨ **Highest Package:** Hit a peak of <strong class="text-xl text-[#00C9A7]">${latestHighest} LPA</strong>.</li>
+                <li class="contact-designation-text">📈 **Average Package:** Solid at <strong>${latestAverage} LPA</strong>.</li>
+                <li class="contact-designation-text">🎓 **Total Offers:** **1625+** (including multiple offers per student).</li>
+                <li class="contact-designation-text">**Top Recruiters:** TCS, Infosys, Wipro, Capgemini, HCL, etc.</li>
+            </ul>
+            <div class="info-divider">
+                <a href="${officialLink}" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block">🔗 View Official Placements Page</a>
+                <p class="mt-2 text-sm font-bold accent-highlight">
+                    Want to see the data trend as a **graph/chart**? 📊
+                </p>
+            </div>
+        `;
+        
+        // Set conversational redirect state
+        conversationFlow = {
+            state: 'awaiting_redirect',
+            targetQuery: 'Show me the placement chart',
+        };
+        
         return `
             <div class="info-card">
                 <p class="font-semibold text-lg text-[#006494] mb-1">💰 Placement Highlights (${latestYear})</p>
-                <p class="text-sm contact-designation-text">The placement cell (CDC) drives continuous growth in recruitment:</p>
-                <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
-                    <li class="contact-designation-text">✨ **Highest Package:** <strong class="text-xl text-[#00C9A7]">${latestHighest} LPA</strong>.</li>
-                    <li class="contact-designation-text">📈 **Average Package:** Strong at <strong>${latestAverage} LPA</strong>.</li>
-                    <li class="contact-designation-text">🎓 **Total Offers:** **1625+** (Includes multiple offers).</li>
-                    <li class="contact-designation-text">**Key Recruiters:** TCS, Infosys, Wipro, Capgemini, HCL, etc.</li>
-                </ul>
-                <div class="info-divider">
-                    <a href="${officialLink}" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block">🔗 View Official Placements Page</a>
-                    <p class="mt-2 text-sm font-bold accent-highlight">
-                        Want to see the data trend as a **graph/chart**? 📊
-                    </p>
-                </div>
+                ${contentHTML}
             </div>
         `;
     };
@@ -2174,7 +2271,7 @@
                 "I'd be happy to show you the trend! Get ready for the graph view. 📊",
                 "Time for some data visualization! This shows our continuous growth. 🤩",
             ];
-            const intro = graphIntros[Math.floor(Math.random() * graphIntros.length)];
+            const intro = graphIntros[Math.floor(Math.random() * intros.length)];
             addMessage(`${intro}`, false);
         }
         
@@ -2219,6 +2316,12 @@
         
         chatHistory.appendChild(chartWrapper);
         scrollToBottom();
+        
+        // Set conversational redirect state
+        conversationFlow = {
+            state: 'awaiting_redirect',
+            targetQuery: 'Contact Dean CDC number',
+        };
 
         // 5. Render the chart
         
@@ -2442,7 +2545,8 @@
     // --- MAIN CHAT FUNCTIONALITY ---
     const sendMessage = async (input, userInitiated = true) => {
         const messageText = input || userInput.value.trim();
-        const queryLower = messageText.toLowerCase(); // Define once here
+        // CRITICAL FIX: Normalize the query once at the start for robust matching across ALL handlers
+        const queryLower = messageText.toLowerCase().replace(/\s+/g, ' ').trim(); 
 
         if (!messageText) return;
 
@@ -2457,66 +2561,86 @@
         clearSuggestions(); 
         
         // --- LOCAL HANDLER CHECKS (Priority 1) ---
-        // New: Moved conversational logic to start of execution
+        
         let queryToHandle = messageText;
         if (conversationContext.state === 'awaiting_branch' && userInitiated) {
              // If we were waiting for the branch, append the new message to the original query
             queryToHandle = conversationContext.originalQuery + ' ' + messageText;
             conversationContext = { state: 'idle', originalQuery: null }; // Reset immediately
         }
+        
+        // --- A. CONVERSATIONAL BRIDGE CHECK (Highest Priority for conversational flow) ---
+        if (conversationFlow.state === 'awaiting_redirect') {
+            const redirectQuery = handleConversationalBridge(queryLower);
+            if (redirectQuery) {
+                // If the user confirms (yes/yup) or sends the exact query (e.g., 'Contact Dean CDC'), 
+                // we recursively call sendMessage with the stored target query.
+                if (redirectQuery.startsWith("Got it!")) {
+                     // This is a denial message, just display it and exit.
+                     hideLoading();
+                     addMessage(redirectQuery, false);
+                     showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
+                     return;
+                }
+                // Execute the redirected query (e.g., 'Contact Dean CDC number')
+                await sendMessage(redirectQuery, false); // Send without user initiation flag to prevent clearing the loading animation instantly
+                return;
+            }
+        }
 
-        const isSyllabusQuery = /syllabus|academic calendar|regulations|course structure/i.test(queryToHandle);
-        const isPaperQuery = /previous|question paper|papers|exam|m.tech|b.tech|btech|mtech/i.test(queryToHandle);
-        const isTimingQuery = /canteen|hostel|hostler|food|lunch|dinner|breakfast|hours|classes|office/i.test(queryToHandle);
-        
-        // --- NEW: General College Query Detection ---
-        const isGeneralCollegeQuery = /admission|fee|fees|tuition|course|branch|stream|affiliate|rank|rating|eligibility/i.test(queryToHandle);
 
-        // --- EXPANDED CONTACT QUERY DETECTION (Ensure all contact intents are caught) ---
-        // Tighter intent check for contact number/line/call
-        const wantsContactDetails = /(number|phone|contact|call|line|whatsapp|cell|tell me the)/i.test(queryLower) || 
-                                     /hod|principal|dean|warden/i.test(queryLower); // Explicit titles imply contact intent
-        
-        const isContactNameMentioned = /(hod|principal|dean|warden|discip|officer|professor|technician|admin|assistant|akka|sir|madam|name|staff|attender|guard)/i.test(queryLower);
-        
-        const isContactQuery = wantsContactDetails || isContactNameMentioned; // Use this for routing logic
-        const isGraphQuery = /(graph|chart|comparison|trend|package|salary|placement)/i.test(queryToHandle);
+        // Re-run flags based on the possibly combined/normalized query
+        const queryLowerNormalized = queryToHandle.toLowerCase().replace(/\s+/g, ' ').trim();
+        const isSyllabusQuery = /syllabus|academic calendar|regulations|course structure/i.test(queryLowerNormalized);
+        const isPaperQuery = /previous|question paper|papers|exam|m.tech|b.tech|btech|mtech/i.test(queryLowerNormalized);
+        const isTimingQuery = /canteen|hostel|hostler|food|lunch|dinner|breakfast|hours|classes|office/i.test(queryLowerNormalized);
+        const isGeneralCollegeQuery = /admission|fee|fees|tuition|course|branch|stream|affiliate|rank|rating|eligibility/i.test(queryLowerNormalized);
+        const wantsContactDetails = /(number|phone|contact|call|line|whatsapp|cell|tell me the)/i.test(queryLowerNormalized) || /hod|principal|dean|warden/i.test(queryLowerNormalized); 
+        const isContactNameMentioned = /(hod|principal|dean|warden|discip|officer|professor|technician|admin|assistant|akka|sir|madam|name|staff|attender|guard)/i.test(queryLowerNormalized);
+        const isContactQuery = wantsContactDetails || isContactNameMentioned; 
+        const isGraphQuery = /(graph|chart|comparison|trend|package|salary|placement)/i.test(queryLowerNormalized);
 
 
         try {
-            // --- A. CONTEXTUAL STAFF FOLLOW-UP (Highest Priority for conversational memory) ---
-            // Trigger if we are currently prompting for clarification, or if the last response was a single match (allowing "his number" follow-up)
+            // --- B. CONTEXTUAL STAFF FOLLOW-UP (Next Priority) ---
             if (lastStaffQuery.state !== 'idle' || lastStaffQuery.singleMatchFound) {
                 const followUpResult = handleStaffFollowUp(messageText);
                 if (followUpResult) {
                     hideLoading();
                     addMessage(followUpResult, false);
                     showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
-                    
-                    // CRITICAL FIX: If handleStaffFollowUp consumed the query (meaning it was a contextual confirmation/clarification)
-                    // The singleMatchFound state must be handled inside handleStaffFollowUp itself.
                     return;
                 }
             }
             
-            // --- B. NEW CONTACT QUERY DETECTED: FORCE RESET CONTEXT ---
-            // This handles the case where a user types a brand new name (not a confirmation/clarification).
-            // The purpose of this block is only to run if the previous block (A) did NOT consume the query.
+            // --- C. NEW CONTACT QUERY DETECTED: FORCE RESET CONTEXT ---
             if (isContactQuery) {
-                // If a new query is detected, wipe the old singleMatchFound just in case.
                 lastStaffQuery.singleMatchFound = null; 
             }
 
-            // --- C. GENERAL ROLE QUERY VS. CONTACT REQUEST (Priority 2) ---
-            const isGeneralRoleInquiry = /who is|name of|current/i.test(queryLower);
+            // --- D. GENERAL ROLE QUERY VS. CONTACT REQUEST (Priority 2) ---
+            const isGeneralRoleInquiry = /who is|name of|current|former|previous|past/i.test(queryLowerNormalized); 
             const roleKeywords = ['principal', 'hod', 'dean', 'warden', 'discipline officer', 'reception', 'xerox'];
-            let asksForRole = roleKeywords.some(role => queryLower.includes(role));
+            let asksForRole = roleKeywords.some(role => queryLowerNormalized.includes(role));
 
-            if (asksForRole && isGeneralRoleInquiry && !wantsContactDetails) { // Use wantsContactDetails for strictness
+            if (asksForRole && isGeneralRoleInquiry && !wantsContactDetails) { 
                 
-                // 1. Check Verified Local Roles First (FIX for wrong Principal name)
-                const roleQueryCleaned = roleKeywords.find(r => queryLower.includes(r)); 
-                let foundVerifiedRole = VERIFIED_ROLE_NAMES[roleQueryCleaned] || null;
+                let roleQueryKey = null;
+                if (queryLowerNormalized.includes('former principal') || queryLowerNormalized.includes('previous principal') || queryLowerNormalized.includes('past principal')) {
+                     roleQueryKey = 'former principal';
+                } else if (queryLowerNormalized.includes('principal')) {
+                     roleQueryKey = 'principal';
+                } else if (queryLowerNormalized.includes('dean cdc') || (queryLowerNormalized.includes('dean') && (queryLowerNormalized.includes('cdc') || queryLowerNormalized.includes('career')))) {
+                     // FIX: Ensures 'Dean CDC' matches correctly
+                     roleQueryKey = 'dean cdc';
+                } else if (queryLowerNormalized.includes('hod cse') || (queryLowerNormalized.includes('hod') && queryLowerNormalized.includes('cse'))) {
+                     roleQueryKey = 'hod cse';
+                } else {
+                     roleQueryKey = roleKeywords.find(r => queryLowerNormalized.includes(r));
+                }
+                
+                // 2. Check Verified Local Roles 
+                let foundVerifiedRole = VERIFIED_ROLE_NAMES[roleQueryKey] || null;
 
                 if (foundVerifiedRole) {
                     hideLoading();
@@ -2525,8 +2649,8 @@
                     return;
                 }
                 
-                // 2. Fallback to Gemini if not locally verified (e.g., "who is the director")
-                const contents = [{ role: "user", parts: [{ text: messageText + " at Pragati Engineering College" }] }]; // Added context to search query
+                // 3. Fallback to Gemini if not locally verified (e.g., "who is the director")
+                const contents = [{ role: "user", parts: [{ text: messageText + " at Pragati Engineering College" }] }]; 
                 showTyping(); 
 
                 const result = await fetchGeminiResponse(contents);
@@ -2572,7 +2696,6 @@
             // --- 3. SYLLABUS CHECK ---
             if (isSyllabusQuery && !isPaperQuery) {
                 hideLoading();
-                // Since this handler returns HTML, we wrap it in an addMessage call that doesn't expect 'text\n'
                 addMessage(`<div>${handleSyllabusQuery()}</div>`, false); 
                  showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
                 return;
@@ -2587,10 +2710,8 @@
                 if (paperResult.success && paperResult.html) {
                     
                     if (paperResult.isMissingBranch) {
-                        // Context needed: Prompting for missing year/sem. Save current message.
                         conversationContext = { state: 'awaiting_branch', originalQuery: messageText };
                     } else {
-                        // Success: Clear context
                         conversationContext = { state: 'idle', originalQuery: null };
                     }
                     
@@ -2608,15 +2729,12 @@
             if (isGraphQuery) {
                 const graphKeywords = /(graph|chart|comparison|trend|package|salary|placement)/i;
                 if (graphKeywords.test(queryToHandle)) {
-                    // Explicit graph request
                     hideLoading();
                     showPlacementGraph();
                     showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
                     return;
                 } else {
-                    // General placement fact request
                     hideLoading();
-                    // Since this handler returns HTML, we wrap it in an addMessage call that doesn't expects 'text\n'
                     addMessage(`<div>${getPlacementSummary()}</div>`, false);
                     showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
                     return;
@@ -2625,26 +2743,17 @@
 
 
             // --- 6. CONTACTS CHECK (PRIMARY SEARCH) ---
-            // Only proceed with the local contact search if explicit intent (wantsContactDetails) is present, 
-            // OR if a name is mentioned AND it's not a general role inquiry (which was handled by Gemini above).
             if (wantsContactDetails || (isContactNameMentioned && !isGeneralRoleInquiry)) {
-                // findStaffContactAndManageContext now handles the search and sets/updates lastStaffQuery state
                 const localContactResponse = findStaffContactAndManageContext(queryToHandle);
                 
                 hideLoading();
                 
                 if (localContactResponse && localContactResponse.startsWith('✅|')) {
-                    // Single clear match (using the new strict format string)
                     addMessage(localContactResponse, false);
-                    
-                    // CRITICAL FIX: Reset the single match *after* the correct display is shown.
-                    // This prevents the next unrelated query from being trapped by the singleMatchFound state.
                     lastStaffQuery.singleMatchFound = null; 
-                    
                     showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
                     return; 
                 } else if (localContactResponse) {
-                    // This handles the "I found multiple staff members..." prompt OR the "Sorry, contact doesn't exist" message
                     addMessage(localContactResponse, false); 
                     showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
                     return;
@@ -2653,7 +2762,7 @@
             // --- END CONTACTS CHECK ---
             
             // --- 7. GENERAL AI QUERY (FALLBACK for EVERYTHING else) ---
-            const contents = [{ role: "user", parts: [{ text: messageText }] }];
+            const contents = [{ role: "user", parts: [{ text: messageText + " at Pragati Engineering College" }] }];
             showTyping(); 
 
             const result = await fetchGeminiResponse(contents);
@@ -2671,7 +2780,6 @@
                 hideLoading();
                 addMessage(botResponse, false); 
                 
-                // Show contextual suggestions 
                 showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
 
             } else {
