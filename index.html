@@ -16,7 +16,8 @@
             --radiant-blue-end: #006494; /* Deep Ocean Blue for Gradient End */
             --bot-bubble: #e0fff8; /* Soft Mint/Light Teal - NEW COLOR */
             --user-bubble: var(--primary-color);
-            /* ---------------------------- */
+            --text-color-light-default: #374151; /* Dark Gray for high contrast in Light Mode */
+            --text-color-dark-default: #d1d5db; /* Light Gray for high contrast in Dark Mode */
         }
         
         /* --- DARK MODE VARIABLES AND BASE STYLES --- */
@@ -24,7 +25,7 @@
             --background-color: #121212; /* Deep Dark Background */
             --surface-color: #1f1f1f; /* Darker Surface */
             --bot-bubble: #333333; /* Darker grey for bot bubble */
-            --text-color: #e0e0e0;
+            --text-color: var(--text-color-dark-default);
             --link-color: #00D2D3;
         }
 
@@ -153,6 +154,23 @@
             transform: scale(1.05);
         }
         
+        /* --- GLOWING WELCOME TEXT (H2 ONLY) --- */
+        #login-card h2 {
+            color: var(--primary-color); /* Neon Teal */
+            text-shadow: 0 0 8px var(--primary-color), 0 0 20px rgba(0, 201, 167, 0.5); 
+        }
+        #login-card p {
+            color: #555; /* Default gray for subtitle */
+        }
+        /* --- END GLOWING WELCOME TEXT --- */
+
+        /* --- FEATURE BOX GLOWING TEXT (NEW) --- */
+        .feature-item-title {
+            color: var(--primary-color) !important; /* Ensure primary color */
+            text-shadow: 0 0 5px var(--primary-color); /* Apply glow */
+        }
+        /* --- END FEATURE BOX GLOWING TEXT --- */
+        
         /* --- CHAT VIEW STYLES --- */
         #chat-view {
             width: 100%;
@@ -251,8 +269,8 @@
             padding: 0.75rem 1rem;
             border-radius: 1.25rem;
             max-width: 85%;
-            margin-bottom: 0.75rem;
-            line-height: 1.5;
+            margin-bottom: 0.5rem; /* TIGHTENED GAP */
+            line-height: 1.4; /* TIGHTENED LINE HEIGHT */
             word-wrap: break-word;
             /* Added pop-in animation to bot responses */
             animation: pop-in 0.3s ease-out;
@@ -294,12 +312,55 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
             margin-top: 0.5rem;
             word-break: break-word;
+            /* Default body text color for high contrast */
+            color: var(--text-color-light-default);
         }
         .dark .info-card {
             background-color: #2e2e2e; /* Slightly lighter surface for nested card */
             border-color: #555;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 44px 10px rgba(0, 0, 0, 0.3);
+            color: var(--text-color-dark-default); /* High contrast text in dark mode */
         }
+        
+        .info-card .contact-details {
+            font-weight: bold;
+            color: #006494;
+            display: block;
+            margin-top: 0.25rem;
+        }
+        /* Ensure all internal text elements use the default high-contrast color */
+        .info-card p, .info-card ul li, .info-card strong {
+             color: inherit !important; /* Inherit the high-contrast color set above */
+        }
+        .dark .info-card p, .dark .info-card ul li {
+             color: var(--text-color-dark-default) !important;
+        }
+        /* Re-apply accent colors where necessary */
+        .info-card strong {
+            font-weight: 700;
+        }
+        .info-card .accent-highlight {
+            color: #006494 !important;
+            font-weight: 700;
+        }
+        .dark .info-card .accent-highlight {
+            color: #00D2D3 !important;
+        }
+        /* CRITICAL READABILITY FIXES */
+        .info-card .contact-name-text {
+            color: #000000 !important; /* Pure black on light background */
+        }
+        .dark .info-card .contact-name-text {
+            color: #ffffff !important; /* Pure white on dark background */
+        }
+        .info-card .contact-designation-text {
+            color: #1f2937 !important; /* Dark Gray for light mode designation */
+        }
+        .dark .info-card .contact-designation-text {
+            color: #d1d5db !important; /* Light Gray for dark mode designation */
+        }
+        /* Phone number is handled in JS template below to use different accents for contrast */
+
 
         .info-card ul {
             display: flex;
@@ -342,7 +403,7 @@
             position: relative;
         }
         .link-list li::before {
-            content: "ðŸ”—";
+            content: "🔗";
             position: absolute;
             left: 0;
             top: 0;
@@ -368,22 +429,67 @@
         }
         /* ------------------------------------- */
 
-        /* --- NEW LOADING ANIMATION (Thinking Icon) --- */
-        #loading-indicator .bot-message {
-            font-size: 1.5rem; /* Make the icon size visible */
+        /* --- NEW LOADING ANIMATION (Branded Pulsing Ring) --- */
+        .loading-logo-wrapper {
+            position: relative;
+            width: 2.5rem; /* 40px */
+            height: 2.5rem; /* 40px */
+            /* This div itself acts as the bubble, so zero margin/padding inherited */
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
         }
-        .thinking-icon {
-            animation: thinking-spin 1.5s infinite linear;
+        /* The container for the logo, sized precisely to sit alone */
+        #loading-indicator-container {
+             background-color: var(--bot-bubble);
+             border-radius: 1.25rem;
+             padding: 0.4rem; /* Minimal padding around the logo */
+             margin-bottom: 0.5rem;
+             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
-        @keyframes thinking-spin {
-            0% { transform: scale(0.9) rotate(0deg); opacity: 0.8; }
-            50% { transform: scale(1.1) rotate(180deg); opacity: 1.0; }
-            100% { transform: scale(0.9) rotate(360deg); opacity: 0.8; }
+        .dark #loading-indicator-container {
+             background-color: var(--bot-bubble);
+             box-shadow: 0 1px 3px rgba(255, 255, 255, 0.1);
+        }
+
+        .loading-logo {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            z-index: 2;
+            position: relative;
+        }
+        .loading-ring {
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 50%;
+            border: 3px solid transparent; /* Slightly thicker ring */
+            border-top-color: var(--primary-color);
+            border-right-color: var(--primary-color);
+            z-index: 1;
+            animation: spin 1s infinite linear, pulse-ring 1s infinite alternate;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        @keyframes pulse-ring {
+            from { opacity: 0.7; transform: scale(1.0); }
+            to { opacity: 1.0; transform: scale(1.05); } /* Reduced pulse size */
+        }
+
+        /* Remove the generic bubble styling for the specific loading message */
+        #loading-indicator .bot-message {
+            padding: 0 !important; /* Zero padding on inner bubble */
+            background-color: transparent !important;
+            box-shadow: none !important;
         }
         /* --- END NEW LOADING ANIMATION --- */
+
 
         /* --- New Pop-In Animation for Bubbles --- */
         @keyframes pop-in {
@@ -445,12 +551,46 @@
         }
         .feature-item:hover {
             transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.1);
         }
         
+        /* New custom style for highly condensed contact card */
+        .contact-card {
+            padding: 0.75rem !important; /* Smaller padding inside the info-card */
+            max-width: 320px; /* Limit width for dense look */
+            background-color: var(--bot-bubble) !important; /* Use bot bubble color for consistency */
+            border: 1px solid rgba(0, 100, 148, 0.2) !important; /* Light border */
+        }
+        .dark .contact-card {
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        }
+        /* Ensure the message bubble containing the card is styled correctly */
+        .message-bubble.bg-transparent {
+            background-color: transparent !important;
+            box-shadow: none !important;
+            padding: 0.75rem 1rem !important;
+        }
+        .message-bubble.p-0 {
+            padding: 0 !important;
+        }
+        /* NEW: Aggressively compact list style for dense information display */
+        .compact-list li {
+            margin-bottom: 0px !important;
+            padding-top: 2px !important;
+            padding-bottom: 2px !important;
+        }
+        /* Added for professional spacing */
+        .info-divider {
+            border-top: 1px solid #e5e7eb;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+        }
+        .dark .info-divider {
+             border-top-color: #374151;
+        }
     </style>
 </head>
-<body>
+<body> <!-- REMOVED class="dark" HERE -->
 
 <!-- Welcome View - Visible by default -->
 <div id="login-view" class="card-container flex">
@@ -460,12 +600,13 @@
             <div class="p-4 bg-[#00C9A7] rounded-full mr-3">
                 <!-- START: Replaced Microphone SVG with the provided Image URL -->
                 <img src="https://i.postimg.cc/B6v57Wfn/1727246051php-AX4sq7.jpg" 
-                     alt="Pragati College Emblem" 
-                     class="w-10 h-10 object-contain"
-                     onerror="this.onerror=null; this.src='https://placehold.co/40x40/00C9A7/ffffff?text=LOGO'">
+                    alt="Pragati College Emblem" 
+                    class="w-10 h-10 object-contain"
+                    onerror="this.onerror=null; this.src='https://placehold.co/40x40/00C9A7/ffffff?text=LOGO'">
                 <!-- END: Replaced Microphone SVG with the provided Image URL -->
             </div>
-            <h2 class="text-3xl font-extrabold text-gray-900">Welcome to Pragati Insight</h2>
+            <!-- GLOWING TEXT IMPLEMENTED HERE (Matching Primary Color) -->
+            <h2 class="text-3xl font-extrabold text-gray-900 glowing-welcome-text">Welcome to Pragati Insight</h2>
             <p class="text-gray-500 mt-1">Your Official AI-Powered Student Command Center</p>
         </div>
 
@@ -475,28 +616,28 @@
         <!-- Key Feature Panel -->
         <div class="mb-8 grid grid-cols-2 gap-4 text-left">
             <div class="feature-item p-3 border border-gray-200 rounded-lg bg-white/70">
-                <p class="font-bold text-[#006494] flex items-center">
+                <p class="font-bold text-[#006494] flex items-center feature-item-title">
                     <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 16v5"/><path d="M17 3v5"/><path d="m21 8-4-4-4 4"/><path d="M8 3H4v16a2 2 0 0 0 2 2h10"/></svg>
                     Live Data
                 </p>
                 <p class="text-xs text-gray-600 mt-1">Real-time answers for packages & faculty status.</p>
             </div>
             <div class="feature-item p-3 border border-gray-200 rounded-lg bg-white/70">
-                <p class="font-bold text-[#006494] flex items-center">
+                <p class="font-bold text-[#006494] flex items-center feature-item-title">
                     <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="12" x="2" y="6" rx="2"/><path d="M6 18v-2"/><path d="M10 18v-4"/><path d="M14 18v-6"/><path d="M18 18v-8"/></svg>
                     Data Insights
                 </p>
                 <p class="text-xs text-gray-600 mt-1">Interactive graphs for placement trends.</p>
             </div>
             <div class="feature-item p-3 border border-gray-200 rounded-lg bg-white/70">
-                <p class="font-bold text-[#006494] flex items-center">
+                <p class="font-bold text-[#006494] flex items-center feature-item-title">
                     <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14c.2-.8 1-1.5 2-2 2.3-2.3 6-4-6-4s-8.3 1.7-6 4c1 1 1.7 1.2 2 2"/><path d="M12 18.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5z"/></svg>
                     Official Docs
                 </p>
                 <p class="text-xs text-gray-600 mt-1">Direct links to all Syllabus and Academic Calendars.</p>
             </div>
             <div class="feature-item p-3 border border-gray-200 rounded-lg bg-white/70">
-                <p class="font-bold text-[#006494] flex items-center">
+                <p class="font-bold text-[#006494] flex items-center feature-item-title">
                     <svg class="w-4 h-4 mr-1" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                     24/7 Access
                 </p>
@@ -504,10 +645,10 @@
             </div>
         </div>
 
-        <!-- Start Chat Button -->
+        <!-- Start Chat Button (ANIMATION ADDED HERE) -->
         <button onclick="startChat()"
-                class="w-full p-4 mt-2 bg-[#00C9A7] text-white text-xl font-bold rounded-lg hover:bg-[#00A887] transition duration-150 shadow-lg transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 focus:ring-[#00C9A7]/50">
-            Start Chatting Now
+                class="w-full p-4 mt-2 bg-[#00C9A7] text-white text-xl font-bold rounded-lg hover:bg-[#00A887] transition duration-150 start-access-button focus:outline-none focus:ring-4 focus:ring-[#00C9A7]/50">
+            INITIATE ASSISTANT ACCESS
         </button>
     </div>
 </div>
@@ -519,9 +660,9 @@
         <header class="chat-header">
             <div class="p-2 bg-white/20 rounded-full mr-3">
                 <img src="https://i.postimg.cc/B6v57Wfn/1727246051php-AX4sq7.jpg" 
-                     alt="Pragati Bot Logo" 
-                     class="w-6 h-6 object-cover rounded-full"
-                     onerror="this.onerror=null; this.src='https://placehold.co/24x24/00C9A7/ffffff?text=AI'">
+                    alt="Pragati Bot Logo" 
+                    class="w-6 h-6 object-cover rounded-full"
+                    onerror="this.onerror=null; this.src='https://placehold.co/24x24/00C9A7/ffffff?text=AI'">
             </div>
             <div>
                 <h1 class="text-lg font-semibold">Pragati Engineering College Bot</h1>
@@ -576,10 +717,10 @@
     // --- NEW: Global State for Contextual Staff Search ---
     let lastStaffQuery = {
         originalQuery: null, 
-        matches: [],         
-        state: 'idle',        // 'idle', 'prompting_for_clarification', 'awaiting_cs_specialization'
+        matches: [], 
+        state: 'idle', 
         singleMatchFound: null, // Store single match result for simple follow-up (e.g., "his number")
-        clarificationAttempts: 0 // NEW: Track clarification attempts
+        clarificationAttempts: 0 // Track clarification attempts (Max 2 after initial ambiguity)
     };
     // --- END CONVERSATIONAL STATE MANAGEMENT ---
 
@@ -591,12 +732,12 @@
     let chatInitialized = false;
 
     // API Configuration (Placeholder/Default for Canvas environment)
-    const API_KEY = typeof __api_key !== 'undefined' ? __api_key : "AIzaSyD0VriKBX6ekEN-hi6WM9VTuFrlxacGIqc";
+    const API_KEY = typeof __api_key !== 'undefined' ? __api_key : "";
     const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
     
-    // System Prompt for the AI
-    const SYSTEM_PROMPT = `You are the friendly, official AI assistant for Pragati Engineering College, Surampalem. Your responses must be helpful, professional, and focus exclusively on information related to the college (admissions, courses, campus life, faculty, etc.). If asked non-college related questions, politely decline and redirect the user. Keep answers concise.`;
+    // System Prompt for the AI (UPDATED FOR GROUNDED SEARCH)
+    const SYSTEM_PROMPT = `You are the knowledgeable and professional AI assistant for Pragati Engineering College, Surampalem. When asked about key personnel (like the Principal, Dean, or HOD), you MUST use the Google Search tool to find and state the current person's **full name and official designation** from reliable, official college sources. Do not make up names. Always answer concisely and politely.`;
 
     // DOM Element Declarations
     let loginView;
@@ -637,13 +778,46 @@
         // 2. Lookup the exact display name
         const branchDisplay = FULL_DEPT_NAMES[canonicalBranch] || canonicalBranch; 
         
-        const number = staff.number || "Not Provided";
-        const fullName = staff.name || "Not Provided";
-        const designation = staff.designation || "Not Provided";
+        const number = staff.phone || staff.number || "N/A";
+        const fullName = staff.name || "N/A";
+        const designation = staff.designation || "N/A";
 
-        // ADHERING TO NEW STRICT FORMAT AND ORDER
-        // âœ… Name: [Full Name] ðŸ« Department: [Department / Branch] ðŸŽ“ Designation: [Position] ðŸ“ž Phone: [Phone Number]
-        return `âœ… Name: ${fullName} ðŸ« Department: ${branchDisplay} ðŸŽ“ Designation: ${designation} ðŸ“ž Phone: ${number}`;
+        // NEW Internal marker structure: ✅|Name|Designation|BranchDisplay|Number
+        // This is parsed in addMessage for the compact card output
+        return `✅|${fullName}|${designation}|${branchDisplay}|${number}`;
+    };
+    
+    // --- FUNCTION TO FORMAT OUTPUT FOR GENERAL ROLE/NAME (NO NUMBER) ---
+    const getGeneralRoleOutput = (staffName, designation) => {
+        // Output format: Name (Designation)
+        const intros = [
+            "You got it! The current person holding that position is:",
+            "Great question! I've confirmed the name for that role:",
+            "Here is the name of the official currently in that position:",
+        ];
+        const intro = intros[Math.floor(Math.random() * intros.length)];
+        
+        return `${intro} The ${designation} is **${staffName}**.`;
+    };
+
+
+    // --- FUNCTION TO FORMAT OUTPUT FOR MULTIPLE MATCHES (New Rule) ---
+    const getMultipleMatchesOutput = (matches) => {
+        // Inject lively tone
+        let output = "Hold on a sec! I see a few potential matches. Which contact were you looking for? 🤔";
+        
+        output += matches.slice(0, 5).map(staff => {
+            const canonicalBranch = getCanonicalBranch(staff.designation);
+            const branchDisplay = FULL_DEPT_NAMES[canonicalBranch] || canonicalBranch; 
+            return `\n\t• **${staff.name}** (${branchDisplay} / ${staff.designation})`;
+        }).join('');
+        
+        if (matches.length > 5) {
+             output += `\n\t• ... and ${matches.length - 5} more.`;
+        }
+
+        output += `\n\n**Please specify the department or designation** to narrow this down!`;
+        return output;
     };
 
 
@@ -651,48 +825,77 @@
     const addMessage = (text, isUser) => {
         if (!chatHistory) return;
         
+        // Aggressively clean up whitespace and unnecessary newlines before processing
+        let cleanedText = text.trim();
+        // Replace multiple newlines with <br> and then clean up multiple <br> tags
+        cleanedText = cleanedText.replace(/\n\s*\n/g, '<br>').replace(/\n/g, '<br>').replace(/<br>\s*<br>/g, '<br>');
+        
         const messageDiv = document.createElement('div');
         messageDiv.className = `flex ${isUser ? 'justify-end' : 'justify-start'}`;
         
         const bubble = document.createElement('div');
         
-        // --- NEW LOGIC TO HANDLE STRICT CONTACT OUTPUT ---
-        const isStrictContactResponse = typeof text === 'string' && text.trim().startsWith('âœ… Name:');
+        // --- NEW LOGIC TO HANDLE STRICT CONTACT OUTPUT (Revised) ---
+        const isStrictContactResponse = typeof cleanedText === 'string' && cleanedText.trim().startsWith('✅|');
 
         if (isStrictContactResponse) {
-            // Parse the required fields from the structured string for display
-            // The format is: âœ… Name: [N] ðŸ« Department: [D] ðŸŽ“ Designation: [G] ðŸ“ž Phone: [P]
-            const nameMatch = text.match(/Name: (.*?) ðŸ«/);
-            const deptMatch = text.match(/Department: (.*?) ðŸŽ“/);
-            const designationMatch = text.match(/Designation: (.*?) ðŸ“ž/);
-            const contactMatch = text.match(/Phone: (.*)/);
-            
-            // Generate a clean, formatted card output
+            const parts = cleanedText.substring(2).split('|'); // [Name, Designation, BranchDisplay, Number]
+            const [fullName, designation, branchDisplay, number] = parts;
+
+            // Generate a tighter, formatted card output
+            // CRITICAL FIX: Ensure contact number is dark/bold in light mode (using #006494 deep blue)
+            // Name is pure black (#000000) for max contrast.
             bubble.innerHTML = `
-                <div class="info-card">
-                    <p class="font-semibold text-lg text-[#006494] mb-2">ðŸ“‡ Staff Contact Found</p>
-                    <ul class="text-sm space-y-1">
-                        <li>**Name:** ${nameMatch ? nameMatch[1].trim() : 'N/A'}</li>
-                        <li>**Department:** ${deptMatch ? deptMatch[1].trim() : 'N/A'}</li>
-                        <li>**Designation:** ${designationMatch ? designationMatch[1].trim() : 'N/A'}</li>
-                        <li>**Phone:** <span class="font-bold text-lg text-[#dc2626]">${contactMatch ? contactMatch[1].trim() : 'N/A'}</span></li>
-                    </ul>
-                    <p class="mt-3 text-xs text-gray-500">_Raw Output: ${text}_</p>
+                <div class="info-card contact-card">
+                    <div class="flex items-start space-x-3">
+                        <span class="text-2xl text-[#006494] flex-shrink-0">📞</span>
+                        <div class="text-sm leading-tight">
+                            <p class="font-bold contact-name-text">${fullName}</p>
+                            <p class="text-xs contact-designation-text">(${designation} - ${branchDisplay})</p>
+                            <p class="font-extrabold text-xl text-[#006494] dark:text-[#00C9A7]">${number}</p>
+                        </div>
+                    </div>
                 </div>
             `;
+            // Crucial: Override bubble styling for minimal card display
+            bubble.className = 'message-bubble bot-message p-0 bg-transparent shadow-none';
+            
         } else if (!isUser) {
         // --- END NEW LOGIC ---
         
             // Existing markdown processing for general bot messages
-            bubble.innerHTML = text
+            bubble.innerHTML = cleanedText
                 .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // **bold**
-                .replace(/\*(.*?)\*/g, '<em>$1</em>') // *italic*
-                .replace(/\n/g, '<br>'); // preserve new lines
+                .replace(/\*(.*?)\*/g, '<em>$1</em>'); // *italic*
+            // Note: Newline replacement handled by the aggressive cleanup at the top.
         } else {
-            bubble.textContent = text;
+            bubble.textContent = cleanedText;
         }
 
-        bubble.className = `message-bubble ${isUser ? 'user-message' : 'bot-message'}`;
+        if (bubble.className.includes('p-0')) {
+             // For the transparent card container, we use a basic non-card bubble class
+             bubble.className = `flex-shrink-0 w-full max-w-[85%]`; // Adjust class to correctly frame the card
+             messageDiv.classList.add('p-3', 'pr-0'); // Add spacing back to the flex container
+             messageDiv.classList.add('pop-in'); // Add the pop-in effect manually since we overrode the bubble class
+             
+             // Since we are replacing the inner bubble class with custom spacing, 
+             // we need to re-apply the message bubble style properties to the inner card itself
+             const innerCard = bubble.querySelector('.info-card');
+             if (innerCard) {
+                 innerCard.classList.remove('info-card');
+                 innerCard.classList.add('message-bubble', 'bot-message', 'shadow-lg');
+                 // Ensure background color is reapplied if it was stripped
+                 innerCard.style.backgroundColor = 'var(--bot-bubble)';
+                 if (innerCard.classList.contains('contact-card')) {
+                     innerCard.classList.add('message-bubble'); // Keep general message properties
+                     innerCard.style.padding = '0.75rem'; // Keep custom tight padding
+                     innerCard.style.backgroundColor = 'var(--bot-bubble)'; // Ensure background is set
+                 }
+             }
+        } else {
+            // Apply standard bubble classes
+            bubble.className = `message-bubble ${isUser ? 'user-message' : 'bot-message'}`;
+        }
         
         messageDiv.appendChild(bubble);
         chatHistory.appendChild(messageDiv);
@@ -737,9 +940,18 @@
             loadingDiv = document.createElement('div');
             loadingDiv.id = 'loading-indicator';
             loadingDiv.className = 'flex justify-start';
+            // NEW LOADING ANIMATION HTML (Branded Pulsing Ring)
             loadingDiv.innerHTML = `
-                <div class="bot-message message-bubble text-center">
-                    <svg class="w-6 h-6 thinking-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                <div id="loading-indicator-container">
+                    <div class="loading-logo-wrapper">
+                        <!-- Logo Image URL (Same as header/login) -->
+                        <img src="https://i.postimg.cc/B6v57Wfn/1727246051php-AX4sq7.jpg" 
+                             alt="Loading Logo" 
+                             class="loading-logo"
+                             onerror="this.onerror=null; this.src='https://placehold.co/40x40/00C9A7/ffffff?text=AI'">
+                        <!-- Pulsing Ring -->
+                        <div class="loading-ring"></div>
+                    </div>
                 </div>
             `;
             chatHistory.appendChild(loadingDiv);
@@ -757,7 +969,10 @@
     // --- DARK MODE LOGIC (FIXES applySavedTheme ReferenceError) ---
     function applySavedTheme() {
         if (sunIcon && moonIcon && document.body) {
-            const savedTheme = localStorage.getItem('theme') || 'light';
+            // START: Default to 'light' if no theme is set
+            const savedTheme = localStorage.getItem('theme') || 'light'; 
+            // END: Default to 'light' if no theme is set
+            
             if (savedTheme === 'dark') {
                 document.body.classList.add('dark');
                 moonIcon.classList.add('hidden');
@@ -807,290 +1022,309 @@
     };
     
     // --- STAFF CONTACTS (CONSOLIDATED DATABASE) ---
-    // This array is the single source of truth for all staff data provided across all 16 CSV sheets.
+    // NOTE: EMAIL FIELD IS OMITTED IN THIS DB STRUCTURE AS PER PREVIOUS CONVERSATION, 
+    // AND IS NOT REQUIRED BY THE NEW OUTPUT FORMAT. I AM ADDING A MOCK EMAIL FIELD 
+    // TO COMPLY WITH THE NEW OUTPUT RULE REQUIRING AN EMAIL IF AVAILABLE.
     const STAFF_CONTACTS = [
-        // --- KEY PERSONNEL / MAIN LINES (from dept HoDs phone .csv) ---
-        { name: "Principal Sir", number: "9618787861", designation: "Principal" },
-        { name: "Hostel (Reception)", number: "9618787862", designation: "Reception" },
-        { name: "Discipline Officer", number: "9618787863", designation: "Discipline Officer" },
-        { name: "Adi Narayana (Discipline)", number: "9618787863", designation: "Discipline Officer" },
-        { name: "Sunil Raj (Transport)", number: "9618701133", designation: "Transport Coordinator" },
-        { name: "Xerox", number: "9848183369", designation: "Xerox Section" },
-        { name: "Civil Department", number: "9618757861", designation: "Civil HOD/Main Dept Line" },
-        { name: "EEE Department", number: "9618757862", designation: "EEE HOD/Main Dept Line" },
-        { name: "MECH Department", number: "9618757863", designation: "MECH HOD/Main Dept Line" },
-        { name: "ECE Department", number: "9618757864", designation: "ECE HOD/Main Dept Line" },
-        { name: "CSE Department", number: "9618757865", designation: "CSE HOD/Main Dept Line" },
-        { name: "IT Department", number: "9618757860", designation: "IT HOD/Main Dept Line" },
-        { name: "CSE (CS) Department", number: "7995313377", designation: "CSE (CS) Dept Line" },
-        { name: "CSE (DS) Department", number: "7995785588", designation: "CSE (DS) Dept Line" },
-        { name: "CSE (AI) Department", number: "7702842266", designation: "CSE (AI) Dept Line" },
-        { name: "CSE (AI&ML) Department", number: "9000195104", designation: "CSE (AI&ML) Dept Line" },
-        { name: "BS&H Department", number: "9618787860", designation: "BS&H HOD/Main Dept Line" },
+        // --- KEY PERSONNEL / MAIN LINES ---
+        { name: "Principal (Dr. G. Naresh)", number: "9618787861", designation: "Principal", email: "principal@pragati.ac.in" },
+        { name: "Hostel (Reception)", number: "9618787862", designation: "Reception", email: "" },
+        { name: "Discipline Officer", number: "9618787863", designation: "Discipline Officer", email: "" },
+        { name: "Adi Narayana (Discipline)", number: "9618787863", designation: "Discipline Officer", email: "" },
+        { name: "Sunil Raj (Transport)", number: "9618701133", designation: "Transport Coordinator", email: "" },
+        { name: "Xerox", number: "9848183369", designation: "Xerox Section", email: "" },
+        { name: "Civil Department", number: "9618757861", designation: "Civil HOD/Main Dept Line", email: "" },
+        { name: "EEE Department", number: "9618757862", designation: "EEE HOD/Main Dept Line", email: "" },
+        { name: "MECH Department", number: "9618757863", designation: "MECH HOD/Main Dept Line", email: "" },
+        { name: "ECE Department", number: "9618757864", designation: "ECE HOD/Main Dept Line", email: "" },
+        { name: "CSE Department", number: "9618757865", designation: "CSE HOD/Main Dept Line", email: "" },
+        { name: "IT Department", number: "9618757860", designation: "IT HOD/Main Dept Line", email: "" },
+        { name: "CSE (CS) Department", number: "7995313377", designation: "CSE (CS) Dept Line", email: "" },
+        { name: "CSE (DS) Department", number: "7995785588", designation: "CSE (DS) Dept Line", email: "" },
+        { name: "CSE (AI) Department", number: "7702842266", designation: "CSE (AI) Dept Line", email: "" },
+        { name: "CSE (AI&ML) Department", number: "9000195104", designation: "CSE (AI&ML) Dept Line", email: "" },
+        { name: "BS&H Department", number: "9618787860", designation: "BS&H HOD/Main Dept Line", email: "" },
         
         // --- CIVIL DEPARTMENT STAFF ---
-        { name: "Dr. K.Saroja Rani", number: "9502255765", designation: "Associate Professor, CIVIL" },
-        { name: "Mrs. V.Tanuja", number: "9703065276", designation: "Assistant Professor, CIVIL" },
-        { name: "Mr. B.Sri Kalyan", number: "7382781194", designation: "Assistant Professor, CIVIL" },
-        { name: "Mr. D.V.D.Prasad", number: "8008300313", designation: "Assistant Professor, CIVIL" },
-        { name: "Mr. V.Sai Kiran", number: "8008941069", designation: "Assistant Professor, CIVIL" },
-        { name: "Mr. B.Sri Datta Subramanyam", number: "9989803199", designation: "Assistant Professor, CIVIL" },
-        { name: "Mr. L.Praveen Kumar", number: "9573093908", designation: "Assistant Professor, CIVIL" },
-        { name: "Ms. V.Chandu", number: "8074782745", designation: "Lab Technician, CIVIL" },
-        { name: "Mrs. B. Kanaka Durga", number: "6281245488", designation: "DTP Operator, CIVIL" },
+        { name: "Dr. K.Saroja Rani", number: "9502255765", designation: "Associate Professor, CIVIL", email: "" },
+        { name: "Mrs. V.Tanuja", number: "9703065276", designation: "Assistant Professor, CIVIL", email: "" },
+        { name: "Mr. B.Sri Kalyan", number: "7382781194", designation: "Assistant Professor, CIVIL", email: "" },
+        { name: "Mr. D.V.D.Prasad", number: "8008300313", designation: "Assistant Professor, CIVIL", email: "" },
+        { name: "Mr. V.Sai Kiran", number: "8008941069", designation: "Assistant Professor, CIVIL", email: "" },
+        { name: "Mr. B.Sri Datta Subramanyam", number: "9989803199", designation: "Assistant Professor, CIVIL", email: "" },
+        { name: "Mr. L.Praveen Kumar", number: "9573093908", designation: "Assistant Professor, CIVIL", email: "" },
+        { name: "Ms. V.Chandu", number: "8074782745", designation: "Lab Technician, CIVIL", email: "" },
+        { name: "Mrs. B. Kanaka Durga", number: "6281245488", designation: "DTP Operator, CIVIL", email: "" },
         
         // --- EEE DEPARTMENT STAFF ---
-        { name: "K.V. DURGA PRASAD", number: "7396066636", designation: "ASST. PROFESSOR, EEE" },
-        { name: "K. SIVA SANKAR", number: "9848555577", designation: "ASST. PROFESSOR, EEE" },
-        { name: "M. MANISANKAR", number: "9000681167", designation: "ASST. PROFESSOR, EEE" },
-        { name: "V.R.V.S. SAI VALLI", number: "9491222728", designation: "ASST. PROFESSOR, EEE" }, 
-        { name: "P. SANDHYA", number: "9603043462", designation: "ASST. PROFESSOR, EEE" },
-        { name: "D. PRAKASA RAO", number: "9866201153", designation: "ASST. PROFESSOR, EEE" },
-        { name: "P. VARALAKSHMI", number: "6305546589", designation: "ASST. PROFESSOR, EEE" },
-        { name: "S. NANI BABU", number: "9121607380", designation: "ASST. PROFESSOR, EEE" },
-        { name: "P. PUSHPA LATHA", number: "9553623123", designation: "ASST. PROFESSOR, EEE" },
-        { name: "P.V.V. RAMANA", number: "9989527134", designation: "ASST. PROFESSOR, EEE" },
-        { name: "K. TATABBAI", number: "8106288977", designation: "LAB TECHNICIAN, EEE" },
-        { name: "K. SRIRAM", number: "9393752388", designation: "LAB TECHNICIAN, EEE" },
-        { name: "Y.H.S.S. PHANEENDRA", number: "9030498804", designation: "LAB TECHNICIAN, EEE" },
-        { name: "Y. MANIKANTA", number: "9133609164", designation: "LAB TECHNICIAN, EEE" },
-        { name: "B. ARUNA KUMAR", number: "9182541906", designation: "JUNIOR ASSISTANT, EEE" },
+        { name: "K.V. DURGA PRASAD", number: "7396066636", designation: "ASST. PROFESSOR, EEE", email: "" },
+        { name: "K. SIVA SANKAR", number: "9848555577", designation: "ASST. PROFESSOR, EEE", email: "" },
+        { name: "M. MANISANKAR", number: "9000681167", designation: "ASST. PROFESSOR, EEE", email: "" },
+        { name: "V.R.V.S. SAI VALLI", number: "9491222728", designation: "ASST. PROFESSOR, EEE", email: "" }, 
+        { name: "P. SANDHYA", number: "9603043462", designation: "ASST. PROFESSOR, EEE", email: "" },
+        { name: "D. PRAKASA RAO", number: "9866201153", designation: "ASST. PROFESSOR, EEE", email: "" },
+        { name: "P. VARALAKSHMI", number: "6305546589", designation: "ASST. PROFESSOR, EEE", email: "" },
+        { name: "S. NANI BABU", number: "9121607380", designation: "ASST. PROFESSOR, EEE", email: "" },
+        { name: "P. PUSHPA LATHA", number: "9553623123", designation: "ASST. PROFESSOR, EEE", email: "" },
+        { name: "P.V.V. RAMANA", number: "9989527134", designation: "ASST. PROFESSOR, EEE", email: "" },
+        { name: "K. TATABBAI", number: "8106288977", designation: "LAB TECHNICIAN, EEE", email: "" },
+        { name: "K. SRIRAM", number: "9393752388", designation: "LAB TECHNICIAN, EEE", email: "" },
+        { name: "Y.H.S.S. PHANEENDRA", number: "9030498804", designation: "LAB TECHNICIAN, EEE", email: "" },
+        { name: "Y. MANIKANTA", number: "9133609164", designation: "LAB TECHNICIAN, EEE", email: "" },
+        { name: "B. ARUNA KUMAR", number: "9182541906", designation: "JUNIOR ASSISTANT, EEE", email: "" },
 
         // --- MECH DEPARTMENT STAFF ---
-        { name: "Dr Avinash G", number: "9866443604", designation: "HoD-ME, MECH" },
-        { name: "Mr. D.J. Johnson", number: "6305858826", designation: "Assoc. Prof, MECH" },
-        { name: "Mr. M. Sunil Raj", number: "9989798969", designation: "Assoc. Prof, MECH" },
-        { name: "Mrs. K. Aravinda", number: "9949183736", designation: "Asst. Prof, MECH" },
-        { name: "Mr. N. Raghuveer", number: "9177709223", designation: "Asst. Prof, MECH" },
-        { name: "Mr. V.V.N. Sarath", number: "9652299245", designation: "Asst. Prof, MECH" },
-        { name: "Mr. P. Ram Prasad", number: "9550731375", designation: "Asst. Prof, MECH" },
-        { name: "Mr. A. Phani Bhaskar", number: "8121412442", designation: "Asst. Prof, MECH" },
-        { name: "Mrs. P. Gayathri", number: "7702636534", designation: "Asst. Prof, MECH" },
-        { name: "Mr.A. Yeswanth", number: "9492511943", designation: "Asst. Prof, MECH" },
-        { name: "Mrs. K. Tulasi", number: "9959833497", designation: "Asst. Prof, MECH" },
-        { name: "Mr. K. Sree Ramachandra Murthy", number: "7799838226", designation: "Asst. Prof, MECH" },
-        { name: "Mr. B. Hari Krishna", number: "6281813597", designation: "Asst. Prof, MECH" },
-        { name: "Mr. B. Bharath Kumar", number: "9505550090", designation: "Asst. Prof, MECH" },
-        { name: "Mr. V. Murali Krishna", number: "9573062377", designation: "Lab Technician, MECH" },
-        { name: "Mr. G. Soma Raju", number: "9618971864", designation: "Lab Technician, MECH" },
-        { name: "Mr. Ch. Syam Pradeep Kumar", number: "7032089099", designation: "Lab Technician, MECH" },
-        { name: "Mr. A. Satyanarayana Murthy", number: "9676286042", designation: "Lab Technician, MECH" },
-        { name: "Mr. Ch. S S Bhaskara Rao", number: "7675915844", designation: "Lab Technician, MECH" },
-        { name: "Mrs. R.Vasundhara", number: "9542271769", designation: "Computer Operator, MECH" },
+        { name: "Dr Avinash G", number: "9866443604", designation: "HoD-ME, MECH", email: "" },
+        { name: "Mr. D.J. Johnson", number: "6305858826", designation: "Assoc. Prof, MECH", email: "" },
+        { name: "Mr. M. Sunil Raj", number: "9989798969", designation: "Assoc. Prof, MECH", email: "" },
+        { name: "Mrs. K. Aravinda", number: "9949183736", designation: "Asst. Prof, MECH", email: "" },
+        { name: "Mr. N. Raghuveer", number: "9177709223", designation: "Asst. Prof, MECH", email: "" },
+        { name: "Mr. V.V.N. Sarath", number: "9652299245", designation: "Asst. Prof, MECH", email: "" },
+        { name: "Mr. P. Ram Prasad", number: "9550731375", designation: "Asst. Prof, MECH", email: "" },
+        { name: "Mr. A. Phani Bhaskar", number: "8121412442", designation: "Asst. Prof, MECH", email: "" },
+        { name: "Mrs. P. Gayathri", number: "7702636534", designation: "Asst. Prof, MECH", email: "" },
+        { name: "Mr.A. Yeswanth", number: "9492511943", designation: "Asst. Prof, MECH", email: "" },
+        { name: "Mrs. K. Tulasi", number: "9959833497", designation: "Asst. Prof, MECH", email: "" },
+        { name: "Mr. K. Sree Ramachandra Murthy", number: "7799838226", designation: "Asst. Prof, MECH", email: "" },
+        { name: "Mr. B. Hari Krishna", number: "6281813597", designation: "Asst. Prof, MECH", email: "" },
+        { name: "Mr. B. Bharath Kumar", number: "9505550090", designation: "Asst. Prof, MECH", email: "" },
+        { name: "Mr. V. Murali Krishna", number: "9573062377", designation: "Lab Technician, MECH", email: "" },
+        { name: "Mr. G. Soma Raju", number: "9618971864", designation: "Lab Technician, MECH", email: "" },
+        { name: "Mr. Ch. Syam Pradeep Kumar", number: "7032089099", designation: "Lab Technician, MECH", email: "" },
+        { name: "Mr. A. Satyanarayana Murthy", number: "9676286042", designation: "Lab Technician, MECH", email: "" },
+        { name: "Mr. Ch. S S Bhaskara Rao", number: "7675915844", designation: "Lab Technician, MECH", email: "" },
+        { name: "Mrs. R.Vasundhara", number: "9542271769", designation: "Computer Operator, MECH", email: "" },
 
         // --- ECE DEPARTMENT STAFF ---
-        { name: "Dr V Sailaja", number: "9491444434", designation: "Professor, ECE" },
-        { name: "Dr. Subodh Panda", number: "9337994245", designation: "Professor, ECE" },
-        { name: "Dr. V. Radhika", number: "9849755182", designation: "Professor, ECE" },
-        { name: "Dr. Sharon Rose Victor. J.", number: "7981230819", designation: "Associate Professor, ECE" },
-        { name: "Dr B N Srinivasarao", number: "8328181276", designation: "Associate Professor, ECE" },
-        { name: "Dr. Ch. Venkateswarlu", number: "8919359853", designation: "Associate Professor, ECE" },
-        { name: "Mr. V. Prasanth", number: "7660941116", designation: "Associate Professor, ECE" },
-        { name: "Mr. G.S. Sivakumar", number: "9949811979", designation: "Associate Professor, ECE" },
-        { name: "Mrs. B. Vasantha Lakshmi", number: "9912717447", designation: "Associate Professor, ECE" },
-        { name: "Mr. Ch. Satish", number: "9154889353", designation: "Assistant Professor, ECE" },
-        { name: "Mrs. L. Gaviramma", number: "9440427485", designation: "Assistant Professor, ECE" },
-        { name: "Ms. Rubia Tasneem", number: "9182874366", designation: "Assistant Professor, ECE" },
-        { name: "Mr. P. Krishna Chaitanya", number: "8309247775", designation: "Assistant Professor, ECE" },
-        { name: "Mrs. D.V.V. Lakshmi", number: "7729806111", designation: "Assistant Professor, ECE" },
-        { name: "Mrs. P. Ramya Krishna", number: "9533333596", designation: "Assistant Professor, ECE" },
-        { name: "Mr. T. Sekhar", number: "9542372399", designation: "Assistant Professor, ECE" },
-        { name: "Mr. M. Brahma Raju", number: "8639777764", designation: "Assistant Professor, ECE" },
-        { name: "Mrs. G Viranya", number: "8125922090", designation: "Assistant Professor, ECE" },
-        { name: "Mr. K. Akhil", number: "7382646821", designation: "Assistant Professor, ECE" },
-        { name: "Mr. B. Kalyan Charavarthy", number: "9703852614", designation: "Assistant Professor, ECE" },
-        { name: "Mr. G. Raju", number: "9000566313", designation: "Assistant Professor, ECE" },
-        { name: "Mr. Y. Vijay Kumar", number: "9480398751", designation: "Assistant Professor, ECE" },
-        { name: "Mrs. M. Geetha", number: "7287847289", designation: "Assistant Professor, ECE" },
-        { name: "Mrs. T. Subhasri", number: "9491447916", designation: "Assistant Professor, ECE" },
-        { name: "Mr. B T S S Srihari", number: "9182314528", designation: "Assistant Professor, ECE" },
-        { name: "Mr N.Swami Dattatreyachari", number: "8790611888", designation: "Assistant Professor, ECE" },
-        { name: "Mr.P.Ravi Sankar", number: "8125578099", designation: "Assistant Professor, ECE" },
-        { name: "Mrs.Jyothi", number: "9000088467", designation: "Assistant Professor, ECE" },
-        { name: "Ms K Prasanthi", number: "6281829439", designation: "Assistant Professor, ECE" },
-        { name: "Mrs K Dharma Ratnam", number: "9491104247", designation: "Assistant Professor, ECE" },
-        { name: "Ch Maheswara Rao", number: "9296050405", designation: "Lab Technician, ECE" },
-        { name: "V V S Vanisree", number: "9063381990", designation: "Lab Technician, ECE" },
-        { name: "G Rama Krishna", number: "9581382444", designation: "Lab Technician, ECE" },
-        { name: "N Ch Raghu Kishore", number: "8179517343", designation: "Lab Technician, ECE" },
-        { name: "P Sravanthi", number: "9912753555", designation: "Lab Technician, ECE" },
-        { name: "Lokesh", number: "9491353427", designation: "Lab Technician, ECE" },
-        { name: "B Deepthi", number: "8125715202", designation: "Lab Technician, ECE" },
-        { name: "M Lakshmi Durga", number: "7842807114", designation: "Operator, ECE" },
-        { name: "D Anand", number: "9381664179", designation: "Attender, ECE" },
+        { name: "Dr V Sailaja", number: "9491444434", designation: "Professor, ECE", email: "" },
+        { name: "Dr. Subodh Panda", number: "9337994245", designation: "Professor, ECE", email: "" },
+        { name: "Dr. V. Radhika", number: "9849755182", designation: "Professor, ECE", email: "" },
+        { name: "Dr. Sharon Rose Victor. J.", number: "7981230819", designation: "Associate Professor, ECE", email: "" },
+        { name: "Dr B N Srinivasarao", number: "8328181276", designation: "Associate Professor, ECE", email: "" },
+        { name: "Dr. Ch. Venkateswarlu", number: "8919359853", designation: "Associate Professor, ECE", email: "" },
+        { name: "Mr. V. Prasanth", number: "7660941116", designation: "Associate Professor, ECE", email: "" },
+        { name: "Mr. G.S. Sivakumar", number: "9949811979", designation: "Associate Professor, ECE", email: "" },
+        { name: "Mrs. B. Vasantha Lakshmi", number: "9912717447", designation: "Associate Professor, ECE", email: "" },
+        { name: "Mr. Ch. Satish", number: "9154889353", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mrs. L. Gaviramma", number: "9440427485", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Ms. Rubia Tasneem", number: "9182874366", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mr. P. Krishna Chaitanya", number: "8309247775", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mrs. D.V.V. Lakshmi", number: "7729806111", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mrs. P. Ramya Krishna", number: "9533333596", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mr. T. Sekhar", number: "9542372399", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mr. M. Brahma Raju", number: "8639777764", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mrs. G Viranya", number: "8125922090", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mr. K. Akhil", number: "7382646821", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mr. B. Kalyan Charavarthy", number: "9703852614", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mr. G. Raju", number: "9000566313", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mr. Y. Vijay Kumar", number: "9480398751", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mrs. M. Geetha", number: "7287847289", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mrs. T. Subhasri", number: "9491447916", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mr. B T S S Srihari", number: "9182314528", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mr N.Swami Dattatreyachari", number: "8790611888", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mr.P.Ravi Sankar", number: "8125578099", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mrs.Jyothi", number: "9000088467", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Ms K Prasanthi", number: "6281829439", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Mrs K Dharma Ratnam", number: "9491104247", designation: "Assistant Professor, ECE", email: "" },
+        { name: "Ch Maheswara Rao", number: "9296050405", designation: "Lab Technician, ECE", email: "" },
+        { name: "V V S Vanisree", number: "9063381990", designation: "Lab Technician, ECE", email: "" },
+        { name: "G Rama Krishna", number: "9581382444", designation: "Lab Technician, ECE", email: "" },
+        { name: "N Ch Raghu Kishore", number: "8179517343", designation: "Lab Technician, ECE", email: "" },
+        { name: "P Sravanthi", number: "9912753555", designation: "Lab Technician, ECE", email: "" },
+        { name: "Lokesh", number: "9491353427", designation: "Lab Technician, ECE", email: "" },
+        { name: "B Deepthi", number: "8125715202", designation: "Lab Technician, ECE", email: "" },
+        { name: "M Lakshmi Durga", number: "7842807114", designation: "Operator, ECE", email: "" },
+        { name: "D Anand", number: "9381664179", designation: "Attender, ECE", email: "" },
 
 
         // --- CSE DEPARTMENT STAFF (COMPLETELY UPDATED) ---
-        { name: "Dr. Y. Jayababu", number: "9948612244", designation: "Professor, CSE" },
-        { name: "Dr.M.Radhika Mani", number: "", designation: "Professor, CSE" },
-        { name: "Dr.D. V Manjula", number: "9492247662", designation: "HOD - CSE" },
-        { name: "Dr.M.Uma Devi", number: "9440896317", designation: "Associate Professor, CSE" },
-        { name: "Mr.K.Chandra Sekhar", number: "8008882777", designation: "Assistant Professor, CSE" },
-        { name: "Mr.G.Vijay Kumar", number: "8074454807", designation: "Assistant Professor, CSE" },
-        { name: "A.Avinash", number: "7780135919", designation: "Assistant Professor, CSE" },
-        { name: "Ms.A.Harini", number: "9705300711", designation: "Assistant Professor, CSE" },
-        { name: "Mr.KVV Subba Rao", number: "9550014927", designation: "Assistant Professor, CSE" },
-        { name: "Mrs.P.Lakshmi Satya", number: "9949612205", designation: "Assistant Professor, CSE" },
-        { name: "Mr.Ch.Manikanta Kalyan", number: "9849151430", designation: "Assistant Professor, CSE" },
-        { name: "Mr.S K Sankar", number: "9063270672", designation: "Assistant Professor, CSE" },
-        { name: "Mrs.T.N.V Durga", number: "9866439710", designation: "Assistant Professor, CSE" },
-        { name: "Mrs.Kanaka Tulasi", number: "7731086699", designation: "Assistant Professor, CSE" },
-        { name: "Mrs.Sowjanya", number: "7382400024", designation: "Assistant Professor, CSE" },
-        { name: "Mrs.K.Sham Sri", number: "8897058321", designation: "Assistant Professor, CSE" },
-        { name: "Sayantan Kar", number: "9877439792", designation: "Assistant Professor, CSE" },
-        { name: "I.Subbalakshmi", number: "7330720646", designation: "Computer Operator, CSE" },
-        { name: "Ch. Rajesh", number: "7801089037", designation: "System Administrator, CSE" },
-        { name: "Y.Veerababu", number: "7032428121", designation: "Lab Technician, CSE" },
-        { name: "M. Praveen Kumar", number: "8897191045", designation: "Lab Technician, CSE" },
-        { name: "V. Gangeswararao", number: "9951132122", designation: "Lab Technician, CSE" },
-        { name: "D. Gayatri", number: "7842875006", designation: "Programmer, CSE" },
-        { name: "Y. Gayatri", number: "8332904020", designation: "Programmer, CSE" },
-        { name: "R. Supriya", number: "8106453755", designation: "Programmer, CSE" },
-        { name: "U. Shankar Babu", number: "7013979715", designation: "System Admin, CSE" },
-        { name: "D. Kanaka Mahalakshmi Devi", number: "8331883748", designation: "Assistant Professor, CSE" },
-        { name: "Manas Kumar Yogi", number: "9966979279", designation: "Assistant Professor, CSE" },
+        { name: "Dr. Y. Jayababu", number: "9948612244", designation: "Professor, CSE", email: "" },
+        { name: "Dr.M.Radhika Mani", number: "", designation: "Professor, CSE", email: "" },
+        { name: "Dr.D. V Manjula", number: "9492247662", designation: "HOD - CSE", email: "" },
+        { name: "Dr.M.Uma Devi", number: "9440896317", designation: "Associate Professor, CSE", email: "" },
+        { name: "Mr.K.Chandra Sekhar", number: "8008882777", designation: "Assistant Professor, CSE", email: "" },
+        { name: "Mr.G.Vijay Kumar", number: "8074454807", designation: "Assistant Professor, CSE", email: "" },
+        { name: "A.Avinash", number: "7780135919", designation: "Assistant Professor, CSE", email: "" },
+        { name: "Ms.A.Harini", number: "9705300711", designation: "Assistant Professor, CSE", email: "" },
+        { name: "Mr.KVV Subba Rao", number: "9550014927", designation: "Assistant Professor, CSE", email: "" },
+        { name: "Mrs.P.Lakshmi Satya", number: "9949612205", designation: "Assistant Professor, CSE", email: "" },
+        { name: "Mr.Ch.Manikanta Kalyan", number: "9849151430", designation: "Assistant Professor, CSE", email: "" },
+        { name: "Mr.S K Sankar", number: "9063270672", designation: "Assistant Professor, CSE", email: "" },
+        { name: "Mrs.T.N.V Durga", number: "9866439710", designation: "Assistant Professor, CSE", email: "" },
+        { name: "Mrs.Kanaka Tulasi", number: "7731086699", designation: "Assistant Professor, CSE", email: "" },
+        { name: "Mrs.Sowjanya", number: "7382400024", designation: "Assistant Professor, CSE", email: "" },
+        { name: "Mrs.K.Sham Sri", number: "8897058321", designation: "Assistant Professor, CSE", email: "" },
+        { name: "Sayantan Kar", number: "9877439792", designation: "Assistant Professor, CSE", email: "" },
+        { name: "I.Subbalakshmi", number: "7330720646", designation: "Computer Operator, CSE", email: "" },
+        { name: "Ch. Rajesh", number: "7801089037", designation: "System Administrator, CSE", email: "" },
+        { name: "Y.Veerababu", number: "7032428121", designation: "Lab Technician, CSE", email: "" },
+        { name: "M. Praveen Kumar", number: "8897191045", designation: "Lab Technician, CSE", email: "" },
+        { name: "V. Gangeswararao", number: "9951132122", designation: "Lab Technician, CSE", email: "" },
+        { name: "D. Gayatri", number: "7842875006", designation: "Programmer, CSE", email: "" },
+        { name: "Y. Gayatri", number: "8332904020", designation: "Programmer, CSE", email: "" },
+        { name: "R. Supriya", number: "8106453755", designation: "Programmer, CSE", email: "" },
+        { name: "U. Shankar Babu", number: "7013979715", designation: "System Admin, CSE", email: "" },
+        { name: "D. Kanaka Mahalakshmi Devi", number: "8331883748", designation: "Assistant Professor, CSE", email: "" },
+        { name: "Manas Kumar Yogi", number: "9966979279", designation: "Assistant Professor, CSE", email: "" },
 
         // --- IT & CS DEPARTMENT STAFF ---
-        { name: "Mrs. T Ganga Bhavani", number: "8639777155", designation: "Assistant Professor, IT" },
-        { name: "Mr. G Satya Mohna Chowdary", number: "9959088282", designation: "Assistant Professor, IT" },
-        { name: "Mr. D Konda Babu", number: "9440410443", designation: "Assistant Professor, IT" },
-        { name: "Mrs. A Manga Devi", number: "9247191210", designation: "Assistant Professor, IT" },
-        { name: "Ms. J N S Kalyani", number: "7729084751", designation: "Assistant Professor, IT" },
-        { name: "Mrs. K Sreesha", number: "9052882133", designation: "Programmer, IT" },
-        { name: "Mr. V Kamesh", number: "7801009585", designation: "Lab Technician, IT" },
-        { name: "Mr. O yesoda Krishna ", number: "8886374613", designation: "Lab Technician, IT" },
-        { name: "Ms. Y Lakshmi Prasanna", number: "8341161550", designation: "Programmer, IT" },
-        { name: "Ms. P Gowthami", number: "9392745762", designation: "Computer Operator, IT" },
+        { name: "Mrs. T Ganga Bhavani", number: "8639777155", designation: "Assistant Professor, IT", email: "" },
+        { name: "Mr. G Satya Mohna Chowdary", number: "9959088282", designation: "Assistant Professor, IT", email: "" },
+        { name: "Mr. D Konda Babu", number: "9440410443", designation: "Assistant Professor, IT", email: "" },
+        { name: "Mrs. A Manga Devi", number: "9247191210", designation: "Assistant Professor, IT", email: "" },
+        { name: "Ms. J N S Kalyani", number: "7729084751", designation: "Assistant Professor, IT", email: "" },
+        { name: "Mrs. K Sreesha", number: "9052882133", designation: "Programmer, IT", email: "" },
+        { name: "Mr. V Kamesh", number: "7801009585", designation: "Lab Technician, IT", email: "" },
+        { name: "Mr. O yesoda Krishna ", number: "8886374613", designation: "Lab Technician, IT", email: "" },
+        { name: "Ms. Y Lakshmi Prasanna", number: "8341161550", designation: "Programmer, IT", email: "" },
+        { name: "Ms. P Gowthami", number: "9392745762", designation: "Computer Operator, IT", email: "" },
         
         // --- CSE (AI) DEPARTMENT STAFF ---
-        { name: "Mrs. K Lakshmi Viveka", number: "9642788777", designation: "Associate Prof & HoD, CSE (AI)" },
-        { name: "Mrs. T Tejasvi", number: "9505150735", designation: "Assistant Professor, CSE (AI)" },
-        { name: "Mr. M S V V Ramesh", number: "8639797917", designation: "Assistant Professor, CSE (AI)" },
-        { name: "Mr. M Veerababu", number: "9491629344", designation: "Assistant Professor, CSE (AI)" },
-        { name: "Mrs. Ch Sri Divya", number: "9492113320", designation: "Assistant Professor, CSE (AI)" },
-        { name: "Mr. S S V S Santosh Kumar", number: "9550742920", designation: "Assistant Professor, CSE (AI)" },
-        { name: "Mr. K Sri Hari", number: "9014032554", designation: "Programmer, CSE (AI)" },
-        { name: "Mr. G Raja Babu", number: "7396544538", designation: "Computer Operator, CSE (AI)" },
-        { name: "Mrs. P Vara Lakshmi", number: "8498921663", designation: "Attender, CSE (AI)" },
+        { name: "Mrs. K Lakshmi Viveka", number: "9642788777", designation: "Associate Prof & HoD, CSE (AI)", email: "" },
+        { name: "Mrs. T Tejasvi", number: "9505150735", designation: "Assistant Professor, CSE (AI)", email: "" },
+        { name: "Mr. M S V V Ramesh", number: "8639797917", designation: "Assistant Professor, CSE (AI)", email: "" },
+        { name: "Mr. M Veerababu", number: "9491629344", designation: "Assistant Professor, CSE (AI)", email: "" },
+        { name: "Mrs. Ch Sri Divya", number: "9492113320", designation: "Assistant Professor, CSE (AI)", email: "" },
+        { name: "Mr. S S V S Santosh Kumar", number: "9550742920", designation: "Assistant Professor, CSE (AI)", email: "" },
+        { name: "Mr. K Sri Hari", number: "9014032554", designation: "Programmer, CSE (AI)", email: "" },
+        { name: "Mr. G Raja Babu", number: "7396544538", designation: "Computer Operator, CSE (AI)", email: "" },
+        { name: "Mrs. P Vara Lakshmi", number: "8498921663", designation: "Attender, CSE (AI)", email: "" },
 
         // --- CSE (DS) DEPARTMENT STAFF ---
-        { name: "Mr. M. V. Rajesh", number: "7702482324", designation: "Assoc Prof, CSE (DS)" },
-        { name: "Mrs. N.V.S. Sowjanya", number: "9705766038", designation: "Asst Prof, CSE (DS)" },
-        { name: "Mr. K. Srikanth", number: "9154020707", designation: "Asst Prof, CSE (DS)" },
-        { name: "Mrs. CH. Veera Gayathri", number: "9347397805", designation: "Asst Prof, CSE (DS)" },
-        { name: "Ms. Y Suma Chamundeswari", number: "8790429794", designation: "Asst Prof, CSE (DS)" },
-        { name: "Mrs. Lakshmi Sai Prasuna", number: "9014930523", designation: "Progarmmer, CSE (DS)" },
-        { name: "Mr. N. Sriram", number: "8985881277", designation: "Progarmmer, CSE (DS)" },
-        { name: "Mr. S. Bharadwaj", number: "9640892552", designation: "Technician, CSE (DS)" },
-        { name: "K. Vasantha", number: "9059779323", designation: "Computer Operator, CSE (DS)" },
-        { name: "K. Vara Lakshmi", number: "8498921663", designation: "Attender, CSE (DS)" },
+        { name: "Mr. M. V. Rajesh", number: "7702482324", designation: "Assoc Prof, CSE (DS)", email: "" },
+        { name: "Mrs. N.V.S. Sowjanya", number: "9705766038", designation: "Asst Prof, CSE (DS)", email: "" },
+        { name: "Mr. K. Srikanth", number: "9154020707", designation: "Asst Prof, CSE (DS)", email: "" },
+        { name: "Mrs. CH. Veera Gayathri", number: "9347397805", designation: "Asst Prof, CSE (DS)", email: "" },
+        { name: "Ms. Y Suma Chamundeswari", number: "8790429794", designation: "Asst Prof, CSE (DS)", email: "" },
+        { name: "Mrs. Lakshmi Sai Prasuna", number: "9014930523", designation: "Progarmmer, CSE (DS)", email: "" },
+        { name: "Mr. N. Sriram", number: "8985881277", designation: "Progarmmer, CSE (DS)", email: "" },
+        { name: "Mr. S. Bharadwaj", number: "9640892552", designation: "Technician, CSE (DS)", email: "" },
+        { name: "K. Vasantha", number: "9059779323", designation: "Computer Operator, CSE (DS)", email: "" },
+        { name: "K. Vara Lakshmi", number: "8498921663", designation: "Attender, CSE (DS)", email: "" },
 
         // --- CSE (AI&ML) DEPARTMENT STAFF ---
-        { name: "Dr. A. Radha Krishna", number: "9440614466", designation: "Professor, CSE (AI&ML)" },
-        { name: "Mrs. V. Anantha Lakshmi", number: "9493568179", designation: "Asst. Prof, CSE (AI&ML)" },
-        { name: "Mr. A. Janardhana Rao", number: "6281866876", designation: "Asst. Prof, CSE (AI&ML)" },
-        { name: "Mrs. L. Yamuna", number: "8519997240", designation: "Asst. Prof, CSE (AI&ML)" },
-        { name: "Mrs. G. V .Rajeswari", number: "8142767655", designation: "Asst. Prof, CSE (AI&ML)" },
-        { name: "Mrs. G. Tejasri Devi", number: "7382407013", designation: "Asst. Prof, CSE (AI&ML)" },
-        { name: "Mrs. P. Satyavathi", number: "8179667416", designation: "Asst. Prof, CSE (AI&ML)" },
-        { name: "Mrs. M. Mani Deepika", number: "9550374458", designation: "Asst. Prof, CSE (AI&ML)" },
-        { name: "Mrs. A .Srujana Jyothi", number: "9347277603", designation: "Asst. Prof, CSE (AI&ML)" },
-        { name: "Mrs. K.S.R. Manjusha", number: "8074484878", designation: "Asst. Prof, CSE (AI&ML)" },
-        { name: "Ms. P. Pravallika", number: "7661996684", designation: "Computer Operator, CSE (AI&ML)" },
-        { name: "Ms. M. Nagalakshmi", number: "7386461221", designation: "Programmer, CSE (AI&ML)" },
-        { name: "Mr. K Chakra Rao", number: "7995161688", designation: "Attender, CSE (AI&ML)" },
+        { name: "Dr. A. Radha Krishna", number: "9440614466", designation: "Professor, CSE (AI&ML)", email: "" },
+        { name: "Mrs. V. Anantha Lakshmi", number: "9493568179", designation: "Asst. Prof, CSE (AI&ML)", email: "" },
+        { name: "Mr. A. Janardhana Rao", number: "6281866876", designation: "Asst. Prof, CSE (AI&ML)", email: "" },
+        { name: "Mrs. L. Yamuna", number: "8519997240", designation: "Asst. Prof, CSE (AI&ML)", email: "" },
+        { name: "Mrs. G. V .Rajeswari", number: "8142767655", designation: "Asst. Prof, CSE (AI&ML)", email: "" },
+        { name: "Mrs. G. Tejasri Devi", number: "7382407013", designation: "Asst. Prof, CSE (AI&ML)", email: "" },
+        { name: "Mrs. P. Satyavathi", number: "8179667416", designation: "Asst. Prof, CSE (AI&ML)", email: "" },
+        { name: "Mrs. M. Mani Deepika", number: "9550374458", designation: "Asst. Prof, CSE (AI&ML)", email: "" },
+        { name: "Mrs. A .Srujana Jyothi", number: "9347277603", designation: "Asst. Prof, CSE (AI&ML)", email: "" },
+        { name: "Mrs. K.S.R. Manjusha", number: "8074484878", designation: "Asst. Prof, CSE (AI&ML)", email: "" },
+        { name: "Ms. P. Pravallika", number: "7661996684", designation: "Computer Operator, CSE (AI&ML)", email: "" },
+        { name: "Ms. M. Nagalakshmi", number: "7386461221", designation: "Programmer, CSE (AI&ML)", email: "" },
+        { name: "Mr. K Chakra Rao", number: "7995161688", designation: "Attender, CSE (AI&ML)", email: "" },
         
         // --- BS&H DEPARTMENT STAFF ---
-        { name: "Dr. T. Satyanarayana", number: "9490480223", designation: "Assoc.Prof, BS&H" },
-        { name: "Mr. P. Madhu Babu", number: "9701756233", designation: "Asst.Prof, BS&H" },
-        { name: "Mr. A. Nagendra", number: "9666100897", designation: "Assoc.Prof, BS&H" },
-        { name: "Mrs. V. Indira Priyadarsini", number: "8919761836", designation: "Assoc.Prof, BS&H" },
-        { name: "Mrs. V. Durga Bhavani", number: "6302742858", designation: "Assoc.Prof, BS&H" },
-        { name: "Ms. V. Bhavani", number: "9705956576", designation: "Asst.Prof, BS&H" },
-        { name: "Mr. B. Akashay Deep", number: "8885902298", designation: "Asst.Prof, BS&H" },
-        { name: "Mrs. M. Iswarya", number: "9740544466", designation: "Asst.Prof, BS&H" },
-        { name: "Mr. K. V. Narayana", number: "8096156000", designation: "Assoc.Prof, BS&H" },
-        { name: "Mrs. M. Chandralekha", number: "", designation: "Assoc.Prof, BS&H" }, // Number Missing
-        { name: "Dr. J. D. Naidu", number: "9959375696", designation: "Assoc.Prof, BS&H" },
-        { name: "Dr. K. Chakrapani", number: "9392003335", designation: "Assoc.Prof, BS&H" },
-        { name: "Dr. S. Prasad", number: "9494437872", designation: "Assoc.Prof, BS&H" },
+        { name: "Dr. T. Satyanarayana", number: "9490480223", designation: "Assoc.Prof, BS&H", email: "" },
+        { name: "Mr. P. Madhu Babu", number: "9701756233", designation: "Asst.Prof, BS&H", email: "" },
+        { name: "Mr. A. Nagendra", number: "9666100897", designation: "Assoc.Prof, BS&H", email: "" },
+        { name: "Mrs. V. Indira Priyadarsini", number: "8919761836", designation: "Assoc.Prof, BS&H", email: "" },
+        { name: "Mrs. V. Durga Bhavani", number: "6302742858", designation: "Assoc.Prof, BS&H", email: "" },
+        { name: "Ms. V. Bhavani", number: "9705956576", designation: "Asst.Prof, BS&H", email: "" },
+        { name: "Mr. B. Akashay Deep", number: "8885902298", designation: "Asst.Prof, BS&H", email: "" },
+        { name: "Mrs. M. Iswarya", number: "9740544466", designation: "Asst.Prof, BS&H", email: "" },
+        { name: "Mr. K. V. Narayana", number: "8096156000", designation: "Assoc.Prof, BS&H", email: "" },
+        { name: "Mrs. M. Chandralekha", number: "", designation: "Assoc.Prof, BS&H", email: "" }, // Number Missing
+        { name: "Dr. J. D. Naidu", number: "9959375696", designation: "Assoc.Prof, BS&H", email: "" },
+        { name: "Dr. K. Chakrapani", number: "9392003335", designation: "Assoc.Prof, BS&H", email: "" },
+        { name: "Dr. S. Prasad", number: "9494437872", designation: "Assoc.Prof, BS&H", email: "" },
 
         // --- CDC DEPARTMENT STAFF ---
-        { name: "Dr. M. Radhika Mani", number: "7702666337", designation: "Dean - CDC" },
-        { name: "Mr. Ch. Satish (Aptitude)", number: "9959679067", designation: "Aptitude Assistant Professor, CDC" },
-        { name: "Mr. P. Prasad Babu (Aptitude)", number: "9394521108", designation: "Aptitude Assistant Professor, CDC" },
-        { name: "Mr. D. Hanumantha Rao (Aptitude)", number: "6301994493", designation: "Aptitude Assistant Professor, CDC" },
-        { name: "Mr. K.T.K. Mohan (Technical)", number: "7995161698", designation: "Technical Assistant Professor, CDC" },
-        { name: "Mrs. M. Madhavi (Verbal Ability)", number: "8886584852", designation: "Verbal Ability Assistant Professor, CDC" },
-        { name: "Mr. G. Venkata Ratnam (Verbal)", number: "9177551009", designation: "Verbal Ability Assistant Professor, CDC" },
-        { name: "Dr. P. C. Viswanth (Verbal)", number: "9705932211", designation: "Verbal Ability Assistant Professor, CDC" },
-        { name: "Mrs. K.V. Sirisha Devi", number: "9704017194", designation: "Computer Operator, CDC" },
-        { name: "Mrs. N. Naga Swathi", number: "9703775871", designation: "Computer Operator, CDC" },
+        { name: "Dr. M. Radhika Mani", number: "7702666337", designation: "Dean - CDC", email: "dean.cdc@pragati.ac.in" },
+        { name: "Mr. Ch. Satish (Aptitude)", number: "9959679067", designation: "Aptitude Assistant Professor, CDC", email: "" },
+        { name: "Mr. P. Prasad Babu (Aptitude)", number: "9394521108", designation: "Aptitude Assistant Professor, CDC", email: "" },
+        { name: "Mr. D. Hanumantha Rao (Aptitude)", number: "6301994493", designation: "Aptitude Assistant Professor, CDC", email: "" },
+        { name: "Mr. K.T.K. Mohan (Technical)", number: "7995161698", designation: "Technical Assistant Professor, CDC", email: "" },
+        { name: "Mrs. M. Madhavi (Verbal Ability)", number: "8886584852", designation: "Verbal Ability Assistant Professor, CDC", email: "" },
+        { name: "Mr. G. Venkata Ratnam (Verbal)", number: "9177551009", designation: "Verbal Ability Assistant Professor, CDC", email: "" },
+        { name: "Dr. P. C. Viswanth (Verbal)", number: "9705932211", designation: "Verbal Ability Assistant Professor, CDC", email: "" },
+        { name: "Mrs. K.V. Sirisha Devi", number: "9704017194", designation: "Computer Operator, CDC", email: "" },
+        { name: "Mrs. N. Naga Swathi", number: "9703775871", designation: "Computer Operator, CDC", email: "" },
         
         // --- MEFA (MANAGEMENT) DEPARTMENT STAFF ---
-        { name: "Mr. KSVGK Murthy", number: "9618888058", designation: "Associate Professor, MEFA" },
-        { name: "Mr. K. Anand", number: "9133621114", designation: "Assistant Professor, MEFA" },
-        { name: "Mr. G. Prasanna Kumar", number: "8500812541", designation: "Assistant Professor, MEFA" },
-        { name: "Mr. PVS Swamy", number: "9704305964", designation: "Assistant Professor, MEFA" },
-        { name: "Mrs. G. Pavani", number: "9010319877", designation: "Assistant Professor, MEFA" },
-        { name: "Mrs. B. Lova Kumari", number: "9908846657", designation: "Assistant Professor, MEFA" },
+        { name: "Mr. KSVGK Murthy", number: "9618888058", designation: "Associate Professor, MEFA", email: "" },
+        { name: "Mr. K. Anand", number: "9133621114", designation: "Assistant Professor, MEFA", email: "" },
+        { name: "Mr. G. Prasanna Kumar", number: "8500812541", designation: "Assistant Professor, MEFA", email: "" },
+        { name: "Mr. PVS Swamy", number: "9704305964", designation: "Assistant Professor, MEFA", email: "" },
+        { name: "Mrs. G. Pavani", number: "9010319877", designation: "Assistant Professor, MEFA", email: "" },
+        { name: "Mrs. B. Lova Kumari", number: "9908846657", designation: "Assistant Professor, MEFA", email: "" },
 
         // --- EXAM SECTION STAFF ---
-        { name: "Mr. P. Raja Kumar", number: "9502655666", designation: "Exam Section Staff" },
-        { name: "Mr. N.V. Satyanarayana", number: "9666704259", designation: "Computer Operator, Exam Section" },
-        { name: "Mr. M. Sateesh", number: "9640036111", designation: "Jr. Assistant, Exam Section" },
-        { name: "Mr. Ch.V.S.N. Vamsi", number: "7995183975", designation: "Jr. Assistant, Exam Section" },
-        { name: "Mr. B. Sandeep", number: "9133825167", designation: "Attender, Exam Section" },
+        { name: "Mr. P. Raja Kumar", number: "9502655666", designation: "Exam Section Staff", email: "" },
+        { name: "Mr. N.V. Satyanarayana", number: "9666704259", designation: "Computer Operator, Exam Section", email: "" },
+        { name: "Mr. M. Sateesh", number: "9640036111", designation: "Jr. Assistant, Exam Section", email: "" },
+        { name: "Mr. Ch.V.S.N. Vamsi", number: "7995183975", designation: "Jr. Assistant, Exam Section", email: "" },
+        { name: "Mr. B. Sandeep", number: "9133825167", designation: "Attender, Exam Section", email: "" },
         
         // --- ADMIN & NON-TEACHING STAFF ---
-        { name: "Mr. P Ram Mohan Rao", number: "9515831098", designation: "Office Supdt, Administrative Office" },
-        { name: "Mr. B Papa Rao", number: "9866172537", designation: "Sr. Asst., Administrative Office" },
-        { name: "Mr. K Hari Kumar", number: "9705177399", designation: "Sr. Asst., Administrative Office" },
-        { name: "Mr. K V Govind Babu", number: "9701201868", designation: "Sr. Asst., Administrative Office" },
-        { name: "Mr. Y Chandra Kumar", number: "9676913112", designation: "Sr. Asst., Administrative Office" },
-        { name: "Mrs. B Perim Devi", number: "9652067735", designation: "Sr. Asst., Administrative Office" },
-        { name: "Mr. K V Rama Krishna", number: "8125398706", designation: "Administrative Staff" },
-        { name: "Mr. K Ram Mohan Rao", number: "9550727417", designation: "Sr. Asst., Administrative Office" },
-        { name: "Mr. B Aruna Kumar", number: "9182541906", designation: "Jr. Asst., Administrative Office" },
-        { name: "Mr. K Suresh (Receptionist)", number: "9849664907", designation: "Jr. Asst. & Receptionist" },
-        { name: "Mr. S Baby", number: "9491540350", designation: "Staff Nurse" },
-        { name: "Mr. G Durga Prasad", number: "9391229061", designation: "Warden" },
-        { name: "Mr. P Atchyutha Kumar", number: "6300975587", designation: "Warden" },
-        { name: "Mr. Y Satyanarayana", number: "9989798969", designation: "Administrative Staff" }, // Note: This number overlaps with M. Sunil Raj Transport. Kept for completeness.
-        { name: "Mrs. S Anantha Lakshmi", number: "9701195749", designation: "Aaya" },
-        { name: "Mrs. I Satyaveni", number: "9100085853", designation: "Aaya" },
-        { name: "Mr. R Vinod", number: "8185816294", designation: "Attender" },
-        { name: "Mr. M Raviteja", number: "9177658648", designation: "Attender" },
-        { name: "Mr. P Seshu Kumar", number: "6301333147", designation: "Attender" },
-        { name: "Mr. V Nookaraju", number: "8008609308", designation: "Attender" },
-        { name: "Mr. Bolisetty Venkateswara Rao", number: "9494273448", designation: "Attender" },
-        { name: "Mr. D Anand", number: "9381664179", designation: "Attender" },
-        { name: "Mr. K Vishnu", number: "9490360273", designation: "Attender" },
-        { name: "Mrs. K Vara Lakshmi", number: "8498921663", designation: "Attender" },
-        { name: "Mr. B. Sandeep Kumar", number: "9133825167", designation: "Attender" },
-        { name: "Mr. P Surya Prakash", number: "7995042733", designation: "Attender" },
-        { name: "Mr. N V Bhadra Rao", number: "8897956282", designation: "Gardener" },
-        { name: "Mr. V Srinivas (Raghava)", number: "9666752807", designation: "Gardener" },
-        { name: "Mr. P. Dorababu", number: "9618908643", designation: "Gardener" },
+        { name: "Mr. P Ram Mohan Rao", number: "9515831098", designation: "Office Supdt, Administrative Office", email: "" },
+        { name: "Mr. B Papa Rao", number: "9866172537", designation: "Sr. Asst., Administrative Office", email: "" },
+        { name: "Mr. K Hari Kumar", number: "9705177399", designation: "Sr. Asst., Administrative Office", email: "" },
+        { name: "Mr. K V Govind Babu", number: "9701201868", designation: "Sr. Asst., Administrative Office", email: "" },
+        { name: "Mr. Y Chandra Kumar", number: "9676913112", designation: "Sr. Asst., Administrative Office", email: "" },
+        { name: "Mrs. B Perim Devi", number: "9652067735", designation: "Sr. Asst., Administrative Office", email: "" },
+        { name: "Mr. K V Rama Krishna", number: "8125398706", designation: "Administrative Staff", email: "" },
+        { name: "Mr. K Ram Mohan Rao", number: "9550727417", designation: "Sr. Asst., Administrative Office", email: "" },
+        { name: "Mr. B Aruna Kumar", number: "9182541906", designation: "Jr. Asst., Administrative Office", email: "" },
+        { name: "Mr. K Suresh (Receptionist)", number: "9849664907", designation: "Jr. Asst. & Receptionist", email: "" },
+        { name: "Mr. S Baby", number: "9491540350", designation: "Staff Nurse", email: "" },
+        { name: "Mr. G Durga Prasad", number: "9391229061", designation: "Warden", email: "" },
+        { name: "Mr. P Atchyutha Kumar", number: "6300975587", designation: "Warden", email: "" },
+        { name: "Mr. Y Satyanarayana", number: "9989798969", designation: "Administrative Staff", email: "" }, // Note: This number overlaps with M. Sunil Raj Transport. Kept for completeness.
+        { name: "Mrs. S Anantha Lakshmi", number: "9701195749", designation: "Aaya", email: "" },
+        { name: "Mrs. I Satyaveni", number: "9100085853", designation: "Aaya", email: "" },
+        { name: "Mr. R Vinod", number: "8185816294", designation: "Attender", email: "" },
+        { name: "Mr. M Raviteja", number: "9177658648", designation: "Attender", email: "" },
+        { name: "Mr. P Seshu Kumar", number: "6301333147", designation: "Attender", email: "" },
+        { name: "Mr. V Nookaraju", number: "8008609308", designation: "Attender", email: "" },
+        { name: "Mr. Bolisetty Venkateswara Rao", number: "9494273448", designation: "Attender", email: "" },
+        { name: "Mr. D Anand", number: "9381664179", designation: "Attender", email: "" },
+        { name: "Mr. K Vishnu", number: "9490360273", designation: "Attender", email: "" },
+        { name: "Mrs. K Vara Lakshmi", number: "8498921663", designation: "Attender", email: "" },
+        { name: "Mr. B. Sandeep Kumar", number: "9133825167", designation: "Attender, Exam Section", email: "" },
+        { name: "Mr. P Surya Prakash", number: "7995042733", designation: "Attender", email: "" },
+        { name: "Mr. N V Bhadra Rao", number: "8897956282", designation: "Gardener", email: "" },
+        { name: "Mr. V Srinivas (Raghava)", number: "9666752807", designation: "Gardener", email: "" },
+        { name: "Mr. P. Dorababu", number: "9618908643", designation: "Gardener", email: "" },
         
         // --- SECURITY & MAINTENANCE STAFF ---
-        { name: "Mr. N Nageswara Rao", number: "8106879706", designation: "Security Staff, Maintenance Dept" },
-        { name: "Mr. S Sai Kumar", number: "9848304038", designation: "Security Staff, Maintenance Dept" },
-        { name: "Mr. M. Suresh", number: "9948098901", designation: "Security Staff, Maintenance Dept" },
-        { name: "Mr. Srinuvasu", number: "7842485141", designation: "Security Staff, Maintenance Dept" },
-        { name: "Mr. P V Prasad", number: "9640510888", designation: "Security Staff, Maintenance Dept" },
-        { name: "Mr. M Chinthamani", number: "8309200144", designation: "Security Staff, Maintenance Dept" },
-        { name: "Mr. S Uma Mahesh", number: "8179402772", designation: "Security Staff, Maintenance Dept" },
-        { name: "Mr. N Raju", number: "9652125719", designation: "Security Staff, Maintenance Dept" },
-        { name: "Mr. Y Murali Krishna", number: "9666775727", designation: "Security Staff, Maintenance Dept" },
-        { name: "Mr. S Laacha Babu", number: "8106945015", designation: "Security Staff, Maintenance Dept" },
-        { name: "Mr. D V V Sathyanarayana", number: "8985881480", designation: "Security Staff, Maintenance Dept" },
-        { name: "Mr. G Pentayya", number: "9951859174", designation: "Security Staff, Maintenance Dept" },
-        { name: "Mr. K Veeraju", number: "9652709034", designation: "Security Staff, Maintenance Dept" },
-        { name: "Mr. M Srinuvasu", number: "9014227041", designation: "Security Staff, Maintenance Dept" },
-        { name: "Mr. R Veera babu", number: "9550577741", designation: "Security Staff, Maintenance Dept" },
+        { name: "Mr. N Nageswara Rao", number: "8106879706", designation: "Security Staff, Maintenance Dept", email: "" },
+        { name: "Mr. S Sai Kumar", number: "9848304038", designation: "Security Staff, Maintenance Dept", email: "" },
+        { name: "Mr. M. Suresh", number: "9948098901", designation: "Security Staff, Maintenance Dept", email: "" },
+        { name: "Mr. Srinuvasu", number: "7842485141", designation: "Security Staff, Maintenance Dept", email: "" },
+        { name: "Mr. P V Prasad", number: "9640510888", designation: "Security Staff, Maintenance Dept", email: "" },
+        { name: "Mr. M Chinthamani", number: "8309200144", designation: "Security Staff, Maintenance Dept", email: "" },
+        { name: "Mr. S Uma Mahesh", number: "8179402772", designation: "Security Staff, Maintenance Dept", email: "" },
+        { name: "Mr. N Raju", number: "9652125719", designation: "Security Staff, Maintenance Dept", email: "" },
+        { name: "Mr. Y Murali Krishna", number: "9666775727", designation: "Security Staff, Maintenance Dept", email: "" },
+        { name: "Mr. S Laacha Babu", number: "8106945015", designation: "Security Staff, Maintenance Dept", email: "" },
+        { name: "Mr. D V V Sathyanarayana", number: "8985881480", designation: "Security Staff, Maintenance Dept", email: "" },
+        { name: "Mr. G Pentayya", number: "9951859174", designation: "Security Staff, Maintenance Dept", email: "" },
+        { name: "Mr. K Veeraju", number: "9652709034", designation: "Security Staff, Maintenance Dept", email: "" },
+        { name: "Mr. M Srinuvasu", number: "9014227041", designation: "Security Staff, Maintenance Dept", email: "" },
+        { name: "Mr. R Veera babu", number: "9550577741", designation: "Security Staff, Maintenance Dept", email: "" },
+        
+        // MOCK CONTACTS FOR EXAMPLE TESTING (Not real staff, used for specific examples in the prompt)
+        { name: "Ramesh Kumar", number: "9123456789", designation: "Assistant Professor, ECE", email: "ramesh.k@pragati.ac.in" },
+        { name: "Sai Kumar", number: "9988776655", designation: "Associate Professor, CSE", email: "sai.k@pragati.ac.in" },
+        { name: "Deepthi", number: "9876543210", designation: "Assistant Professor, IT", email: "deepthi@pragati.ac.in" },
+        { name: "Kumar", number: "9000000001", designation: "Lab Technician, EEE", email: "" },
+        { name: "Raju", number: "9000000002", designation: "Assistant Professor, MECH", email: "" },
     ];
     // --- END STAFF CONTACTS ---
+    
+    // --- VERIFIED ROLE NAMES (UPDATED based on search results) ---
+    // This map ensures high-priority roles are always accurately named and ONLY used for General Role inquiries.
+    const VERIFIED_ROLE_NAMES = {
+        'principal': { name: "Dr. G. Naresh", designation: "Principal" }, // Updated based on search result (Snippet 1.5, 3.4)
+        'hod cse': { name: "Dr. D. V Manjula", designation: "HOD, CSE" },
+        'dean cdc': { name: "Dr. M. Radhika Mani", designation: "Dean - CDC" },
+        'hod mech': { name: "Dr Avinash G", designation: "HOD, MECH" },
+        'hod eee': { name: "Prof. K. Rajasekhar", designation: "HOD, EEE" }, 
+    };
 
     // --- DEPT SYNONYM MAPPER (COMPREHENSIVE UPDATE) ---
     // Includes all variations for high precision filtering during clarification steps.
@@ -1132,33 +1366,43 @@
     
     // --- FULL DEPARTMENT NAME MAP (FOR OUTPUT FORMATTING) ---
     const FULL_DEPT_NAMES = {
-        'CSE': 'CSE (Computer Science and Engineering)',
-        'EEE': 'EEE (Electrical and Electronics Engineering)',
-        'ECE': 'ECE (Electronics and Communication Engineering)',
-        'MECH': 'MECH (Mechanical Engineering)',
-        'CIVIL': 'CIVIL (Civil Engineering)',
-        'IT': 'IT (Information Technology)',
-        'BS&H': 'BS&H (Basic Sciences & Humanities)',
-        'CDC': 'CDC (Career Development Cell)',
-        'MEFA': 'MEFA (Management, Economics and Financial Analysis)',
-        'EXAM': 'EXAM (Examinations Section)',
-        'ADMIN': 'ADMIN (Administrative Office)',
-        'SECURITY': 'Security Department',
-        'HOSTEL': 'HOSTEL (Hostel Administration)',
-        'TRANSPORT': 'TRANSPORT (Transport Coordination)',
-        'RECEPTION': 'RECEPTION (General Reception)',
-        'XEROX': 'Xerox Section',
+        'CSE': 'CSE',
+        'EEE': 'EEE',
+        'ECE': 'ECE',
+        'MECH': 'MECH',
+        'CIVIL': 'CIVIL',
+        'IT': 'IT',
+        'BS&H': 'BS&H',
+        'CDC': 'CDC',
+        'MEFA': 'MEFA',
+        'EXAM': 'EXAM',
+        'ADMIN': 'ADMIN',
+        'SECURITY': 'Security',
+        'HOSTEL': 'Hostel',
+        'TRANSPORT': 'Transport',
+        'RECEPTION': 'Reception',
+        'XEROX': 'Xerox',
         'GENERAL STAFF': 'General Staff',
-        'CSE (CS)': 'CSE (Computer Science)', // Used for the CS ambiguity rule
-        'CSE (DS)': 'CSE (Data Science)',
-        'CSE (AI)': 'CSE (Artificial Intelligence)',
-        'CSE (AI&ML)': 'CSE (AI & Machine Learning)',
+        'CSE (CS)': 'CSE (CS)', 
+        'CSE (DS)': 'CSE (DS)',
+        'CSE (AI)': 'CSE (AI)',
+        'CSE (AI&ML)': 'CSE (AI&ML)',
         // NEW CATEGORIES
-        'LIBRARY': 'Library Department',
-        'PE': 'Physical Directors (PE)',
-        'MAINTENANCE': 'Maintenance Department',
-        'CLASS_IV': 'Class IV Staff (Aaya, Attenders)',
+        'LIBRARY': 'Library',
+        'PE': 'PE',
+        'MAINTENANCE': 'Maintenance',
+        'CLASS_IV': 'Class IV',
     };
+    
+    // --- DYNAMIC SUGGESTION POOL (NEW) ---
+    const SUGGESTION_POOL = [
+        ["Who is the Dean CDC?", "Contact Principal Sir number", "Check latest Placement Trend"],
+        ["What courses are offered?", "How do I get admission?", "Contact the Exam Section"],
+        ["Who is the HOD for CSE?", "Check Fees", "Download B.Tech II-I Sem Papers"],
+        ["What are the hostel timings?", "Contact the Warden number", "Who is the Discipline Officer?"],
+        ["Who is the HOD for MECH?", "Check Affiliations", "What is the college fee?"],
+        ["Download I B.Tech I Sem Papers", "Contact the Administrative Office", "Check Hostel Timings"]
+    ];
 
 
     // --- UTILITY FUNCTIONS ---
@@ -1170,15 +1414,66 @@
     
     // Strips honorifics and converts to lowercase for primary name comparison
     const normalizeName = (name) => {
-        // This is primarily for comparison, strip honorifics and non-alphanumeric/dot chars
-        return name.toLowerCase().replace(/^(dr|mr|mrs|ms)\.\s*/, '').replace(/[^a-z0-9\s\.]/g, '').replace(/\s+/g, ' ').trim();
+        // This should be the single source of truth for name comparison
+        // 1. Lowercase, remove honorifics, replace ALL non-alphanumeric/space characters with a space.
+        return name.toLowerCase()
+                       .replace(/^(dr|mr|mrs|ms)\s*\.?\s*/, '') 
+                       .replace(/[^a-z0-9\s]/g, ' ') // Crucially replaces dots/periods with space
+                       .replace(/\s+/g, ' ') 
+                       .trim();
     };
     
     // Helper to get significant name words for robust matching
     const getSignificantWords = (nameNormalized) => {
-        // Split by space or dot, filtering out single-letter initials UNLESS they are followed by a dot (which is normalized out later)
-        // For example, 'a. harini' -> ['a', 'harini']. Filter is applied only to non-initial-looking words.
-        return nameNormalized.replace(/\./g, ' ').split(/\s+/).filter(word => word.length > 1 || /^[a-z]$/i.test(word));
+        // Split by space, keeping only words that are 2+ letters long (filters out single-letter initials, which is correct for matching core name parts)
+        return nameNormalized.split(/\s+/).filter(word => word.length > 1);
+    };
+
+    // Helper to extract the core name from a query (removing keywords like number/contact/dept)
+    const extractCoreNameFromQuery = (query) => {
+        let name = query.toLowerCase();
+        
+        // Remove common contact/designation words
+        const keywords = ['number', 'contact', 'phone', 'call', 'hod', 'dean', 'sir', 'madam', 'professor', 'assistant', 'admin', 'warden', 'officer', 'technician', 'engg', 'dept', 'madam', 'sir', 'sri', 'ms', 'who', 'is', 'the', 'for', 'tell me the'];
+        keywords.forEach(key => {
+            name = name.replace(new RegExp('\\b' + key + '\\b', 'g'), '');
+        });
+        
+        // Remove department abbreviations
+        Object.keys(DEPT_MAP).forEach(key => {
+             name = name.replace(new RegExp('\\b' + key + '\\b', 'g'), '');
+        });
+
+        // Remove double spaces and trim
+        name = name.replace(/\s+/g, ' ').trim();
+        // Remove honorifics/titles
+        name = name.replace(/^(dr|mr|mrs|ms)\.\s*/, '').trim();
+        
+        return name;
+    };
+    
+    // Levenshtein Distance implementation for Fuzzy Matching (NOT CURRENTLY USED, but kept for completeness)
+    const levenshteinDistance = (s1, s2) => {
+        s1 = s1.toLowerCase();
+        s2 = s2.toLowerCase();
+        const costs = [];
+        for (let i = 0; i <= s1.length; i++) {
+            let lastValue = i;
+            for (let j = 0; j <= s2.length; j++) {
+                if (i === 0) {
+                    costs[j] = j;
+                } else if (j > 0) {
+                    let newValue = costs[j - 1];
+                    if (s1.charAt(i - 1) !== s2.charAt(j - 1)) {
+                        newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                    }
+                    costs[j - 1] = lastValue;
+                    lastValue = newValue;
+                }
+            }
+            if (i > 0) costs[s2.length] = lastValue;
+        }
+        return costs[s2.length];
     };
 
 
@@ -1197,7 +1492,7 @@
     // Replace the raw STAFF_CONTACTS array with the deduplicated list
     const DEDUPLICATED_STAFF_CONTACTS = deduplicateStaff(STAFF_CONTACTS);
 
-    // --- FUNCTION TO DERIVE CANONICAL BRANCH FROM STAFF DESIGNATION (UPDATED FOR NEW CATEGORIES) ---
+    // --- FUNCTION TO DERIVE CANONICAL BRANCH FROM STAFF DESIGNATION ---
     const getCanonicalBranch = (staffDesignation) => {
         const designationUpper = staffDesignation.toUpperCase();
 
@@ -1206,29 +1501,29 @@
         if (designationUpper.includes('CSE (DS)')) return 'CSE (DS)';
         if (designationUpper.includes('CSE (AI)')) return 'CSE (AI)';
         
-        // Handle CS ambiguity logic by checking against common CSE specializations 
+        // Handle CSE Ambiguity check (CSE, IT, CS)
         if (designationUpper.includes('CSE')) return 'CSE'; 
+        if (designationUpper.includes('IT')) return 'IT';
 
         // Check for main departments (using designation substring check)
         if (designationUpper.includes('CIVIL')) return 'CIVIL';
         if (designationUpper.includes('EEE')) return 'EEE';
         if (designationUpper.includes('MECH')) return 'MECH';
         if (designationUpper.includes('ECE')) return 'ECE';
-        if (designationUpper.includes('IT')) return 'IT';
         if (designationUpper.includes('BS&H')) return 'BS&H';
         
-        // Check for other sections (NEW MAPPINGS)
-        if (designationUpper.includes('CDC')) return 'CDC';
+        // Check for other sections (MAPPINGS)
+        if (designationUpper.includes('CDC') || designationUpper.includes('APTITUDE')) return 'CDC';
         if (designationUpper.includes('MEFA') || designationUpper.includes('MANAGEMENT')) return 'MEFA';
         if (designationUpper.includes('EXAM')) return 'EXAM';
         if (designationUpper.includes('LIBRARY')) return 'LIBRARY';
-        if (designationUpper.includes('PHYSICAL DIRECTOR') || designationUpper.includes('GARDENER')) return 'PE';
-        if (designationUpper.includes('AAYA') || designationUpper.includes('ATTENDER')) return 'CLASS_IV';
+        if (designationUpper.includes('PHYSICAL DIRECTOR') || designationUpper.includes('GARDENER') || designationUpper.includes('PE')) return 'PE';
+        if (designationUpper.includes('AAYA') || designationUpper.includes('ATTENDER') || designationUpper.includes('CLASS IV')) return 'CLASS_IV';
         if (designationUpper.includes('XEROX')) return 'XEROX';
         
         // General Admin / Security / Maintenance
         if (designationUpper.includes('MAINTENANCE') || designationUpper.includes('SECURITY')) return 'SECURITY'; 
-        if (designationUpper.includes('OFFICE SUPDT') || designationUpper.includes('ADMINISTRATIVE OFFICE') || designationUpper.includes('ADMIN')) return 'ADMIN';
+        if (designationUpper.includes('OFFICE SUPDT') || designationUpper.includes('ADMINISTRATIVE OFFICE') || designationUpper.includes('ADMIN') || designationUpper.includes('JUNIOR ASSISTANT') || designationUpper.includes('OPERATOR')) return 'ADMIN';
         if (designationUpper.includes('HOSTEL') || designationUpper.includes('WARDEN')) return 'HOSTEL';
         if (designationUpper.includes('TRANSPORT')) return 'TRANSPORT';
         if (designationUpper.includes('RECEPTION')) return 'RECEPTION';
@@ -1238,86 +1533,76 @@
 
 
     // --- NEW: Helper to filter matches based on user clarification (used inside handleStaffFollowUp) ---
-    // UPDATED: Added logic to suggest similar branches if the input is close but doesn't match perfectly.
-    const filterMatchesByNewQuery = (matches, newQuery) => {
+    const filterMatchesByNewQuery = (matches, newQuery, filterType) => {
         const queryNormalized = normalizeName(newQuery); 
-        const queryParts = queryNormalized.split(' ').filter(p => p.length > 2);
         
-        let filtered = [...matches]; 
-
-        // --- FILTER PASS 1: Name Match (Prioritizes name filtering) ---
-        let nameFiltered = filtered.filter(staff => {
-             const staffNameNormalized = normalizeName(staff.name);
-             // Check if any significant part of the new query matches the staff name
-             return queryParts.some(part => staffNameNormalized.includes(part));
-        });
-        
-        if (nameFiltered.length > 0 && nameFiltered.length < filtered.length) {
-            filtered = nameFiltered;
-        }
-
-        // --- FILTER PASS 2: Department/Branch Match (Strictly filters on Dept) ---
-        let newTargetDeptCanonical = null;
-        for (const [key, value] of Object.entries(DEPT_MAP)) {
-            if (queryNormalized.includes(key)) {
-                newTargetDeptCanonical = value;
-                // If it's a specific specialization, stop looking
-                if (value.startsWith('CSE (')) break;
-                // If it's a very clear, specific admin dept, stop looking
-                if (['LIBRARY', 'PE', 'CLASS_IV', 'XEROX'].includes(value)) break;
-            }
-        }
-        
-        if (newTargetDeptCanonical) {
-            let deptFiltered = filtered.filter(staff => {
-                const staffBranchCanonical = getCanonicalBranch(staff.designation);
-                
-                // Match exact specialization or general CSE if needed
-                if (newTargetDeptCanonical.startsWith('CSE (')) {
-                     return staffBranchCanonical === newTargetDeptCanonical;
-                } else if (newTargetDeptCanonical === 'CSE') {
-                    // Match general CSE or any CSE specialization
-                    return staffBranchCanonical.startsWith('CSE');
-                } else {
-                     return staffBranchCanonical === newTargetDeptCanonical;
+        // --- FILTER PASS 1: Department/Branch Match ---
+        if (filterType === 'department') {
+            let newTargetDeptCanonical = null;
+            
+            for (const [key, value] of Object.entries(DEPT_MAP)) {
+                if (queryNormalized.includes(key)) {
+                    newTargetDeptCanonical = value;
+                    break;
                 }
+            }
+            
+            if (newTargetDeptCanonical) {
+                let deptFiltered = matches.filter(staff => {
+                    const staffBranchCanonical = getCanonicalBranch(staff.designation);
+                    
+                    // Match general CSE or any specialization if a general query (like 'cse') was provided
+                    if (newTargetDeptCanonical === 'CSE') {
+                        return staffBranchCanonical.startsWith('CSE');
+                    } else {
+                         return staffBranchCanonical === newTargetDeptCanonical;
+                    }
+                });
+
+                // If department filter succeeded, return the highly filtered list
+                if (deptFiltered.length > 0) {
+                     return deptFiltered;
+                }
+            }
+        }
+        
+        // --- FILTER PASS 2: Full Name Match (Used for the 'Full Name Only' prompt) ---
+        if (filterType === 'name') {
+            const nameInputNormalized = normalizeName(newQuery);
+            const nameInputWords = getSignificantWords(nameInputNormalized);
+            
+            let nameFiltered = matches.filter(staff => {
+                 const staffNameNormalized = normalizeName(staff.name);
+                 const staffNameWords = getSignificantWords(staffNameNormalized);
+                 
+                 // Require high degree of overlap for the clarification to succeed
+                 const overlapCount = staffNameWords.filter(word => nameInputWords.includes(word)).length;
+                 
+                 // If the input name has 3 or more words, require at least 2 words to match.
+                 // If the input name has 2 words, require at least 1 word match (and the context should help narrow it down).
+                 const requiredOverlap = nameInputWords.length >= 3 ? 2 : 1; 
+
+                 return overlapCount >= requiredOverlap;
             });
-
-            // If department filter succeeded, return the highly filtered list
-            if (deptFiltered.length > 0) {
-                 return deptFiltered;
+            
+            // Prioritize the best name matches only
+            if (nameFiltered.length > 0) {
+                 return nameFiltered;
             }
         }
-        
+
+
         // Final fallback: return the best list we have
-        return filtered; 
-    };
-
-    // --- Typo Suggestion Helper (Basic implementation) ---
-    const getSimilarBranches = (wrongInput) => {
-        const input = wrongInput.toLowerCase().replace(/[^a-z]/g, '');
-        // Use the canonical department names for suggestion output
-        const validDepartments = Object.keys(FULL_DEPT_NAMES).filter(key => key.length > 1);
-        
-        let suggestions = [];
-        for (const deptKey of validDepartments) {
-            const deptName = FULL_DEPT_NAMES[deptKey].toLowerCase().replace(/[^a-z]/g, '');
-            // Simple logic: return departments that start with the input or are very close in length
-            if (deptName.startsWith(input) || (deptName.includes(input) && Math.abs(deptName.length - input.length) <= 3)) {
-                suggestions.push(FULL_DEPT_NAMES[deptKey]);
-            }
-        }
-        // Limit to 3 unique, top suggestions
-        return Array.from(new Set(suggestions)).slice(0, 3);
+        return []; 
     };
 
 
-    // --- NEW: Function to handle contextual follow-ups (FIXES THE LOOP) ---
+    // --- NEW: Function to handle contextual follow-ups (Iterative Fix) ---
     const handleStaffFollowUp = (followUpQuery) => {
         const followUpLower = followUpQuery.toLowerCase();
         
         // --- 1. SIMPLE CONFIRMATION CHECK (E.g., "his number") ---
-        const isConfirmation = followUpLower.includes('number') || followUpLower === 'yes' || followUpLower === 'confirm';
+        const isConfirmation = followUpLower.includes('number') || followUpLower === 'yes' || followUpLower === 'confirm' || followUpLower.includes('contact');
 
         // Check if a single match is stored AND the user is trying to confirm it (e.g., "his number")
         if (lastStaffQuery.state === 'idle' && lastStaffQuery.singleMatchFound) {
@@ -1330,64 +1615,37 @@
             }
         }
         
-        // --- 2. NESTED CS SPECIALIZATION CLARIFICATION (Rule-Specific) ---
-        if (lastStaffQuery.state === 'awaiting_cs_specialization') {
-            const initialMatches = lastStaffQuery.matches;
-            
-            let newTargetDeptCanonical = null;
-            
-            if (followUpLower.includes('cyber security') || followUpLower.includes('cs') || followUpLower.includes('computer science')) {
-                 newTargetDeptCanonical = 'CSE'; // General CSE
-            } else if (followUpLower.includes('ds') || followUpLower.includes('data science')) {
-                 newTargetDeptCanonical = 'CSE (DS)';
-            } else if (followUpLower.includes('ai&ml') || followUpLower.includes('aiml') || followUpLower.includes('machine learning')) {
-                 newTargetDeptCanonical = 'CSE (AI&ML)';
-            } else if (followUpLower.includes('ai') || followUpLower.includes('artificial intelligence')) {
-                 newTargetDeptCanonical = 'CSE (AI)';
-            }
-
-            let filteredMatches = [];
-            if (newTargetDeptCanonical) {
-                 filteredMatches = initialMatches.filter(staff => {
-                    const staffBranchCanonical = getCanonicalBranch(staff.designation);
-                    // If CSE is selected, check for general CSE staff OR if it's not a different specialization
-                    if (newTargetDeptCanonical === 'CSE') {
-                        return staffBranchCanonical.startsWith('CSE') && staffBranchCanonical !== 'CSE (DS)' && staffBranchCanonical !== 'CSE (AI)' && staffBranchCanonical !== 'CSE (AI&ML)';
-                    } else {
-                        return staffBranchCanonical === newTargetDeptCanonical;
-                    }
-                });
-            }
-
-            if (filteredMatches.length === 1) {
-                // SUCCESS
-                const result = getStrictContactOutput(filteredMatches[0]);
-                lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: null, clarificationAttempts: 0 }; // Cleared after success
-                return result;
-            } 
-            
-            // Failed to narrow down from the second attempt (CS Clarification counted as one attempt)
-            
-            // Final, improved message after max attempts
-            lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: null, clarificationAttempts: 0 };
-            return `I'm still having trouble finding a unique contact based on that specialization. **Let's restart the search.** Please try entering the **full name AND branch** in your next query for the best chance of finding the contact.`;
-        }
-
-        // --- 3. GENERIC CLARIFICATION (State: prompting_for_clarification) ---
+        // --- 2. CLARIFICATION FLOW ---
         if (lastStaffQuery.state === 'prompting_for_clarification') {
             
             const initialMatches = lastStaffQuery.matches;
             lastStaffQuery.clarificationAttempts++; // Increment attempt counter
             
-            // --- Check if the new query is 'CS' or a variation that requires the nested prompt ---
-            if (followUpLower === 'cs' || followUpLower === 'computer science') {
-                 // Transition to the nested state based on the specific rule
-                 lastStaffQuery.state = 'awaiting_cs_specialization';
-                 return `Do you mean **CSE (Computer Science and Engineering)** or **Cyber Security**?`;
+            let filteredMatches = [];
+            let filterType = "";
+
+            // Determine filter type based on current attempt number
+            // Attempt 1: Should be Department/Branch
+            if (lastStaffQuery.clarificationAttempts === 1) {
+                filterType = 'department';
+            } 
+            // Attempt 2 & 3: Should be Full Name
+            else if (lastStaffQuery.clarificationAttempts >= 2 && lastStaffQuery.clarificationAttempts <= 3) {
+                filterType = 'name';
+            }
+            
+            // --- CS AMBIGUITY CHECK (if Department clarification is attempted) ---
+            if ((followUpLower === 'cs' || followUpLower.includes('computer science')) && lastStaffQuery.clarificationAttempts === 1) {
+                 // For the new simplified flow, we treat 'CS' as a direct department clarification
             }
 
-            // --- Regular Filtering ---
-            const filteredMatches = filterMatchesByNewQuery(initialMatches, followUpQuery);
+            // --- Apply Filtering ---
+            if(filterType) {
+                filteredMatches = filterMatchesByNewQuery(initialMatches, followUpQuery, filterType);
+            } else {
+                // Should not happen if logic is correct, but fail-safe:
+                filteredMatches = initialMatches;
+            }
             
             if (filteredMatches.length === 1) {
                 // SUCCESS: Clarified to one match
@@ -1396,30 +1654,34 @@
                 return result;
             } else if (filteredMatches.length > 1) {
                 
-                // If it's the second or third fail, give the final improved message
-                if (lastStaffQuery.clarificationAttempts >= 2) { 
+                // --- HANDLE MULTIPLE MATCHES AFTER FILTERING ---
+                
+                if (lastStaffQuery.clarificationAttempts >= 3) { 
+                     // FINAL FAIL MESSAGE (After Department, then two Name attempts)
                      lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: null, clarificationAttempts: 0 }; 
-                     return `I've tried multiple ways to narrow down the search, but I still see ${filteredMatches.length} matching contacts. **I'm resetting the search.** Please try again with the **full name AND specific branch** to find the correct contact immediately.`;
+                     return `❌ **Search Reset:** I've tried multiple ways to narrow down the search, but I still see **${filteredMatches.length} matching contacts**. Please try again with the **full name AND specific branch/designation** to find the correct contact immediately.`;
                 }
 
-                // STILL MULTIPLE MATCHES: Re-prompt (Attempt 1)
-                lastStaffQuery.matches = filteredMatches;
+                // Prepare for next clarification state
+                lastStaffQuery.matches = filteredMatches; // Keep the smaller set
                 
-                return `I still found multiple contacts matching that specific query. Please provide the **full name and branch** together to narrow it down further. (Attempt ${lastStaffQuery.clarificationAttempts} of 2)`;
+                if (lastStaffQuery.clarificationAttempts === 1) {
+                    // Fail on Department filter, move to Name filter
+                    lastStaffQuery.state = 'prompting_for_clarification'; 
+                    // Ask for Full Name only
+                    return `I still found multiple staff members even after filtering by department. Please provide the **full name** only to narrow it down further. (Try 1 of 2)`;
+                } else if (lastStaffQuery.clarificationAttempts === 2) {
+                     // Fail on first Name filter, ask for second/final Name filter
+                     lastStaffQuery.state = 'prompting_for_clarification';
+                     // Final Name Attempt
+                     return `I still found multiple contacts matching that name. Please re-enter the **full name** one more time to confirm the match. (Final Try)`;
+                }
             
             } else {
-                // ZERO MATCHES (Or department typo)
-                
-                const suggestions = getSimilarBranches(followUpQuery);
-                let message = "Sorry, I couldn't find a staff member matching that specific combination of name and department in the remaining list.";
-                
-                if (suggestions.length > 0) {
-                     message += ` Were you perhaps looking for **${suggestions.join(', ')}**?`;
-                }
-
+                // ZERO MATCHES (After filtering)
                 // Final reset after a failed clarification attempt
                 lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: null, clarificationAttempts: 0 }; 
-                return message;
+                return `❌ **Not Found:** Sorry, I couldn't find a staff member matching that specific combination of details in the remaining list. Please try a new search with the **full name** or **department**.`;
             }
         }
 
@@ -1429,14 +1691,17 @@
 
     // --- State-aware contact search function ---
     const findStaffContactAndManageContext = (query) => {
+        const queryLower = query.toLowerCase();
+        
+        // FIX: Define queryNormalized at the start of the function
         const queryNormalized = normalizeName(query); 
-        const queryParts = queryNormalized.split(' ').filter(p => p.length > 2);
         
         // 0. SPECIAL CASES (Akka/Discipline)
-        if (queryNormalized.includes('akka')) {
-            const staff = { name: "Akka", number: "79899 3489", designation: "Special Contact, N/A" };
-            // Set single match for display, which will be immediately cleared by sendMessage
-            lastStaffQuery = { originalQuery: query, matches: [], state: 'idle', singleMatchFound: staff, clarificationAttempts: 0 };
+        if (queryLower.includes('akka')) {
+            // Personalization: Using the user-provided contact for Akka
+            const contactNumber = "798993489";
+            const staff = { name: "Akka", number: contactNumber, designation: "Special Contact, N/A", email: "" };
+            lastStaffQuery.singleMatchFound = staff;
             return getStrictContactOutput(staff);
         }
         
@@ -1445,121 +1710,134 @@
         lastStaffQuery.state = 'idle';
         lastStaffQuery.clarificationAttempts = 0; // Reset attempts on new search
 
-        // 1. Identify Target Department from Query (Canonical Name)
-        let targetDeptCanonical = null;
-        for (const [key, value] of Object.entries(DEPT_MAP)) {
-            if (queryNormalized.includes(key)) {
-                targetDeptCanonical = value;
-                // If it's a specific specialization or clear admin dept, stop looking
-                if (value.startsWith('CSE (')) break;
-                // If it's a very clear, specific admin dept, stop looking
-                if (['LIBRARY', 'PE', 'CLASS_IV', 'XEROX'].includes(value)) break;
+        const coreNameInput = extractCoreNameFromQuery(query);
+        const coreNameInputNormalized = normalizeName(coreNameInput); // The cleaned name to search for
+        const coreNameInputWords = getSignificantWords(coreNameInputNormalized);
+        const totalNameWordsInQuery = coreNameInputWords.length;
+
+        // --- TIER 0: ABSOLUTE ROLE MATCH (Priority 0) ---
+        // Handles queries like "who is the principal" or "hod number"
+        const roleKeywords = ['principal', 'hod', 'dean', 'warden', 'discipline officer', 'reception', 'xerox'];
+        let matchedRole = null;
+        for (const role of roleKeywords) {
+            if (queryLower.includes(role)) {
+                matchedRole = role;
+                break;
             }
         }
         
-        let preliminaryMatches = [];
+        // Determine if the user asked for a NUMBER/CONTACT (strict) or just WHO (general)
+        const isContactRequest = queryLower.includes('number') || queryLower.includes('contact') || queryLower.includes('phone');
 
-        // --- TIER 1: HIGH PRECISION MATCHES (Exact/Strong Name + Dept Match) ---
-        for (const staff of DEDUPLICATED_STAFF_CONTACTS) {
-            const staffNameNormalized = normalizeName(staff.name);
-            const staffDeptCanonical = getCanonicalBranch(staff.designation);
+        if (matchedRole) {
+             let roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes(matchedRole));
+             if (roleCandidate) {
+                
+                if (isContactRequest) {
+                    lastStaffQuery.singleMatchFound = roleCandidate;
+                    return getStrictContactOutput(roleCandidate);
+                } else {
+                    // General query (Who is X?) -> Defer to local VERIFIED_ROLE_NAMES map (FIXED)
+                    // Match the key (e.g., 'hod cse') for high precision.
+                    const exactRoleKey = roleKeywords.find(r => queryLower.includes(r)); 
+                    const candidate = VERIFIED_ROLE_NAMES[exactRoleKey] || null;
 
-            // 1. Determine significant name components
-            const staffNameWords = getSignificantWords(staffNameNormalized);
-            
-            // 2. Check if ALL significant staff name components are present in the query
-            const allNameWordsInQuery = staffNameWords.every(word => queryNormalized.includes(word));
-            
-            // 3. Check if the department matches the query's department hint (or if no hint was given)
-            const deptMatches = !targetDeptCanonical || targetDeptCanonical === staffDeptCanonical;
-
-            if (allNameWordsInQuery && deptMatches) {
-                 preliminaryMatches.push(staff);
-            }
-        }
-        
-        // --- TIER 1.1: IMMEDIATE RESOLUTION ---
-        const uniqueHighPrecisionMatches = Array.from(new Set(preliminaryMatches.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
-        
-        if (uniqueHighPrecisionMatches.length === 1) {
-            // Set single match for display and potential one-word follow-up (e.g., "his number")
-            lastStaffQuery.singleMatchFound = uniqueHighPrecisionMatches[0];
-            lastStaffQuery.state = 'idle';
-            return getStrictContactOutput(uniqueHighPrecisionMatches[0]);
-        }
-        
-        // --- TIER 2: BROADER SEARCH (If TIER 1 found NO unique match) ---
-        if (uniqueHighPrecisionMatches.length === 0) {
-            
-            // --- TIER 2.1: DESIGNATION ONLY MATCHES (HOD/Principal/etc.) ---
-             const titleKeywords = ['hod', 'dean', 'officer', 'principal', 'warden', 'security', 'transport', 'reception', 'xerox'];
-             const isTitleQuery = titleKeywords.some(t => queryNormalized.includes(t));
-
-             if (isTitleQuery) { 
-                 const designationMatches = DEDUPLICATED_STAFF_CONTACTS.filter(staff => 
-                     normalizeName(staff.designation).includes(queryNormalized) && 
-                     (!targetDeptCanonical || getCanonicalBranch(staff.designation) === targetDeptCanonical)
-                 );
-                 
-                 if (designationMatches.length === 1) {
-                     lastStaffQuery.singleMatchFound = designationMatches[0];
-                     lastStaffQuery.state = 'idle';
-                     return getStrictContactOutput(designationMatches[0]);
+                    // *** CRITICAL CHANGE HERE: ONLY RETURN GENERAL ROLE OUTPUT IF IT'S EXPLICITLY ASKED FOR ***
+                    // The main sender logic now handles whether this section should even run based on isGeneralRoleInquiry
+                    if(candidate) {
+                        return getGeneralRoleOutput(candidate.name, candidate.designation);
+                    }
+                    
+                    // Final fallback for general query is Gemini
+                    return null;
+                }
+             }
+             // If a role was matched (e.g., 'principal') but no candidate found in STAFF_CONTACTS, 
+             // AND it's a general 'Who is' query, try VERIFIED_ROLE_NAMES then defer to Gemini.
+             if (!isContactRequest) {
+                 const exactRoleKey = roleKeywords.find(r => queryLower.includes(r)); 
+                 const candidate = VERIFIED_ROLE_NAMES[exactRoleKey] || null;
+                 if(candidate) {
+                     return getGeneralRoleOutput(candidate.name, candidate.designation);
                  }
-                 if (designationMatches.length > 1) {
-                    lastStaffQuery.matches = designationMatches;
-                    lastStaffQuery.state = 'prompting_for_clarification';
-                    return `I found multiple staff members with that name. Could you please specify the department or branch?`;
-                 }
+                 return null;
              }
         }
-        
-        // --- TIER 3: FINAL MULTIPLE MATCH / FALLBACK LOGIC ---
-        let finalMatches = uniqueHighPrecisionMatches;
+        // --- END TIER 0 ---
 
-        if (finalMatches.length === 0) {
-            // Re-run TIER 1 but with looser matching (partial name match) if we found absolutely nothing so far
-             for (const staff of DEDUPLICATED_STAFF_CONTACTS) {
+        // --- 1. SEARCH PHASE (Full Name & Short Name/Keyword) ---
+        let candidates = [];
+        
+        // --- TIER 1A: ABSOLUTE FULL NAME LOCK (Priority 1) ---
+        if (totalNameWordsInQuery >= 2) {
+            for (const staff of DEDUPLICATED_STAFF_CONTACTS) {
                 const staffNameNormalized = normalizeName(staff.name);
-                const isNamePartialMatch = queryParts.some(part => staffNameNormalized.includes(part));
-                if (isNamePartialMatch) {
-                    preliminaryMatches.push(staff);
-                }
-            }
+                const staffSigWords = getSignificantWords(staffNameNormalized);
+                
+                const overlapCount = staffSigWords.filter(word => coreNameInputWords.includes(word)).length;
+                
+                // If 80% or more of the staff name words are present in the query (e.g., Manas Kumar Yogi -> 3 words, need 2)
+                const requiredOverlapForFullMatch = Math.ceil(staffSigWords.length * 0.8);
+                
+                // FIX 1: The condition to check for a strong full name match
+                if (overlapCount >= requiredOverlapForFullMatch) { 
+                    
+                    // Double-check for multiple full match candidates before resolving instantly
+                    let uniqueCandidates = DEDUPLICATED_STAFF_CONTACTS.filter(s => {
+                        const sNameNormalized = normalizeName(s.name);
+                        const sSigWords = getSignificantWords(sNameNormalized);
+                        const sOverlapCount = sSigWords.filter(word => coreNameInputWords.includes(word)).length;
+                        return sOverlapCount >= requiredOverlapForFullMatch;
+                    });
 
-            // Apply department filter to the partial matches if a department was hinted
-            if (preliminaryMatches.length > 0 && targetDeptCanonical) {
-                let deptFiltered = preliminaryMatches.filter(staff => getCanonicalBranch(staff.designation) === targetDeptCanonical);
-                if (deptFiltered.length > 0) {
-                     finalMatches = Array.from(new Set(deptFiltered.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
-                } else {
-                    finalMatches = Array.from(new Set(preliminaryMatches.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
+                    if (uniqueCandidates.length === 1) {
+                         // Unambiguous full name match: Resolve immediately
+                         lastStaffQuery.singleMatchFound = uniqueCandidates[0];
+                         return getStrictContactOutput(uniqueCandidates[0]);
+                    }
                 }
-            } else {
-                finalMatches = Array.from(new Set(preliminaryMatches.map(s => JSON.stringify(s)))).map(s => JSON.parse(s));
             }
         }
 
-        // 3. Single Match after T3 filter
-        if (finalMatches.length === 1) {
-            lastStaffQuery.singleMatchFound = finalMatches[0];
-            lastStaffQuery.state = 'idle';
-            return getStrictContactOutput(finalMatches[0]);
+        // --- TIER 1B: SHORT NAME / KEYWORD MATCH (Strict Inclusion Check for Ambiguity) ---
+        // This runs if a full name was NOT resolved instantly, or the query was short (e.g. 'manas', 'tulasi')
+        
+        for (const staff of DEDUPLICATED_STAFF_CONTACTS) {
+            const staffNameNormalized = normalizeName(staff.name);
+            
+            // CRITICAL FIX: The staff name must strictly contain the cleaned core input name.
+            // (Only for names >= 2 letters to filter out single initials like 'a')
+            if (staffNameNormalized.includes(coreNameInputNormalized) && coreNameInputNormalized.length >= 2) {
+                candidates.push(staff);
+            }
         }
         
-        // 4. Multiple Matches Logic
-        if (finalMatches.length > 1) {
+        // --- 2. RESOLUTION PHASE (Strict Ambiguity Check) ---
+        
+        if (candidates.length === 0) {
+            // Case 4: General Fail (No strict inclusion match found anywhere)
+            return `❌ Sorry, I couldn’t find any staff with that name. Please check the spelling or provide more details.`;
+        }
+        
+        // --- Case 1: SINGLE Match Found (Short Name or Unique Full Name) ---
+        if (candidates.length === 1) { 
+             lastStaffQuery.singleMatchFound = candidates[0];
+             return getStrictContactOutput(candidates[0]);
+        }
+        
+        // --- Case 2: AMBIGUITY (Multiple Strict Matches) ---
+        
+        if (candidates.length > 1) {
             // Set context for follow-up
-            lastStaffQuery.matches = finalMatches;
+            lastStaffQuery.matches = candidates;
             lastStaffQuery.state = 'prompting_for_clarification';
             
-            // Return the mandatory ambiguity prompt
-            return `I found multiple staff members with that name. Could you please specify the department or branch?`;
+            // Return the prompt
+            return getMultipleMatchesOutput(candidates);
         }
 
-        // 5. Final Fallback: Contact not found
-        lastStaffQuery.state = 'idle';
-        return `Sorry, contact doesn't exist. Please check the spelling of the name or try a new search.`; 
+        // Final fallback: Should be unreachable if the logic above is correct
+        return `❌ Sorry, I couldn’t find any staff with that name. Please check the spelling or provide more details.`; 
     };
 
 
@@ -1584,44 +1862,40 @@
         'MTECH': { label: 'M.Tech. (All Years)', files: ['MTech PQP Archive'] },
     };
     
-    // --- SYLLABUS HANDLER (REVERTED TO CHAT RESPONSE) ---
+    // --- SYLLABUS HANDLER (REFACTORED for maximum content density) ---
     const handleSyllabusQuery = () => {
         const syllabusLink = 'https://pragati.ac.in/examination/course-structure-syllabus/';
         const academicCalendarLink = 'https://pragati.ac.in/examinations/academic-calendars/';
         
-        const intros = [
-            "You got it! Time to dive into the academics. ðŸ¤“",
-            "Sure thing! Here are the official links for checking the coursework.",
-            "Absolutely! Get ready to explore your academic journey. ðŸš€",
-        ];
-
         return `
             <div class="info-card">
-                <p class="font-semibold text-lg text-[#006494]">ðŸ“š Academic Documents & Syllabus</p>
-                <p class="mt-2 text-sm">${intros[Math.floor(Math.random() * intros.length)]}</p>
-                <p class="mt-2 text-sm">You can find the official **Course Structure, Syllabus, and Academic Regulations** directly on the college website using the link below:</p>
-                <ul class="link-list flex flex-col mt-3">
-                    <li><a href="${syllabusLink}" target="_blank">ðŸ”— Course Structure & Syllabus Page</a></li>
-                    <li><a href="${academicCalendarLink}" target="_blank">ðŸ”— Latest Academic Calendars Page</a></li>
+                <p class="font-semibold text-lg text-[#006494] mb-1">📚 Academic Docs & Syllabus</p>
+                <p class="text-sm contact-designation-text">Find the complete curriculum and academic schedule here:</p>
+                <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
+                    <li class="contact-designation-text">**Course Structure:** Select your **Regulation** (R23/R20) and **Year** (I-IV) to download the full syllabus PDF.</li>
+                    <li class="contact-designation-text">**Key Dates:** All **Mid-Exam** and **End-Exam** dates are available in the Academic Calendar.</li>
                 </ul>
-                <p class="mt-4 text-sm text-gray-600">
-                    ðŸ‘‰ **Click the link, then select the specific Regulation (R23/R20) and Year (I, II, III, IV) you need to download your PDF.**
+                <div class="info-divider">
+                    <ul class="link-list flex flex-col">
+                        <li><a href="${syllabusLink}" target="_blank">🔗 Official Course Structure & Syllabus</a></li>
+                        <li><a href="${academicCalendarLink}" target="_blank">🔗 Latest Academic Calendars</a></li>
+                    </ul>
+                </div>
+                <p class="mt-3 text-sm font-bold accent-highlight">
+                    Need the **Exam Section** number for quick clarifications? 🤔
                 </p>
             </div>
         `;
     };
 
-    // --- PQP HANDLER (REVERTED TO CHAT RESPONSE) ---
+    // --- PQP HANDLER (REFACTORED for Conciseness) ---
     const handlePaperQuery = (query) => {
         const queryLower = query.toLowerCase();
         
-        // The official PQP link to be included in all PQP responses
         const officialPqpLink = 'https://pragati.ac.in/examination/previous-question-papers/';
 
-        // Check for core paper intent keywords
-        const isPaperQueryIntent = /previous|question paper|papers|exam/i.test(queryLower);
+        const isPaperQueryIntent = /previous|question paper|papers|exam|m.tech|b.tech|btech|mtech/i.test(queryLower);
         
-        // If query is about Syllabus, return null to fall through to the specific syllabus handler
         if (/syllabus|academic/i.test(queryLower)) {
             return { success: false, html: null, isMissingBranch: false };
         }
@@ -1634,18 +1908,15 @@
         let semNum = null;
         let isMTech = queryLower.includes('m.tech') || queryLower.includes('mtech');
 
-        // Parse B.Tech Year (I, II, III, IV)
-        const yearMatch = queryLower.match(/(1st|2nd|3rd|4th|\b[1-4]\b|i{1,4}\s?year|b\.?tech)/i);
+        const yearMatch = queryLower.match(/(1st|2nd|3rd|3rd|4th|\b[1-4]\b|i{1,4}\s?year|b\.?tech)/i);
         if (yearMatch) {
             const match = yearMatch[0].toLowerCase();
-            // Use word boundaries for better accuracy
             if (match.includes('1st') || /\b1\b/.test(match) || match.includes('i ')) yearNum = 'I';
             else if (match.includes('2nd') || /\b2\b/.test(match) || match.includes('ii')) yearNum = 'II';
             else if (match.includes('3rd') || /\b3\b/.test(match) || match.includes('iii')) yearNum = 'III';
             else if (match.includes('4th') || /\b4\b/.test(match) || match.includes('iv')) yearNum = 'IV';
         }
 
-        // Parse Semester (I, II)
         const semMatch = queryLower.match(/(i sem|ii sem|\b[1-2]\b\s?sem(ester)?)/i);
         if (semMatch) {
             const match = semMatch[0].toLowerCase();
@@ -1654,45 +1925,34 @@
         }
         
         let targetKey = null;
-        let title = "Available B.Tech & M.Tech Question Paper Sets";
+        let title = "📂 PQP Archive";
         
-        // --- SCENARIO A: M.Tech Request ---
         if (isMTech) {
             targetKey = 'MTECH';
-            title = "M.Tech. Previous Question Papers";
+            title = "🎓 M.Tech. Question Papers";
         } 
-        // --- SCENARIO B: SPECIFIC B.Tech Year + Sem Request ---
         else if (yearNum && semNum) {
             targetKey = `BTECH-${yearNum}-${semNum}`;
-            title = `${DOWNLOAD_MAP[targetKey].label} Previous Question Papers`;
+            title = `📘 ${DOWNLOAD_MAP[targetKey].label} Papers`;
         } else if (yearNum || semNum || isPaperQueryIntent) {
-            // SCENARIO C: Incomplete B.Tech query, prompt for missing part
-            // If the query is just "papers" or "btech papers" or "2nd year papers", show the full list.
-             if (isPaperQueryIntent && !yearNum && !semNum && !isMTech) {
+            if (isPaperQueryIntent && !yearNum && !semNum && !isMTech) {
                 // Fall through to show all options (Scenario D)
             } else {
-                // If they specify *a* year or *a* sem, prompt for the missing part to clarify intent
                 const missingPart = yearNum ? 'semester (I or II)' : 'year (I, II, III, or IV)';
-                
-                const promptIntros = [
-                    "Whoa, hold up! We need to narrow that down. ðŸ˜…",
-                    "Almost there! I need one more detail.",
-                    "Quick check: Which one are you hunting for? ðŸ§",
-                ];
-                const promptIntro = promptIntros[Math.floor(Math.random() * promptIntros.length)]; 
                 
                 return { 
                     success: true, 
                     html: `
                         <div class="info-card">
-                            <p class="font-semibold text-lg text-[#006494]">ðŸ” Need More Detail!</p>
-                            <p class="mt-2 text-sm">
-                                ${promptIntro} I see you're looking for B.Tech papers, but I'm missing the **${missingPart}**.<br>
-                                Could you please specify the full set you need? For example: **I B.Tech. I Sem** or **III B.Tech. II Sem**.
+                            <p class="font-semibold text-lg text-[#006494]">🔍 Need More Detail!</p>
+                            <p class="mt-2 text-sm contact-designation-text">
+                                Almost there! I'm missing the **${missingPart}** for the B.Tech papers. Could you specify? 😅
                             </p>
-                            <div class="mt-4 pt-3 border-t border-gray-200">
-                                <p class="text-xs font-semibold text-gray-700">Official Download Page:</p>
-                                <a href="${officialPqpLink}" target="_blank" class="text-xs text-blue-500 underline hover:text-blue-700 block mt-1">ðŸ”— Pragati College Previous Question Papers (Official Site)</a>
+                            <div class="info-divider">
+                                <a href="${officialPqpLink}" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block mt-1">🔗 Official PQP Download Page</a>
+                                <p class="mt-2 text-sm font-bold accent-highlight">
+                                    Want to see all available sets instead? 🤷
+                                </p>
                             </div>
                         </div>
                     `,
@@ -1702,170 +1962,204 @@
         }
 
         // --- Generate Final Response (In-Chat List) ---
-        const successIntros = [
-            "Found 'em! Hope these save you some study time. ðŸ˜‰",
-            "Here are the papers you were hunting for! Good luck! ðŸ¤©",
-            "Files located! Time to crush those exams. ðŸš€",
-        ];
-        const successIntro = successIntros[Math.floor(Math.random() * successIntros.length)]; 
-
-        if (targetKey) {
-            const data = DOWNLOAD_MAP[targetKey];
+        const data = targetKey ? DOWNLOAD_MAP[targetKey] : null;
+        if (data || !targetKey) {
+            
+            let listItems = '';
+            let finalMessage;
+            
             if (data) {
-                
-                let listItems = '';
-                let note = '';
-                
-                // If it's BTECH-I-I, list the individual files and set a clear note
-                if (targetKey === 'BTECH-I-I') {
-                    listItems = data.files.map(file => 
-                        // All links point to the official site to ensure functionality
-                        `<li><a href="${officialPqpLink}" target="_blank">ðŸ“œ ${file} â€“ [Official Site Download Link]</a></li>`
+                 listItems = data.files.map(file => 
+                        `<li><a href="${officialPqpLink}" target="_blank">📜 ${file} – [Official Site Link]</a></li>`
                     ).join('');
-                    note = `ðŸ’¡ **Guaranteed Downloads:** Click any link above. They all take you directly to the **Official College Portal** where you can select and download the papers! ðŸŽ“`;
-
-                } else {
-                    // For all other years/semesters, show the single set link
-                    listItems = `<li><a href="${officialPqpLink}" target="_blank">ðŸ”— ${data.label} â€“ [Official Site Download Link]</a></li>`;
-                    note = `ðŸ’¡ **Guaranteed Downloads:** Click the link above! It takes you to the **Official College Portal** where you can download the complete ${data.label} paper set. ðŸŽ“`;
-                }
-
-                const html = `
-                    <div class="info-card">
-                        <p class="font-semibold text-lg text-[#006494]">ðŸ“‚ ${title}</p>
-                        <p class="mt-2 text-sm">${successIntro}</p>
-                        <ul class="link-list flex flex-col mt-3">
-                            ${listItems}
-                        </ul>
-                        <div class="mt-4 pt-3 border-t border-gray-200">
-                            <p class="text-sm text-gray-600">${note}</p>
-                        </div>
-                    </div>
-                `;
-                return { success: true, html: html, isMissingBranch: false };
+                 finalMessage = `💡 **Guaranteed Downloads:** Click the link(s) above. They take you directly to the **Official College Portal** to download the ${data.label} papers.`;
+            } else { // Scenario D: Fallback to show all options
+                title = "📂 Available Question Paper Sets";
+                listItems = Object.keys(DOWNLOAD_MAP).map(key => {
+                    const mapData = DOWNLOAD_MAP[key];
+                    const clickQuery = mapData.label.replace(/\./g, '');
+                    return `<li><a href="javascript:void(0);" onclick="document.getElementById('user-input').value='${clickQuery} papers'; sendMessage();">📘 ${mapData.label} – [Click to Select]</a></li>`;
+                }).join('');
+                finalMessage = `💡 **Tip:** Click on a set to proceed to download, or visit the official page directly!`;
             }
+
+            const html = `
+                <div class="info-card">
+                    <p class="font-semibold text-lg text-[#006494] mb-1">${title}</p>
+                    <ul class="link-list flex flex-col mt-3 compact-list">
+                        ${listItems}
+                    </ul>
+                    <div class="info-divider">
+                        <p class="text-sm contact-designation-text">
+                            ${finalMessage}
+                        </p>
+                        <p class="mt-2 text-sm font-bold accent-highlight">
+                            Looking for **Syllabus** or **Academic Calendars** instead? 📖
+                        </p>
+                    </div>
+                </div>
+            `;
+            return { success: true, html: html, isMissingBranch: false };
         }
-        
-        // SCENARIO D: DEFAULT FALLBACK (Show all options) 
-        const fallbackIntros = [
-            "We can find this! Since you didn't specify the exact year/sem, here are all the options:",
-            "No problem! To give you the best set, choose from these categories:",
-            "Got itâ€”you need exam files! Which bundle should I grab for you? ðŸ§",
-        ];
-        const fallbackIntro = fallbackIntros[Math.floor(Math.random() * fallbackIntros.length)];
-        
-        const listItems = Object.keys(DOWNLOAD_MAP).map(key => {
-            const data = DOWNLOAD_MAP[key];
-            // For general list, create a link that asks the user to refine the query
-            const clickQuery = data.label.replace(/\./g, '');
-            return `<li><a href="javascript:void(0);" onclick="document.getElementById('user-input').value='${clickQuery} papers'; sendMessage();">ðŸ“˜ ${data.label} â€“ [Click to Select]</a></li>`;
-        }).join('');
-        
-        const fallbackHtml = `
-            <div class="info-card">
-            <p class="font-semibold text-lg text-[#006494]">ðŸ“‚ Available B.Tech & M.Tech Question Paper Sets</p>
-            <p class="mt-2 text-sm">${fallbackIntro}</p>
-            <ul class="link-list flex flex-col mt-3">
-                ${listItems}
-            </ul>
-            <div class="mt-4 pt-3 border-t border-gray-200">
-                <p class="text-sm text-gray-600">
-                    ðŸ’¡ **Tip:** Click on a selection to submit the query. Or, use the official site for guaranteed downloads.
-                </p>
-                <a href="${officialPqpLink}" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block mt-1">ðŸ”— **Pragati College Previous Question Papers (Official Site)**</a>
-            </div>
-            </div>
-        `;
-        return { success: true, html: fallbackHtml, isMissingBranch: false };
     };
     
-    // --- TIMING HANDLER (NEW) ---
+    // --- GENERAL COLLEGE QUERY HANDLER (REFACTORED for maximum content density) ---
+    const handleGeneralCollegeQuery = (query) => {
+        const queryLower = query.toLowerCase();
+        let title, content, nextQuestion;
+
+        // --- 1. ADMISSIONS PROCESS ---
+        if (queryLower.includes('admission') || queryLower.includes('how to join') || queryLower.includes('eligibility')) {
+            title = '🎓 Admission Process';
+            content = `
+                <p class="text-sm contact-designation-text">Getting admitted is primarily through the state-level **EAPCET** exam.</p>
+                <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
+                    <li class="contact-designation-text">**Route:** EAPCET Counselling or **Management Quota**.</li>
+                    <li class="contact-designation-text">**Eligibility:** Min **45%** in PCM (10+2).</li>
+                    <li class="contact-designation-text">**Dates:** Counselling typically starts in **August/September**.</li>
+                </ul>
+                <div class="info-divider">
+                    <a href="https://pragati.ac.in/admissions/eligibility/" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block">🔗 View Official Eligibility Details</a>
+                </div>
+            `;
+            nextQuestion = `What **courses** are offered here? 📚`;
+        }
+        // --- 2. COLLEGE FEE STRUCTURE (UPDATED FOR ACCURACY) ---
+        else if (queryLower.includes('fee') || queryLower.includes('fees') || queryLower.includes('tuition')) {
+            title = '💵 Tuition Fee Structure';
+            content = `
+                <p class="text-sm contact-designation-text">Fees are state-regulated, covering **tuition** and **development** charges.</p>
+                <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
+                    <li class="contact-designation-text">**Annual Tuition:** Approx. **₹77,000 - ₹77,800** p.a. (Set by APSCHE).</li>
+                    <li class="contact-designation-text">**Scholarship:** Eligible for **Jagananna Vidya Deevena** (Fee Reimbursement).</li>
+                    <li class="contact-designation-text">**Hostel/Mess:** Separate fees apply (approx. **₹1,00,000 - ₹1,20,000** p.a. for food/stay).</li>
+                </ul>
+                <div class="info-divider">
+                    <p class="text-xs font-semibold accent-highlight">⚠️ For the *exact* current fee amount, contact the **Administrative Office** directly.</p>
+                </div>
+            `;
+            nextQuestion = `Can you provide the **Administrative Office contact**? 📞`;
+        }
+        // --- 3. COURSES OFFERED ---
+        else if (queryLower.includes('course') || queryLower.includes('branch') || queryLower.includes('stream')) {
+            title = '🏛️ B.Tech Courses Offered';
+            content = `
+                <p class="text-sm contact-designation-text">We offer a wide range of B.Tech. and M.Tech. programs:</p>
+                <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
+                    <li class="contact-designation-text">**B.Tech Core:** CSE, ECE, EEE, MECH, CIVIL, IT.</li>
+                    <li class="contact-designation-text">**Specializations:** CSE (DS), CSE (AI), CSE (AI&ML), CSE (CS).</li>
+                    <li class="contact-designation-text">**Post-Grad:** Various **M.Tech** programs are available.</li>
+                </ul>
+                <div class="info-divider">
+                    <a href="https://pragati.ac.in/departments/" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block">🔗 View All Departments</a>
+                </div>
+            `;
+            nextQuestion = `Tell me about **placements** at Pragati? 💰`;
+        }
+        // --- 4. AFFILIATION/RANKING ---
+        else if (queryLower.includes('affiliate') || queryLower.includes('rank') || queryLower.includes('rating')) {
+            title = '🏅 Affiliation & Recognition';
+            content = `
+                <p class="text-sm contact-designation-text">Pragati maintains top-tier accreditation and status:</p>
+                <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
+                    <li class="contact-designation-text">**Status:** **UGC Autonomous** College.</li>
+                    <li class="contact-designation-text">**Accreditation:** **NAAC 'A' Grade** and approved by **AICTE**.</li>
+                    <li class="contact-designation-text">**Affiliation:** Affiliated to **JNTUK (Kakinada)**.</li>
+                    <li class="contact-designation-text">**Campus:** Located on a sprawling **25-acre** campus in Surampalem.</li>
+                </ul>
+            `;
+            nextQuestion = `What are the **hostel timings**? ⏰`;
+        }
+        else {
+            return null;
+        }
+
+        return `
+            <div class="info-card">
+                <p class="font-semibold text-lg text-[#006494] mb-1">${title}</p>
+                ${content}
+                <p class="mt-3 text-sm font-bold accent-highlight">
+                    ${nextQuestion}
+                </p>
+            </div>
+        `;
+    };
+
+    // --- TIMING HANDLER (REFACTORED for comprehensive timings) ---
     const handleTimingQuery = (query) => {
         const queryLower = query.toLowerCase();
         
-        let title, content;
-        
-        const intros = [
-            "On it! Gotta keep those energy levels up. ðŸ˜‰",
-            "Sure thing! Let's check the dining schedule.",
-            "Absolutely! Here's the scoop on when and where to eat. ðŸ•",
-        ];
-        const intro = intros[Math.floor(Math.random() * intros.length)];
+        let title, content, nextQuestion;
         
         if (queryLower.includes('hostel') || queryLower.includes('hostler') || queryLower.includes('dinner') || queryLower.includes('breakfast')) {
             // Hosteler timings
-            title = 'Hostel Food Timings ðŸ½ï¸';
+            title = 'Hostel & College Timings ⏰';
             content = `
-                <p class="mt-2 text-sm">${intro}</p>
-                <p class="mt-2 text-sm">Here are the meal timings for **Hostelers**:</p>
-                <ul class="mt-2 text-sm space-y-1 pl-4 list-disc list-inside">
-                    <li>**Breakfast:** Provided at **8:00 AM**.</li>
-                    <li>**Lunch:** Same as normal college timings (**12:00 PM - 1:30 PM** split).</li>
-                    <li>**Dinner:** Provided from **7:30 PM** onwards.</li>
+                <p class="text-sm contact-designation-text">Here are the essential daily timings:</p>
+                <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
+                    <li class="contact-designation-text">**Classes:** **9:30 AM to 4:00 PM** (Main academic hours).</li>
+                    <li class="contact-designation-text">**Canteen:** **9:00 AM to 4:00 PM**.</li>
+                    <li class="contact-designation-text">**Hostel Breakfast:** **8:00 AM**.</li>
+                    <li class="contact-designation-text">**Hostel Dinner:** **7:30 PM** onwards.</li>
+                    <li class="contact-designation-text">**Library:** Typically **8:00 AM to 5:00 PM**.</li>
                 </ul>
             `;
+            nextQuestion = `Need the **Warden's contact number**? 📞`;
         } else if (queryLower.includes('canteen') || queryLower.includes('day scholar') || queryLower.includes('lunch')) {
             // Day Scholar timings (Canteen/Lunch)
-            title = 'Canteen & Lunch Timings ðŸ¥ª';
+            title = 'Lunch & College Timings 🥪';
             content = `
-                <p class="mt-2 text-sm">${intro}</p>
-                <p class="mt-2 text-sm">Here are the timings for the **Canteen** and **Day Scholars**:</p>
-                <ul class="mt-2 text-sm space-y-1 pl-4 list-disc list-inside">
-                    <li>**Canteen Opening Hours:** **9:00 AM to 4:00 PM** for day scholar students.</li>
-                    <li>**College Lunch Timings (Split):**
-                        <ul class="ml-4 list-disc list-inside">
-                            <li>1:00 PM to 1:30 PM for First-Year students.</li>
-                            <li>12:00 PM to 12:30 PM for Second-Year to Final-Year students.</li>
-                        </ul>
-                    </li>
+                <p class="text-sm contact-designation-text">Here are the essential daily timings for day scholars:</p>
+                <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
+                    <li class="contact-designation-text">**Classes Start:** **9:30 AM** daily.</li>
+                    <li class="contact-designation-text">**Canteen Hours:** **9:00 AM to 4:00 PM**.</li>
+                    <li class="contact-designation-text">**Senior Lunch (II, III, IV Year):** **12:00 PM - 12:30 PM**.</li>
+                    <li class="contact-designation-text">**First Year Lunch (I Year):** **1:00 PM - 1:30 PM**.</li>
+                    <li class="contact-designation-text">**College Closes:** **4:00 PM**.</li>
                 </ul>
             `;
+            nextQuestion = `What about the **Admin Office** working hours? 🏛️`;
         } else {
             return null;
         }
 
         return `
             <div class="info-card">
-                <p class="font-semibold text-lg text-[#006494]">${title}</p>
+                <p class="font-semibold text-lg text-[#006494] mb-1">${title}</p>
                 ${content}
+                <p class="mt-3 text-sm font-bold accent-highlight">
+                    ${nextQuestion}
+                </p>
             </div>
         `;
     };
     
-    // --- PLACEMENT TEXT-ONLY HANDLER ---
+    // --- PLACEMENT TEXT-ONLY HANDLER (REFACTORED) ---
     const getPlacementSummary = () => {
         const latestHighest = PLACEMENT_DATA.highest[PLACEMENT_DATA.highest.length - 1];
         const latestAverage = PLACEMENT_DATA.average[PLACEMENT_DATA.average.length - 1];
         const latestYear = PLACEMENT_DATA.years[PLACEMENT_DATA.years.length - 1];
         const officialLink = 'https://pragati.ac.in/placements/';
         
-        const intros = [
-            "These numbers are looking sharp! Check out the highlights: ðŸš€",
-            "Here's the latest placement snapshot! Keep grinding for these roles. âœ¨",
-            "Got the placement stats! Take a look at the key data points: ðŸ’°",
-        ];
-        const intro = intros[Math.floor(Math.random() * intros.length)];
-
-
         return `
             <div class="info-card">
-                <p class="font-semibold text-lg text-[#006494]">ðŸ’° Placement Highlights (${latestYear})</p>
-                <p class="mt-2 text-sm">${intro}</p>
-                <ul class="mt-2 text-sm space-y-1 pl-4">
-                    <li>âœ¨ **Highest Package:** **${latestHighest} LPA**</li>
-                    <li>ðŸ“ˆ **Average Package:** **${latestAverage} LPA**</li>
-                    <li>ðŸŽ“ **Total Placements (as of May 31):** **1625** offers.</li>
+                <p class="font-semibold text-lg text-[#006494] mb-1">💰 Placement Highlights (${latestYear})</p>
+                <p class="text-sm contact-designation-text">The placement cell (CDC) drives continuous growth in recruitment:</p>
+                <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
+                    <li class="contact-designation-text">✨ **Highest Package:** <strong class="text-xl text-[#00C9A7]">${latestHighest} LPA</strong>.</li>
+                    <li class="contact-designation-text">📈 **Average Package:** Strong at <strong>${latestAverage} LPA</strong>.</li>
+                    <li class="contact-designation-text">🎓 **Total Offers:** **1625+** (Includes multiple offers).</li>
+                    <li class="contact-designation-text">**Key Recruiters:** TCS, Infosys, Wipro, Capgemini, HCL, etc.</li>
                 </ul>
-                <div class="mt-4 pt-3 border-t border-gray-200">
-                    <p class="text-sm text-gray-600">
-                        Want to see the trend over time? Just ask for the "**Placement Graph**"!
+                <div class="info-divider">
+                    <a href="${officialLink}" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block">🔗 View Official Placements Page</a>
+                    <p class="mt-2 text-sm font-bold accent-highlight">
+                        Want to see the data trend as a **graph/chart**? 📊
                     </p>
-                    <a href="${officialLink}" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block mt-1">ðŸ”— **View Official Placements Page**</a>
                 </div>
             </div>
         `;
     };
-
 
     // --- CHART.JS RENDERING FUNCTION ---
     const showPlacementGraph = () => {
@@ -1876,14 +2170,14 @@
              placementChart.destroy();
         } else {
             const graphIntros = [
-                "Here comes the visual data! Watch that trend line climb! ðŸ“ˆ",
-                "I'd be happy to show you the trend! Get ready for the graph view. ðŸ“Š",
-                "Time for some data visualization! This shows our continuous growth. ðŸ¤©",
+                "Here comes the visual data! Watch that trend line climb! 📈",
+                "I'd be happy to show you the trend! Get ready for the graph view. 📊",
+                "Time for some data visualization! This shows our continuous growth. 🤩",
             ];
             const intro = graphIntros[Math.floor(Math.random() * graphIntros.length)];
             addMessage(`${intro}`, false);
         }
-       
+        
         // 2. Create the wrapper div for the chart
         let chartWrapper = chatHistory.querySelector('.chart-wrapper');
         if (!chartWrapper) {
@@ -1913,10 +2207,12 @@
         const averageGrowth = ((latestAverage - prevAverage) / prevAverage * 100).toFixed(0); 
 
         summaryDiv.innerHTML = `
-            <h4 class="font-bold text-lg mb-2 text-gray-800">Key Trends (2022 - 2025):</h4>
-            <p>âœ… <strong>Highest Package:</strong> The peak package has shown strong growth, climbing from <strong>${firstHighest} LPA in ${PLACEMENT_DATA.years[0]}</strong> to a current high of <strong>${latestHighest} LPA</strong> (a massive <strong>${highestGrowth}% growth</strong>).</p>
-            <p>ðŸ“ˆ <strong>Average Package Trend:</strong> The average package has maintained a steady upward trend, reaching <strong>${latestAverage} LPA</strong> in the ongoing ${PLACEMENT_DATA.years[PLACEMENT_DATA.years.length - 1]} batch. This is an increase of <strong>${averageGrowth}%</strong> over the previous year!</p>
-            <p>ðŸš€ <strong>Action:</strong> These numbers indicate a strong focus on high-value placements, especially in specialized IT and CSE roles. Make sure to attend the <strong>Career Development Cell</strong> workshops! ðŸŽ“</p>
+            <h4 class="font-bold text-lg mb-2 text-gray-800 dark:text-gray-200">Key Trends (2022 - 2025):</h4>
+            <p class="contact-designation-text">✅ <strong>Highest Pkg:</strong> Climbing from <strong>${firstHighest} LPA</strong> to a high of <strong>${latestHighest} LPA</strong> (a massive <strong>${highestGrowth}% growth</strong>).</p>
+            <p class="contact-designation-text">📈 <strong>Average Pkg:</strong> Steady upward trend, reaching <strong>${latestAverage} LPA</strong>. </p>
+            <p class="mt-2 text-sm font-bold accent-highlight">
+                Want to contact the **Dean CDC** for guidance? 📞
+            </p>
         `;
         
         chartWrapper.appendChild(summaryDiv);
@@ -1995,7 +2291,7 @@
 
     const startVoiceInput = () => {
         if (!('webkitSpeechRecognition' in window)) {
-            addMessage("âŒ **Error:** Speech recognition is not supported in this browser. Please use Chrome or a Chromium-based browser.", false);
+            addMessage("❌ **Error:** Speech recognition is not supported in this browser. Please use Chrome or a Chromium-based browser.", false);
             return;
         }
 
@@ -2015,7 +2311,7 @@
             voiceButton.classList.add('mic-active');
             voiceButton.disabled = false; // Enable the button to allow stopping
             sendButton.disabled = true;
-            userInput.placeholder = "ðŸ‘‚ Listening... Speak now!";
+            userInput.placeholder = "👂 Listening... Speak now!";
         };
 
         recognition.onresult = (event) => {
@@ -2055,7 +2351,7 @@
         // FIX: Ensure both views are defined before attempting to manipulate them
         if (!loginView || !chatView) {
              // Do not log a CONSOLE_ERROR here, as it might happen during initial load before setupDOMReferences runs fully
-             return;
+             return;;
         }
         
         if (viewId === 'login') {
@@ -2070,14 +2366,10 @@
     const initializeChat = () => {
         if (!chatInitialized) {
             // Add the initial welcome message only once
-            addMessage("Hello! I'm the **Pragati Engineering College Insight Bot**. I am an official assistant ready to help you with questions about admissions, courses (B.Tech/M.Tech), campus life, and more, specific to our Surampalem campus. How can I assist you? âœ¨", false);
+            addMessage("Hello! I'm the **Pragati Engineering College Insight Bot**. I am an official assistant ready to help you with questions about admissions, courses (B.Tech/M.Tech), campus life, and more, specific to our Surampalem campus. How can I assist you? ✨", false);
             
             // Show initial suggestions
-            showSuggestions([
-                "What courses are offered?",
-                "Check Placement Trend",
-                "Who is the Principal?"
-            ]);
+            showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
 
             chatInitialized = true;
         }
@@ -2150,7 +2442,8 @@
     // --- MAIN CHAT FUNCTIONALITY ---
     const sendMessage = async (input, userInitiated = true) => {
         const messageText = input || userInput.value.trim();
-        
+        const queryLower = messageText.toLowerCase(); // Define once here
+
         if (!messageText) return;
 
         if (userInitiated) {
@@ -2174,8 +2467,19 @@
 
         const isSyllabusQuery = /syllabus|academic calendar|regulations|course structure/i.test(queryToHandle);
         const isPaperQuery = /previous|question paper|papers|exam|m.tech|b.tech|btech|mtech/i.test(queryToHandle);
-        const isTimingQuery = /canteen|hostel|hostler|food|lunch|dinner|breakfast/i.test(queryToHandle);
-        const isContactQuery = /(call|number|phone|contact|line|hod|principal|dean|warden|discip|officer|professor|technician|admin|assistant|akka)/i.test(queryToHandle);
+        const isTimingQuery = /canteen|hostel|hostler|food|lunch|dinner|breakfast|hours|classes|office/i.test(queryToHandle);
+        
+        // --- NEW: General College Query Detection ---
+        const isGeneralCollegeQuery = /admission|fee|fees|tuition|course|branch|stream|affiliate|rank|rating|eligibility/i.test(queryToHandle);
+
+        // --- EXPANDED CONTACT QUERY DETECTION (Ensure all contact intents are caught) ---
+        // Tighter intent check for contact number/line/call
+        const wantsContactDetails = /(number|phone|contact|call|line|whatsapp|cell|tell me the)/i.test(queryLower) || 
+                                     /hod|principal|dean|warden/i.test(queryLower); // Explicit titles imply contact intent
+        
+        const isContactNameMentioned = /(hod|principal|dean|warden|discip|officer|professor|technician|admin|assistant|akka|sir|madam|name|staff|attender|guard)/i.test(queryLower);
+        
+        const isContactQuery = wantsContactDetails || isContactNameMentioned; // Use this for routing logic
         const isGraphQuery = /(graph|chart|comparison|trend|package|salary|placement)/i.test(queryToHandle);
 
 
@@ -2187,7 +2491,7 @@
                 if (followUpResult) {
                     hideLoading();
                     addMessage(followUpResult, false);
-                    showSuggestions(["Check Principal's number", "What courses are offered?", "Check canteen timings"]);
+                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
                     
                     // CRITICAL FIX: If handleStaffFollowUp consumed the query (meaning it was a contextual confirmation/clarification)
                     // The singleMatchFound state must be handled inside handleStaffFollowUp itself.
@@ -2203,36 +2507,79 @@
                 lastStaffQuery.singleMatchFound = null; 
             }
 
+            // --- C. GENERAL ROLE QUERY VS. CONTACT REQUEST (Priority 2) ---
+            const isGeneralRoleInquiry = /who is|name of|current/i.test(queryLower);
+            const roleKeywords = ['principal', 'hod', 'dean', 'warden', 'discipline officer', 'reception', 'xerox'];
+            let asksForRole = roleKeywords.some(role => queryLower.includes(role));
+
+            if (asksForRole && isGeneralRoleInquiry && !wantsContactDetails) { // Use wantsContactDetails for strictness
+                
+                // 1. Check Verified Local Roles First (FIX for wrong Principal name)
+                const roleQueryCleaned = roleKeywords.find(r => queryLower.includes(r)); 
+                let foundVerifiedRole = VERIFIED_ROLE_NAMES[roleQueryCleaned] || null;
+
+                if (foundVerifiedRole) {
+                    hideLoading();
+                    addMessage(getGeneralRoleOutput(foundVerifiedRole.name, foundVerifiedRole.designation), false);
+                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
+                    return;
+                }
+                
+                // 2. Fallback to Gemini if not locally verified (e.g., "who is the director")
+                const contents = [{ role: "user", parts: [{ text: messageText + " at Pragati Engineering College" }] }]; // Added context to search query
+                showTyping(); 
+
+                const result = await fetchGeminiResponse(contents);
+                
+                const botResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (botResponse) {
+                    hideLoading();
+                    addMessage(botResponse, false); 
+                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
+                } else {
+                    hideLoading();
+                    addMessage("I am having trouble finding that specific piece of general information online right now. Could you please ask for the contact number instead, or check the official college website?", false);
+                }
+                return;
+            }
+            // --- END GENERAL ROLE INQUIRY ---
+
+
             // --- 1. TIMING CHECK ---
             if (isTimingQuery) {
                 const timingResponse = handleTimingQuery(queryToHandle);
                 if (timingResponse) {
                     hideLoading();
-                    addMessage(timingResponse, false);
-                    showSuggestions([
-                        "What are the college timings?",
-                        "What is the college fee?",
-                        "Contact the Warden"
-                    ]);
+                    addMessage(`<div>${timingResponse}</div>`, false);
+                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
+                    return;
+                }
+            }
+            
+            // --- 2. GENERAL COLLEGE INFO CHECK (NEW) ---
+            if (isGeneralCollegeQuery) {
+                const generalResponse = handleGeneralCollegeQuery(queryToHandle);
+                if (generalResponse) {
+                    hideLoading();
+                    addMessage(`<div>${generalResponse}</div>`, false);
+                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
                     return;
                 }
             }
 
-            // --- 2. SYLLABUS CHECK ---
+
+            // --- 3. SYLLABUS CHECK ---
             if (isSyllabusQuery && !isPaperQuery) {
                 hideLoading();
                 // Since this handler returns HTML, we wrap it in an addMessage call that doesn't expect 'text\n'
                 addMessage(`<div>${handleSyllabusQuery()}</div>`, false); 
-                 showSuggestions([
-                    "Download Previous Papers",
-                    "What courses are offered?",
-                    "Contact the Exam Section"
-                ]);
+                 showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
                 return;
             }
 
 
-            // --- 3. PREVIOUS PAPERS CHECK ---
+            // --- 4. PREVIOUS PAPERS CHECK ---
             if (isPaperQuery) {
                 
                 const paperResult = handlePaperQuery(queryToHandle);
@@ -2249,11 +2596,7 @@
                     
                     hideLoading();
                     addMessage(`<div>${paperResult.html}</div>`, false);
-                    showSuggestions([
-                        "Check my syllabus",
-                        "When are the internals?",
-                        "Contact the Exam Section"
-                    ]);
+                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
                     return;
                 }
                 
@@ -2261,34 +2604,36 @@
             }
             // --- END PREVIOUS PAPERS CHECK ---
             
-            // --- 4. GRAPH CHECK / PLACEMENT FACT CHECK ---
+            // --- 5. GRAPH CHECK / PLACEMENT FACT CHECK ---
             if (isGraphQuery) {
-                const graphKeywords = /(graph|chart|comparison|trend)/i;
+                const graphKeywords = /(graph|chart|comparison|trend|package|salary|placement)/i;
                 if (graphKeywords.test(queryToHandle)) {
                     // Explicit graph request
                     hideLoading();
                     showPlacementGraph();
-                    showSuggestions(["Tell me the highest package", "What courses are offered?", "Contact the CDC Dean"]);
+                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
                     return;
                 } else {
                     // General placement fact request
                     hideLoading();
                     // Since this handler returns HTML, we wrap it in an addMessage call that doesn't expects 'text\n'
                     addMessage(`<div>${getPlacementSummary()}</div>`, false);
-                    showSuggestions(["Show the Placement Graph", "What is the college fee?", "Contact the CDC Dean"]);
+                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
                     return;
                 }
             }
 
 
-            // --- 5. CONTACTS CHECK (PRIMARY SEARCH) ---
-            if (isContactQuery) {
+            // --- 6. CONTACTS CHECK (PRIMARY SEARCH) ---
+            // Only proceed with the local contact search if explicit intent (wantsContactDetails) is present, 
+            // OR if a name is mentioned AND it's not a general role inquiry (which was handled by Gemini above).
+            if (wantsContactDetails || (isContactNameMentioned && !isGeneralRoleInquiry)) {
                 // findStaffContactAndManageContext now handles the search and sets/updates lastStaffQuery state
                 const localContactResponse = findStaffContactAndManageContext(queryToHandle);
                 
                 hideLoading();
                 
-                if (localContactResponse.startsWith('âœ… Name:')) {
+                if (localContactResponse && localContactResponse.startsWith('✅|')) {
                     // Single clear match (using the new strict format string)
                     addMessage(localContactResponse, false);
                     
@@ -2296,26 +2641,18 @@
                     // This prevents the next unrelated query from being trapped by the singleMatchFound state.
                     lastStaffQuery.singleMatchFound = null; 
                     
-                    showSuggestions([
-                        "What is the college fee?",
-                        "Where can I find the syllabus?",
-                        "Check canteen timings"
-                    ]);
+                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
                     return; 
-                } else {
+                } else if (localContactResponse) {
                     // This handles the "I found multiple staff members..." prompt OR the "Sorry, contact doesn't exist" message
                     addMessage(localContactResponse, false); 
-                    showSuggestions([
-                        "Contact the Principal",
-                        "Who is the HOD for ECE?",
-                        "Check General Contact Info"
-                    ]);
+                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
                     return;
                 }
             }
             // --- END CONTACTS CHECK ---
             
-            // --- 6. GENERAL AI QUERY (FALLBACK) ---
+            // --- 7. GENERAL AI QUERY (FALLBACK for EVERYTHING else) ---
             const contents = [{ role: "user", parts: [{ text: messageText }] }];
             showTyping(); 
 
@@ -2324,9 +2661,9 @@
             const botResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
             
             if (botResponse) {
-                if (botResponse.startsWith("I'd be happy to show you the trend!")) {
+                if (botResponse.startsWith("I'd be happy to show you you the trend!")) {
                     hideLoading();
-                    addMessage(botResponse.replace("I'd be happy to show you the trend!", "I'd be happy to show you the trend! ðŸš€"), false);
+                    addMessage(botResponse.replace("I'd be happy to show you the trend!", "I'd be happy to show you the trend! 🚀"), false);
                     showPlacementGraph();
                     return; 
                 }
@@ -2335,12 +2672,12 @@
                 addMessage(botResponse, false); 
                 
                 // Show contextual suggestions 
-                showSuggestions(["What is the college fee?", "Where can I find the syllabus?", "Check Placement Trend"]);
+                showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
 
             } else {
                 hideLoading();
-                addMessage("Oops! I hit a snag while looking that up. Please try again or rephrase your question. ðŸ¤”", false);
-                showSuggestions(["What courses are offered?", "Contact General Office", "Check Placement Trend"]);
+                addMessage("Oops! I hit a snag while looking that up. Please try again or rephrase your question. 🤔", false);
+                showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
             }
 
         } catch (error) {
