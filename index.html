@@ -1873,7 +1873,6 @@
         let candidates = [];
         
         // --- TIER 1A: ABSOLUTE FULL NAME LOCK (Priority 1) ---
-        // FIX: Re-calculate totalNameWordsInQuery inside this function or remove dependence
         const totalNameWordsInQuery = coreNameInputWords.length;
         if (totalNameWordsInQuery >= 2) {
             for (const staff of DEDUPLICATED_STAFF_CONTACTS) {
@@ -2185,8 +2184,15 @@
         
         let title, content, nextQuestion, redirectQuery;
         
-        // CRITICAL FIX: Use specific timing keywords, NOT staff-related words.
+        // CRITICAL FIX: Only trigger if explicitly asking for time/schedule-related words.
+        const isScheduleQuery = /when|time|schedule|\bhours\b|\bstarts\b|\bends\b/i.test(queryLower);
+        
+        if (!isScheduleQuery) {
+            return null;
+        }
+
         if (queryLower.includes('hostel') || queryLower.includes('hostler') || queryLower.includes('dinner') || queryLower.includes('breakfast')) {
+            
             // Hosteler timings
             title = 'Hostel & College Timings ⏰';
             content = `
@@ -2200,7 +2206,7 @@
             `;
             nextQuestion = `Need the **Warden's contact number** for the hostel? 📞`;
             redirectQuery = 'Contact the Warden number';
-        } else if (queryLower.includes('canteen') || queryLower.includes('day scholar') || queryLower.includes('lunch') || queryLower.includes('admin office') || queryLower.includes('working hours') || queryLower.includes('office hours') || queryLower.includes('class hours')) {
+        } else if (queryLower.includes('canteen') || queryLower.includes('day scholar') || queryLower.includes('lunch') || queryLower.includes('admin office') || queryLower.includes('class hours')) {
             // Day Scholar timings (Canteen/Lunch)
             title = 'Lunch & College Timings 🥪';
             content = `
@@ -2274,18 +2280,20 @@
 
     // --- CHART.JS RENDERING FUNCTION ---
     const showPlacementGraph = () => {
+        // CRITICAL FIX: Define graphIntros outside the conditional to resolve ReferenceError
+        const graphIntros = [
+            "Here comes the visual data! Watch that trend line climb! 📈",
+            "I'd be happy to show you the trend! Get ready for the graph view. 📊",
+            "Time for some data visualization! This shows our continuous growth. 🤩",
+        ];
+        
         // 1. Add chat confirmation message
         if (placementChart) {
             // If chart exists, destroy it before trying to find the element wrapper.
             // Also, skip the confirmation message to prevent spam when redrawing the chart on theme change.
              placementChart.destroy();
         } else {
-            const graphIntros = [
-                "Here comes the visual data! Watch that trend line climb! 📈",
-                "I'd be happy to show you the trend! Get ready for the graph view. 📊",
-                "Time for some data visualization! This shows our continuous growth. 🤩",
-            ];
-            const intro = graphIntros[Math.floor(Math.random() * intros.length)];
+            const intro = graphIntros[Math.floor(Math.random() * graphIntros.length)]; // Correct variable use
             addMessage(`${intro}`, false);
         }
         
@@ -2608,7 +2616,16 @@
         const isSyllabusQuery = /syllabus|academic calendar|regulations|course structure/i.test(queryLowerNormalized);
         const isPaperQuery = /previous|question paper|papers|exam|m.tech|b.tech|btech|mtech/i.test(queryLowerNormalized);
         // CRITICAL FIX: Changed timing regex to use word boundaries (\b) to avoid matching "officer" inside "timing" checks.
-        const isTimingQuery = /(canteen|hostel|hostler|food|lunch|dinner|breakfast|\bhours\b|\bclasses\b|\bworking\b|\bcollege timing\b)/i.test(queryLowerNormalized);
+        // Also added stricter timing words to avoid accidental trigger.
+        const isTimingQuery = /(when|time|schedule|\bhours\b|\bstarts\b|\bends\b)/i.test(queryLowerNormalized);
+        
+        // NEW INTELLIGENCE CHECK: Is the user asking for subjective info (reviews/quality)?
+        const isSubjectiveQuery = /how is|is it good|quality|reviews|tasty|bad/i.test(queryLowerNormalized);
+        
+        // If it's about Hostel/Food AND it's a subjective query, SKIP local handlers and go straight to AI Fallback
+        const isHostelFoodQualityQuery = (queryLowerNormalized.includes('hostel') || queryLowerNormalized.includes('food')) && isSubjectiveQuery;
+
+
         const isGeneralCollegeQuery = /admission|fee|fees|tuition|course|branch|stream|affiliate|rank|rating|eligibility/i.test(queryLowerNormalized);
         const wantsContactDetails = /(number|phone|contact|call|line|whatsapp|cell|tell me the)/i.test(queryLowerNormalized) || /hod|principal|dean|warden|discipline officer/i.test(queryLowerNormalized); // Explicit roles imply contact
         const isContactNameMentioned = /(hod|principal|dean|warden|discip|officer|professor|technician|admin|assistant|akka|sir|madam|name|staff|attender|guard)/i.test(queryLowerNormalized);
@@ -2631,9 +2648,17 @@
                 return;
             }
 
+            // --- CRITICAL INTELLIGENCE GATE: Bypass Local Handlers for Subjective Queries ---
+            if (isHostelFoodQualityQuery) {
+                // Skip all local handlers and proceed directly to Gemini/Google Search
+                console.log("INTENT: Subjective query detected. Bypassing local handler and deferring to Gemini for grounded search.");
+                // Fall through to step 7
+            }
+            // --- END INTELLIGENCE GATE ---
+
 
             // --- C. CONTEXTUAL STAFF FOLLOW-UP (Next Priority) ---
-            if (lastStaffQuery.state !== 'idle' || lastStaffQuery.singleMatchFound) {
+            else if (lastStaffQuery.state !== 'idle' || lastStaffQuery.singleMatchFound) {
                 const followUpResult = handleStaffFollowUp(messageText);
                 if (followUpResult) {
                     hideLoading();
@@ -2644,7 +2669,7 @@
             }
             
             // --- D. NEW CONTACT QUERY DETECTED: FORCE RESET CONTEXT ---
-            if (isContactQuery) {
+            else if (isContactQuery) {
                 lastStaffQuery.singleMatchFound = null; 
             }
 
@@ -2709,7 +2734,7 @@
 
 
             // --- 1. TIMING CHECK ---
-            if (isTimingQuery) {
+            if (isTimingQuery && !isHostelFoodQualityQuery) {
                 const timingResponse = handleTimingQuery(queryToHandle);
                 if (timingResponse) {
                     hideLoading();
@@ -2800,6 +2825,7 @@
             // --- END CONTACTS CHECK ---
             
             // --- 7. GENERAL AI QUERY (FALLBACK for EVERYTHING else) ---
+            // If the query is about subjective opinion (hostel food, etc.), use a general search
             const contents = [{ role: "user", parts: [{ text: messageText + " at Pragati Engineering College" }] }];
             showTyping(); 
 
