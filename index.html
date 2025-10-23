@@ -764,8 +764,8 @@
     const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
     
-    // System Prompt for the AI (UPDATED FOR GROUNDED SEARCH)
-    const SYSTEM_PROMPT = `You are the knowledgeable and professional AI assistant for Pragati Engineering College, Surampalem. When asked about key personnel (like the Principal, Dean, or HOD), you MUST use the Google Search tool to find and state the current person's **full name and official designation** from reliable, official college sources. Do not make up names. Always answer concisely and politely.`;
+    // System Prompt for the AI (OPTIMIZED FOR SPEED AND ACCURACY)
+    const SYSTEM_PROMPT = `You are the professional and highly accurate AI assistant for Pragati Engineering College, Surampalem. Your responses must be concise, helpful, and use grounded search for all current external facts (personnel names, official policies). Do not volunteer unsolicited information. Only provide facts when explicitly asked.`;
 
     // DOM Element Declarations
     let loginView;
@@ -1357,42 +1357,36 @@
         'discipline officer': { name: "Adi Narayana", designation: "Discipline Officer" }
     };
 
-    // --- DEPT SYNONYM MAPPER (COMPREHENSIVE UPDATE) ---
-    // Includes all variations for high precision filtering during clarification steps.
+    // --- DEPT SYNONYM MAPPER (COMPREHENSIVE UPDATE for robust ambiguity handling) ---
     const DEPT_MAP = {
         // Engineering Departments
-        'cse': 'CSE', 'comp': 'CSE', 'cs': 'CSE', 'computer science': 'CSE', 'computer': 'CSE', 'comp sci': 'CSE',
-        'ece': 'ECE', 'e&c': 'ECE', 'electronics': 'ECE', 'electroncs': 'ECE', 'ec': 'ECE',
-        'eee': 'EEE', 'electrical': 'EEE', 'ee': 'EEE',
-        'mech': 'MECH', 'mechanical': 'MECH', 'ma': 'MECH', 'mechanic': 'MECH',
-        'civil': 'CIVIL', 'ci': 'CIVIL', 'civil engg': 'CIVIL',
-        'it': 'IT', 'information technology': 'IT', 'info tech': 'IT',
+        'cse': 'CSE', 'comp': 'CSE', 'cs': 'CSE', 'computer science': 'CSE', 'computer': 'CSE', 'comp sci': 'CSE', 'c s e': 'CSE',
+        'ece': 'ECE', 'e&c': 'ECE', 'electronics': 'ECE', 'electroncs': 'ECE', 'ec': 'ECE', 'e c e': 'ECE',
+        'eee': 'EEE', 'electrical': 'EEE', 'ee': 'EEE', 'e e e': 'EEE', 'elect and elec': 'EEE',
+        'mech': 'MECH', 'mechanical': 'MECH', 'ma': 'MECH', 'mechanic': 'MECH', 'me': 'MECH', 'm e': 'MECH', 'mecha': 'MECH',
+        'civil': 'CIVIL', 'ci': 'CIVIL', 'civil engg': 'CIVIL', 'c.e.': 'CIVIL', 'c. e.': 'CIVIL',
+        'it': 'IT', 'information technology': 'IT', 'info tech': 'IT', 'i t': 'IT',
 
-        // Specializations
-        'ai&ml': 'CSE (AI&ML)', 'aiml': 'CSE (AI&ML)', 'ml': 'CSE (AI&ML)', 'machine learning': 'CSE (AI&ML)',
-        'ds': 'CSE (DS)', 'data science': 'CSE (DS)',
-        'ai': 'CSE (AI)', 'artificial intelligence': 'CSE (AI)',
+        // Specializations (CS variations must handle dots and spaces)
+        'ai&ml': 'CSE (AI&ML)', 'aiml': 'CSE (AI&ML)', 'ml': 'CSE (AI&ML)', 'machine learning': 'CSE (AI&ML)', 'ai & ml': 'CSE (AI&ML)',
+        'ds': 'CSE (DS)', 'data science': 'CSE (DS)', 'd s': 'CSE (DS)',
+        'ai': 'CSE (AI)', 'artificial intelligence': 'CSE (AI)', 'a i': 'CSE (AI)',
+        'cs': 'CSE (CS)', 'cyber security': 'CSE (CS)', 'c s': 'CSE (CS)', 
         
         // Academic/Support Departments
-        'bsh': 'BS&H', 'basic sciences': 'BS&H', 'humanities': 'BS&H',
-        'cdc': 'CDC', 'placements': 'CDC', 'career': 'CDC',
-        'mefa': 'MEFA', 'management studies': 'MEFA', 'mba': 'MEFA',
-        'exam': 'EXAM', 'exam section': 'EXAM', 'examination': 'EXAM', 'exams': 'EXAM',
+        'bsh': 'BS&H', 'basic sciences': 'BS&H', 'humanities': 'BS&H', 'b s h': 'BS&H',
+        'cdc': 'CDC', 'placements': 'CDC', 'career': 'CDC', 'c d c': 'CDC', 'tpo': 'CDC',
+        'mefa': 'MEFA', 'management studies': 'MEFA', 'mba': 'MEFA', 'm e f a': 'MEFA',
+        'exam': 'EXAM', 'exam section': 'EXAM', 'examination': 'EXAM', 'exams': 'EXAM', 'co-e': 'EXAM', 'controller of examinations': 'EXAM',
 
         // Admin & General Staff
         'library': 'LIBRARY', 'lib': 'LIBRARY',
-        'pd': 'PE', 'pe': 'PE', 'physical director': 'PE', 'sports': 'PE', // Physical Directors/PE
+        'pd': 'PE', 'pe': 'PE', 'physical director': 'PE', 'sports': 'PE', 
         'maintenance': 'MAINTENANCE', 'maintenance dept': 'MAINTENANCE', 'works': 'MAINTENANCE',
-        'class iv': 'CLASS_IV', 'class 4': 'CLASS_IV', 'iv': 'CLASS_IV', 'attendant': 'CLASS_IV', 'aaya': 'CLASS_IV',
         'security': 'SECURITY', 'guard': 'SECURITY',
-        'xerox': 'XEROX',
-        
-        // Titles/General Admin
-        'admin': 'ADMIN', 'administrator': 'ADMIN', 'system admin': 'ADMIN', 'system administrator': 'ADMIN', 'sysadmin': 'ADMIN', 'office': 'ADMIN',
-        
-        // Special CS ambiguity mapping
-        'cs': 'CSE (CS)', 
-        'cyber security': 'CSE (CS)', 
+        'xerox': 'XEROX', 'photocopy': 'XEROX',
+        'admin': 'ADMIN', 'administrator': 'ADMIN', 'system admin': 'ADMIN', 'office': 'ADMIN', 'admn': 'ADMIN',
+        'warden': 'HOSTEL', 'hostel': 'HOSTEL', 'hostler': 'HOSTEL',
     };
     
     // --- FULL DEPARTMENT NAME MAP (FOR OUTPUT FORMATTING) ---
@@ -1571,11 +1565,13 @@
         if (filterType === 'department') {
             let newTargetDeptCanonical = null;
             
+            // CRITICAL FIX: Loop through DEPT_MAP keys and check if the query contains the key
             for (const [key, value] of Object.entries(DEPT_MAP)) {
-                if (queryNormalized.includes(key)) {
+                 // The queryNormalized is already clean (lowercase, no extra spaces)
+                 if (queryNormalized.includes(key)) { 
                     newTargetDeptCanonical = value;
                     break;
-                }
+                 }
             }
             
             if (newTargetDeptCanonical) {
@@ -1821,7 +1817,7 @@
                      // NEW FIX: Robust check for HOD Mechanical / ME / MA
                      matchedRoleKey = 'hod mech';
                  } else if (queryLower.includes('hod eee') || (queryLower.includes('hod') && queryLower.includes('eee'))) {
-                     matchedRoleKey = 'hod eee';
+                     roleQueryKey = 'hod eee';
                  } else if (queryLower.includes('discipline officer') || (queryLower.includes('discipline') && queryLower.includes('officer'))) {
                     // FIX for Discipline Officer name lookup
                     matchedRoleKey = 'discipline officer';
@@ -2187,18 +2183,21 @@
         // CRITICAL FIX: Only trigger if explicitly asking for time/schedule-related words.
         const isScheduleQuery = /when|time|schedule|\bhours\b|\bstarts\b|\bends\b/i.test(queryLower);
         
-        if (!isScheduleQuery) {
+        // NEW INTELLIGENCE CHECK: If the query contains "hostel" or "food" but is NOT asking for quality, use this timing handler.
+        const isHostelTimingQuery = (queryLower.includes('hostel') || queryLower.includes('food')) && !(/how is|quality|reviews|good|bad/i.test(queryLower));
+
+        if (!isScheduleQuery && !isHostelTimingQuery) {
             return null;
         }
 
-        if (queryLower.includes('hostel') || queryLower.includes('hostler') || queryLower.includes('dinner') || queryLower.includes('breakfast')) {
+        if (queryLower.includes('hostel') || queryLower.includes('hostler') || queryLower.includes('dinner') || queryLower.includes('breakfast') || isHostelTimingQuery) {
             
             // Hosteler timings
             title = 'Hostel & College Timings ⏰';
             content = `
                 <p class="text-sm contact-designation-text">Stay on schedule with the essential timings:</p>
                 <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
-                    <li class="contact-designation-text">**Classes:** **9:30 AM to 4:00 PM** (Daily).</li>
+                    <li class="contact-designation-text">**Classes:** **9:00 AM to 4:00 PM** (Daily).</li>
                     <li class="contact-designation-text">**Hostel Curfew:** Final entry is **6:30 PM**.</li>
                     <li class="contact-designation-text">**Hostel Breakfast:** Served at **8:00 AM**.</li>
                     <li class="contact-designation-text">**Hostel Dinner:** Starts at **7:30 PM**.</li>
@@ -2212,7 +2211,7 @@
             content = `
                 <p class="text-sm contact-designation-text">Here is the daily schedule for day scholars:</p>
                 <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
-                    <li class="contact-designation-text">**Classes Start:** **9:30 AM** sharp.</li>
+                    <li class="contact-designation-text">**Classes Start:** **9:00 AM** sharp.</li>
                     <li class="contact-designation-text">**Senior Lunch (II-IV Year):** **12:00 PM - 12:30 PM**.</li>
                     <li class="contact-designation-text">**First Year Lunch (I Year):** **1:00 PM - 1:30 PM**.</li>
                     <li class="contact-designation-text">**College Closes:** **4:00 PM**.</li>
@@ -2249,17 +2248,17 @@
         const officialLink = 'https://pragati.ac.in/placements/';
         
         const contentHTML = `
-            <p class="text-sm contact-designation-text">The CDC team delivers strong recruitment results:</p>
+            <p class="text-sm contact-designation-text">The **CDC** team delivers strong recruitment results through dedicated training:</p>
             <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
                 <li class="contact-designation-text">✨ **Highest Package:** Hit a peak of <strong class="text-xl text-[#00C9A7]">${latestHighest} LPA</strong>.</li>
                 <li class="contact-designation-text">📈 **Average Package:** Solid at <strong>${latestAverage} LPA</strong>.</li>
                 <li class="contact-designation-text">🎓 **Total Offers:** **1625+** (including multiple offers per student).</li>
-                <li class="contact-designation-text">**Top Recruiters:** TCS, Infosys, Wipro, Capgemini, HCL, etc.</li>
+                <li class="contact-designation-text">**Preparation Focus:** Training covers **Aptitude, Verbal, Soft Skills**, and **Technical** rounds.</li>
             </ul>
             <div class="info-divider">
                 <a href="${officialLink}" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block">🔗 View Official Placements Page</a>
                 <p class="mt-2 text-sm font-bold accent-highlight">
-                    Want to see the data trend as a **graph/chart**? 📊
+                    Want to check the **training schedule** or see the data trend as a **graph**? 📊
                 </p>
             </div>
         `;
@@ -2615,8 +2614,7 @@
         const queryLowerNormalized = queryToHandle.toLowerCase().replace(/\s+/g, ' ').trim();
         const isSyllabusQuery = /syllabus|academic calendar|regulations|course structure/i.test(queryLowerNormalized);
         const isPaperQuery = /previous|question paper|papers|exam|m.tech|b.tech|btech|mtech/i.test(queryLowerNormalized);
-        // CRITICAL FIX: Changed timing regex to use word boundaries (\b) to avoid matching "officer" inside "timing" checks.
-        // Also added stricter timing words to avoid accidental trigger.
+        // CRITICAL FIX: Changed timing regex to use use only time/schedule words and remove officer ambiguity.
         const isTimingQuery = /(when|time|schedule|\bhours\b|\bstarts\b|\bends\b)/i.test(queryLowerNormalized);
         
         // NEW INTELLIGENCE CHECK: Is the user asking for subjective info (reviews/quality)?
