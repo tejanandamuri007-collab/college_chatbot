@@ -1338,7 +1338,7 @@
         // MOCK CONTACTS FOR EXAMPLE TESTING (Not real staff, used for specific examples in the prompt)
         { name: "Ramesh Kumar", number: "9123456789", designation: "Assistant Professor, ECE", email: "ramesh.k@pragati.ac.in" },
         { name: "Sai Kumar", number: "9988776655", designation: "Associate Professor, CSE", email: "sai.k@pragati.ac.in" },
-        { name: "Deepthi", number: "9876543210", designation: "Assistant Professor, IT", email: "deepthi@pragati.ac.in" },
+        { name: "Deepthi", number: "9876543210", designation: "Assistant Professor, IT", email: "" },
         { name: "Kumar", number: "9000000001", designation: "Lab Technician, EEE", email: "" },
         { name: "Raju", number: "9000000002", designation: "Assistant Professor, MECH", email: "" },
     ];
@@ -1403,7 +1403,7 @@
         'EXAM': 'EXAM',
         'ADMIN': 'ADMIN',
         'SECURITY': 'Security',
-        'HOSTEL': 'Hostel',
+        'HOSTEL': 'Hostel (Boys)',
         'TRANSPORT': 'Transport',
         'RECEPTION': 'Reception',
         'XEROX': 'Xerox',
@@ -1423,10 +1423,10 @@
     const SUGGESTION_POOL = [
         ["Who is the Dean CDC?", "Contact Principal Sir number", "Check latest Placement Trend"],
         ["What courses are offered?", "How do I get admission?", "Contact the Exam Section"],
-        ["Who is the HOD for CSE?", "Check Fees", "Download B.Tech II-I Sem Papers"],
+        ["Who is the HOD for CSE?", "Check Fees", "Download previous sem papers"],
         ["What are the hostel timings?", "Contact the Warden number", "Who is the Discipline Officer?"],
         ["Who is the HOD for MECH?", "Check Affiliations", "What is the college fee?"],
-        ["Download I B.Tech I Sem Papers", "Contact the Administrative Office", "Check Hostel Timings"]
+        ["Download previous sem papers", "Contact the Administrative Office", "Check Hostel Timings"]
     ];
 
 
@@ -1778,7 +1778,7 @@
 
         // --- TIER 0: ABSOLUTE ROLE MATCH (Priority 0) ---
         // Handles queries like "who is the principal" or "hod number"
-        const roleKeywords = ['principal', 'hod', 'dean', 'warden', 'discipline officer', 'reception', 'xerox'];
+        const roleKeywords = ['principal', 'hod', 'dean', 'warden', 'discipline officer', 'reception', 'xerox', 'civil', 'eee', 'mech', 'ece', 'cse', 'it', 'bsh'];
         let matchedRole = null;
         let matchedRoleKey = null; // Store the key (e.g., 'principal', 'former principal')
 
@@ -1817,7 +1817,7 @@
                      // NEW FIX: Robust check for HOD Mechanical / ME / MA
                      matchedRoleKey = 'hod mech';
                  } else if (queryLower.includes('hod eee') || (queryLower.includes('hod') && queryLower.includes('eee'))) {
-                     roleQueryKey = 'hod eee';
+                     matchedRoleKey = 'hod eee';
                  } else if (queryLower.includes('discipline officer') || (queryLower.includes('discipline') && queryLower.includes('officer'))) {
                     // FIX for Discipline Officer name lookup
                     matchedRoleKey = 'discipline officer';
@@ -1839,16 +1839,39 @@
                 const contactRoleKey = (matchedRoleKey === 'former principal') ? 'principal' : matchedRoleKey;
                 
                 // Use robust keyword matching for contact request against the whole contact list
-                let roleCandidate;
+                let roleCandidate = null;
+                let targetDept = null;
+                let targetRole = null;
 
-                if (queryLower.includes('hod mech') || queryLower.includes('hod me') || queryLower.includes('hod ma') || (queryLower.includes('hod') && (queryLower.includes('mech') || queryLower.includes('mechanical')))) {
-                    // Match HOD MECH contact specifically
-                     roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes('hod-me, mech'));
-                } else if (queryLower.includes('discipline officer') || (queryLower.includes('discipline') && queryLower.includes('officer'))) {
+                // --- HOD/DEPT Specific Logic ---
+                if (queryLower.includes('hod') || queryLower.includes('department')) {
+                    // Try to extract the department from the query
+                    targetDept = Object.keys(DEPT_MAP).find(key => queryLower.includes(key));
+                    targetRole = 'HOD'; // Target is HOD or main department line
+
+                    if (targetDept) {
+                        const canonicalDept = DEPT_MAP[targetDept];
+                        const canonicalDeptLower = canonicalDept.toLowerCase();
+
+                        // Priority 1: Find the explicit HOD (e.g., Dr. D. V Manjula, HOD - CSE)
+                        roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => 
+                            s.designation.toLowerCase().includes('hod') && 
+                            s.designation.toLowerCase().includes(canonicalDeptLower)
+                        );
+
+                        // Priority 2: Find the main department line if HOD is not explicitly listed (e.g., "CSE Department" line)
+                        if (!roleCandidate) {
+                             roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => 
+                                s.designation.toLowerCase().includes(canonicalDeptLower) && 
+                                s.designation.toLowerCase().includes('main dept line')
+                             );
+                        }
+                    }
+                } else if (queryLower.includes('discipline officer')) {
                     // Match Discipline Officer contact specifically
                     roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes('discipline officer'));
                 } else {
-                     // Match general role contact
+                     // Fallback to general role search (e.g., Principal, Warden, Exam Section)
                      roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes(contactRoleKey));
                 }
                 
@@ -2108,7 +2131,7 @@
                     <li class="contact-designation-text">**Annual Tuition (EAPCET):** Approx. **₹77,000 - ₹77,800** p.a. </li>
                     <li class="contact-designation-text">**Management Quota:** Fees for MQ are higher, ranging from **₹1,00,000 to ₹1,95,000** p.a.</li>
                     <li class="contact-designation-text">**Scholarship Perk:** Eligible for **Jagananna Vidya Deevena** (Fee Reimbursement).</li>
-                    <li class="contact-designation-text">**Hostel/Mess:** Separate costs (approx. **₹1,00,000 - ₹1,20,000** p.a.).</li>
+                    <li class="contact-designation-text">**Hostel/Mess (Boys):** Separate costs (approx. **₹1,00,000 - ₹1,20,000** p.a.).</li>
                 </ul>
                 <div class="info-divider">
                     <p class="text-xs font-semibold accent-highlight">⚠️ **Quick Tip:** For the *absolute exact* amount, contact the **Administrative Office** directly.</p>
@@ -2198,7 +2221,7 @@
                 <p class="text-sm contact-designation-text">Stay on schedule with the essential timings:</p>
                 <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
                     <li class="contact-designation-text">**Classes:** **9:00 AM to 4:00 PM** (Daily).</li>
-                    <li class="contact-designation-text">**Hostel Curfew:** Final entry is **6:30 PM**.</li>
+                    <li class="contact-designation-text">**Hostel Curfew (Boys):** Final entry is **6:30 PM**.</li>
                     <li class="contact-designation-text">**Hostel Breakfast:** Served at **8:00 AM**.</li>
                     <li class="contact-designation-text">**Hostel Dinner:** Starts at **7:30 PM**.</li>
                 </ul>
@@ -2628,7 +2651,9 @@
         const wantsContactDetails = /(number|phone|contact|call|line|whatsapp|cell|tell me the)/i.test(queryLowerNormalized) || /hod|principal|dean|warden|discipline officer/i.test(queryLowerNormalized); // Explicit roles imply contact
         const isContactNameMentioned = /(hod|principal|dean|warden|discip|officer|professor|technician|admin|assistant|akka|sir|madam|name|staff|attender|guard)/i.test(queryLowerNormalized);
         const isContactQuery = wantsContactDetails || isContactNameMentioned; 
-        const isGraphQuery = /(graph|chart|comparison|trend|package|salary|placement)/i.test(queryLowerNormalized);
+        // CRITICAL PLACEMENT FIX: Only trigger graph for explicit graph/chart request
+        const isGraphQueryExplicit = /(graph|chart|comparison|trend)/i.test(queryLowerNormalized);
+        const isGeneralPlacementQuery = /(package|salary|placement)/i.test(queryLowerNormalized);
 
         
         try {
@@ -2787,19 +2812,18 @@
             // --- END PREVIOUS PAPERS CHECK ---
             
             // --- 5. GRAPH CHECK / PLACEMENT FACT CHECK ---
-            if (isGraphQuery) {
-                const graphKeywords = /(graph|chart|comparison|trend|package|salary|placement)/i;
-                if (graphKeywords.test(queryToHandle)) {
-                    hideLoading();
-                    showPlacementGraph();
-                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
-                    return;
-                } else {
-                    hideLoading();
-                    addMessage(`<div>${getPlacementSummary()}</div>`, false);
-                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
-                    return;
-                }
+            if (isGraphQueryExplicit) {
+                // EXPLICIT graph requested (e.g., "show chart")
+                hideLoading();
+                showPlacementGraph();
+                showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
+                return;
+            } else if (isGeneralPlacementQuery) {
+                // GENERAL placement query (e.g., "tell me about placements")
+                hideLoading();
+                addMessage(`<div>${getPlacementSummary()}</div>`, false);
+                showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
+                return;
             }
 
 
