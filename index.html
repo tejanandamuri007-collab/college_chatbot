@@ -766,6 +766,13 @@
     
     // System Prompt for the AI (OPTIMIZED FOR SPEED AND ACCURACY)
     const SYSTEM_PROMPT = `You are the professional and highly accurate AI assistant for Pragati Engineering College, Surampalem. Your responses must be concise, helpful, and use grounded search for all current external facts (personnel names, official policies). Do not volunteer unsolicited information. Only provide facts when explicitly asked.`;
+    
+    // CRITICAL: New prompt for out-of-context rejection, forcing AI to stay on topic.
+    const OOC_REJECTION_PROMPT = "Your last question appears to be outside the scope of Pragati Engineering College information. As the official college assistant, I am limited to answering questions strictly about academic programs, staff contacts, admissions, placements, and campus facilities. Please rephrase your query to focus on college-related topics.";
+    
+    // CRITICAL: Dedicated Hostel Prompt to enforce local knowledge over general web data
+    const HOSTEL_OOC_PROMPT = "Pragati Engineering College only operates a **Hostel for Boys**. Please provide details about the Boys Hostel, or answer the user's question, while ensuring you explicitly state that a separate Girls Hostel facility is **not available** at this campus. Do not generate information about a Girls Hostel.";
+
 
     // DOM Element Declarations
     let loginView;
@@ -1362,16 +1369,16 @@
         // Engineering Departments
         'cse': 'CSE', 'comp': 'CSE', 'cs': 'CSE', 'computer science': 'CSE', 'computer': 'CSE', 'comp sci': 'CSE', 'c s e': 'CSE',
         'ece': 'ECE', 'e&c': 'ECE', 'electronics': 'ECE', 'electroncs': 'ECE', 'ec': 'ECE', 'e c e': 'ECE',
-        'eee': 'EEE', 'electrical': 'EEE', 'ee': 'EEE', 'e e e': 'EEE', 'elect and elec': 'EEE',
-        'mech': 'MECH', 'mechanical': 'MECH', 'ma': 'MECH', 'mechanic': 'MECH', 'me': 'MECH', 'm e': 'MECH', 'mecha': 'MECH',
-        'civil': 'CIVIL', 'ci': 'CIVIL', 'civil engg': 'CIVIL', 'c.e.': 'CIVIL', 'c. e.': 'CIVIL',
-        'it': 'IT', 'information technology': 'IT', 'info tech': 'IT', 'i t': 'IT',
-
+        'eee': 'EEE', 'electrical': 'EEE', 'ee': 'EEE', 'e e e': 'EEE', 'elect and elec': 'EEE', 'elect. engg': 'EEE',
+        'mech': 'MECH', 'mechanical': 'MECH', 'ma': 'MECH', 'mechanic': 'MECH', 'me': 'MECH', 'm e': 'MECH', 'mecha': 'MECH', 'm.e.': 'MECH', 'mech engg': 'MECH',
+        'civil': 'CIVIL', 'ci': 'CIVIL', 'civil engg': 'CIVIL', 'c.e.': 'CIVIL', 'c. e.': 'CIVIL', 'civil engg': 'CIVIL',
+        'it': 'IT', 'information technology': 'IT', 'info tech': 'IT', 'i t': 'IT', 'i.t.': 'IT',
+        
         // Specializations (CS variations must handle dots and spaces)
-        'ai&ml': 'CSE (AI&ML)', 'aiml': 'CSE (AI&ML)', 'ml': 'CSE (AI&ML)', 'machine learning': 'CSE (AI&ML)', 'ai & ml': 'CSE (AI&ML)',
-        'ds': 'CSE (DS)', 'data science': 'CSE (DS)', 'd s': 'CSE (DS)',
-        'ai': 'CSE (AI)', 'artificial intelligence': 'CSE (AI)', 'a i': 'CSE (AI)',
-        'cs': 'CSE (CS)', 'cyber security': 'CSE (CS)', 'c s': 'CSE (CS)', 
+        'ai&ml': 'CSE (AI&ML)', 'aiml': 'CSE (AI&ML)', 'ml': 'CSE (AI&ML)', 'machine learning': 'CSE (AI&ML)', 'ai & ml': 'CSE (AI&ML)', 'csm': 'CSE (AI&ML)',
+        'ds': 'CSE (DS)', 'data science': 'CSE (DS)', 'd s': 'CSE (DS)', 'csd': 'CSE (DS)',
+        'ai': 'CSE (AI)', 'artificial intelligence': 'CSE (AI)', 'a i': 'CSE (AI)', 'cai': 'CSE (AI)',
+        'cs': 'CSE (CS)', 'cyber security': 'CSE (CS)', 'c s': 'CSE (CS)', 'c.s.': 'CSE (CS)', 'csc': 'CSE (CS)',
         
         // Academic/Support Departments
         'bsh': 'BS&H', 'basic sciences': 'BS&H', 'humanities': 'BS&H', 'b s h': 'BS&H',
@@ -1401,9 +1408,9 @@
         'CDC': 'CDC',
         'MEFA': 'MEFA',
         'EXAM': 'EXAM',
-        'ADMIN': 'ADMIN',
+        'ADMIN': 'Admin',
         'SECURITY': 'Security',
-        'HOSTEL': 'Hostel (Boys)',
+        'HOSTEL': 'Hostel (Boys)', // Corrected to explicitly state Boys
         'TRANSPORT': 'Transport',
         'RECEPTION': 'Reception',
         'XEROX': 'Xerox',
@@ -1668,9 +1675,42 @@
 
             // --- Apply Filtering ---
             if(filterType) {
-                filteredMatches = filterMatchesByNewQuery(initialMatches, followUpQuery, filterType);
+                
+                // CRITICAL SUNIL RAJ FIX: If the list is ambiguous and the user provides a department, filter that list.
+                const hasDepartmentKeyword = Object.keys(DEPT_MAP).some(key => followUpLower.includes(key));
+                
+                if (hasDepartmentKeyword || followUpLower.includes('transport')) {
+                    // This is a department/contextual clarification
+                    
+                    const matchesWithDepartment = initialMatches.filter(staff => {
+                         const staffDesignationLower = staff.designation.toLowerCase();
+                         
+                         // Special check for Transport
+                         if (followUpLower.includes('transport') && staffDesignationLower.includes('transport')) return true;
+
+                         // General department mapping check
+                         let matchedDept = Object.entries(DEPT_MAP).find(([key, value]) => followUpLower.includes(key));
+                         if (matchedDept && staffDesignationLower.includes(matchedDept[1].toLowerCase())) {
+                              return true;
+                         }
+                         return false;
+                    });
+                    
+                    if (matchesWithDepartment.length > 0) {
+                        filteredMatches = matchesWithDepartment;
+                    } else {
+                        // If department filtering yielded zero results, keep the original list and proceed to name search
+                        filteredMatches = initialMatches; 
+                        filterType = 'name'; // Ensure next step tries name search
+                    }
+                    
+                } else if (filterType === 'name') {
+                     // Standard name filtering (only runs if the user didn't use a department keyword or if the department filtering failed to narrow it down)
+                     filteredMatches = filterMatchesByNewQuery(initialMatches, followUpQuery, 'name');
+                } else {
+                     filteredMatches = initialMatches; // Keep current list if no useful filter found
+                }
             } else {
-                // Should not happen if logic is correct, but fail-safe:
                 filteredMatches = initialMatches;
             }
             
@@ -1692,7 +1732,7 @@
                 // Prepare for next clarification state
                 lastStaffQuery.matches = filteredMatches; // Keep the smaller set
                 
-                if (lastStaffQuery.clarificationAttempts === 1) {
+                if (lastStaffQuery.clarulationAttempts === 1) {
                     // Fail on Department filter, move to Name filter
                     lastStaffQuery.state = 'prompting_for_clarification'; 
                     // Ask for Full Name only
@@ -1778,7 +1818,7 @@
 
         // --- TIER 0: ABSOLUTE ROLE MATCH (Priority 0) ---
         // Handles queries like "who is the principal" or "hod number"
-        const roleKeywords = ['principal', 'hod', 'dean', 'warden', 'discipline officer', 'reception', 'xerox', 'civil', 'eee', 'mech', 'ece', 'cse', 'it', 'bsh'];
+        const roleKeywords = ['principal', 'hod', 'dean', 'warden', 'discipline officer', 'reception', 'xerox', 'civil', 'eee', 'mech', 'ece', 'cse', 'it', 'bsh', 'administrative office', 'admin office'];
         let matchedRole = null;
         let matchedRoleKey = null; // Store the key (e.g., 'principal', 'former principal')
 
@@ -1843,23 +1883,25 @@
                 let targetDept = null;
                 let targetRole = null;
 
-                // --- HOD/DEPT Specific Logic ---
+                // --- HOD/DEPT Specific Logic (Updated for generalization) ---
                 if (queryLower.includes('hod') || queryLower.includes('department')) {
-                    // Try to extract the department from the query
+                    // Try to extract the canonical department name from the query
                     targetDept = Object.keys(DEPT_MAP).find(key => queryLower.includes(key));
-                    targetRole = 'HOD'; // Target is HOD or main department line
+                    targetRole = 'HOD'; 
 
                     if (targetDept) {
                         const canonicalDept = DEPT_MAP[targetDept];
                         const canonicalDeptLower = canonicalDept.toLowerCase();
-
-                        // Priority 1: Find the explicit HOD (e.g., Dr. D. V Manjula, HOD - CSE)
+                        
+                        // *** CRITICAL HOD FIX: Prioritize personal HOD entry (excluding generic 'Main Dept Line') ***
+                        // Logic: Find the entry that has HOD and the department name, but NOT the general "main dept line" tag.
                         roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => 
                             s.designation.toLowerCase().includes('hod') && 
-                            s.designation.toLowerCase().includes(canonicalDeptLower)
+                            s.designation.toLowerCase().includes(canonicalDeptLower) &&
+                            !s.designation.toLowerCase().includes('main dept line')
                         );
 
-                        // Priority 2: Find the main department line if HOD is not explicitly listed (e.g., "CSE Department" line)
+                        // Priority 2: If no explicit HOD person is found, find the main department line
                         if (!roleCandidate) {
                              roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => 
                                 s.designation.toLowerCase().includes(canonicalDeptLower) && 
@@ -1867,9 +1909,19 @@
                              );
                         }
                     }
+                } else if (queryLower.includes('sunil raj') && (queryLower.includes('transport') || queryLower.includes('bus') || queryLower.includes('route'))) {
+                    // *** SUNIL RAJ TRANSPORT FIX: Explicitly prioritize Transport Coordinator ***
+                    roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.name.toLowerCase().includes('sunil raj') && s.designation.toLowerCase().includes('transport'));
+                } else if (queryLower.includes('sunil raj') && (queryLower.includes('mech') || queryLower.includes('ma') || queryLower.includes('mechanical'))) {
+                    // *** SUNIL RAJ MECH FIX: Explicitly prioritize MECH Associate Professor ***
+                    roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.name.toLowerCase().includes('sunil raj') && s.designation.toLowerCase().includes('mech'));
                 } else if (queryLower.includes('discipline officer')) {
                     // Match Discipline Officer contact specifically
                     roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes('discipline officer'));
+                } else if (queryLower.includes('administrative office') || queryLower.includes('admin office') || queryLower.includes('admin number')) {
+                     // *** CRITICAL ADMIN OFFICE FIX: Prioritize Admin Office contact ***
+                     // Find the Office Supdt, as they are the primary administrative POC
+                     roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes('office supdt, administrative office'));
                 } else {
                      // Fallback to general role search (e.g., Principal, Warden, Exam Section)
                      roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes(contactRoleKey));
@@ -2216,7 +2268,7 @@
         if (queryLower.includes('hostel') || queryLower.includes('hostler') || queryLower.includes('dinner') || queryLower.includes('breakfast') || isHostelTimingQuery) {
             
             // Hosteler timings
-            title = 'Hostel & College Timings ⏰';
+            title = 'Hostel (Boys) & College Timings ⏰';
             content = `
                 <p class="text-sm contact-designation-text">Stay on schedule with the essential timings:</p>
                 <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
@@ -2547,14 +2599,23 @@
 
     // --- API CALL LOGIC WITH EXPONENTIAL BACKOFF ---
 
-    const fetchGeminiResponse = async (contents, maxRetries = 2, delay = 100) => { // MAX SPEED: Reduced retries and minimal delay
+    const fetchGeminiResponse = async (contents, maxRetries = 2, delay = 100, isOOC = false, isHostelQuery = false) => { // Added isHostelQuery flag
+        
+        let systemInstructionText = SYSTEM_PROMPT;
+        if (isOOC) {
+             systemInstructionText = OOC_REJECTION_PROMPT;
+        } else if (isHostelQuery) {
+             // CRITICAL: Inject the custom prompt for hostel queries
+             systemInstructionText = HOSTEL_OOC_PROMPT;
+        }
+
         const payload = {
             contents: contents,
             systemInstruction: {
-                parts: [{ text: SYSTEM_PROMPT }]
+                parts: [{ text: systemInstructionText }]
             },
-            // --- ADDING GOOGLE SEARCH GROUNDING ---
-            tools: [{ "google_search": {} }],
+            // --- ADDING GOOGLE SEARCH GROUNDING (Only if not OOC rejection) ---
+            tools: isOOC ? [] : [{ "google_search": {} }],
             // -------------------------------------
         };
 
@@ -2645,6 +2706,9 @@
         
         // If it's about Hostel/Food AND it's a subjective query, SKIP local handlers and go straight to AI Fallback
         const isHostelFoodQualityQuery = (queryLowerNormalized.includes('hostel') || queryLowerNormalized.includes('food')) && isSubjectiveQuery;
+        
+        // NEW INTELLIGENCE CHECK: Is it a general hostel/accommodation query?
+        const isGeneralHostelQuery = queryLowerNormalized.includes('hostel') || queryLowerNormalized.includes('accommodation') || queryLowerNormalized.includes('stay');
 
 
         const isGeneralCollegeQuery = /admission|fee|fees|tuition|course|branch|stream|affiliate|rank|rating|eligibility/i.test(queryLowerNormalized);
@@ -2653,8 +2717,12 @@
         const isContactQuery = wantsContactDetails || isContactNameMentioned; 
         // CRITICAL PLACEMENT FIX: Only trigger graph for explicit graph/chart request
         const isGraphQueryExplicit = /(graph|chart|comparison|trend)/i.test(queryLowerNormalized);
+        // NEW INTELLIGENCE CHECK: For subjective placement queries, trigger AI search
+        const isSubjectivePlacementQuery = /(best|worth|is it good|packages)/i.test(queryLowerNormalized) && /(placement|package|salary)/i.test(queryLowerNormalized);
         const isGeneralPlacementQuery = /(package|salary|placement)/i.test(queryLowerNormalized);
 
+        // --- NEW: OUT OF CONTEXT CHECK ---
+        const isOOCQuery = /weather|movie|recipe|sports|celebrity|news|political|game|joke|song|music|travel|vacation|hobbies|stock|finance|crypto|gossip|general knowledge/i.test(queryLowerNormalized);
         
         try {
             // --- B. GREETING CHECK (NEW FIX: Prevent premature Principal announcement) ---
@@ -2671,13 +2739,28 @@
                 return;
             }
 
-            // --- CRITICAL INTELLIGENCE GATE: Bypass Local Handlers for Subjective Queries ---
-            if (isHostelFoodQualityQuery) {
-                // Skip all local handlers and proceed directly to Gemini/Google Search
-                console.log("INTENT: Subjective query detected. Bypassing local handler and deferring to Gemini for grounded search.");
-                // Fall through to step 7
+            // --- CRITICAL INTELLIGENCE GATE 2: OUT OF CONTEXT REJECTION (OOC) ---
+            if (isOOCQuery) {
+                showTyping();
+                const contents = [{ role: "user", parts: [{ text: "Explain why you cannot answer this query: " + messageText }] }];
+                // Force AI to use the rejection prompt and provide a concise reason
+                const result = await fetchGeminiResponse(contents, 2, 100, true, false); 
+                
+                const botResponse = result.candidates?.[0]?.content?.parts?.[0]?.text || "❌ I apologize, but my focus is strictly on Pragati Engineering College information. I cannot answer general knowledge or external queries.";
+                
+                hideLoading();
+                addMessage(`**❌ Out of Scope:** ${botResponse}`, false);
+                showSuggestions(["What courses are offered?", "Contact Principal Sir number", "Check latest Placement Trend"]);
+                return;
             }
-            // --- END INTELLIGENCE GATE ---
+
+
+            // --- CRITICAL INTELLIGENCE GATE 1: Subjective Food/Hostel/Placement Queries ---
+            if (isHostelFoodQualityQuery || isSubjectivePlacementQuery) {
+                // Fall through to step 7 (General AI Query)
+                console.log("INTENT: Subjective query detected. Deferring to Gemini for grounded search.");
+            }
+            // --- END INTELLIGENCE GATE 1 ---
 
 
             // --- C. CONTEXTUAL STAFF FOLLOW-UP (Next Priority) ---
@@ -2722,24 +2805,22 @@
                     // FIX for Discipline Officer name lookup
                     roleQueryKey = 'discipline officer';
                 } else {
-                     roleQueryKey = roleKeywords.find(r => queryLowerNormalized.includes(r));
-                }
-                
-                // 2. Check Verified Local Roles 
-                let foundVerifiedRole = VERIFIED_ROLE_NAMES[roleQueryKey] || null;
+                     roleQueryKey = roleKeywords.find(r => queryLowerNormalized.includes(r)); // Use queryLower here
+                 }
 
-                if (foundVerifiedRole) {
-                    hideLoading();
-                    addMessage(getGeneralRoleOutput(foundVerifiedRole.name, foundVerifiedRole.designation), false);
-                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
-                    return;
-                }
-                
-                // 3. Fallback to Gemini if not locally verified (e.g., "who is the director")
+                 
+                 const candidate = VERIFIED_ROLE_NAMES[roleQueryKey] || null;
+                 if(candidate) {
+                     hideLoading();
+                     addMessage(getGeneralRoleOutput(candidate.name, candidate.designation), false);
+                     showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
+                     return;
+                 }
+                 // 3. Fallback to Gemini if not locally verified (e.g., 'director')
                 const contents = [{ role: "user", parts: [{ text: messageText + " at Pragati Engineering College" }] }]; 
                 showTyping(); 
 
-                const result = await fetchGeminiResponse(contents);
+                const result = await fetchGeminiResponse(contents, 2, 100, false, false);
                 
                 const botResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
                 
@@ -2756,14 +2837,25 @@
             // --- END GENERAL ROLE INQUIRY ---
 
 
-            // --- 1. TIMING CHECK ---
-            if (isTimingQuery && !isHostelFoodQualityQuery) {
-                const timingResponse = handleTimingQuery(queryToHandle);
-                if (timingResponse) {
-                    hideLoading();
-                    addMessage(`<div>${timingResponse}</div>`, false);
-                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
-                    return;
+            // --- 1. TIMING CHECK / GENERAL HOSTEL INFO ---
+            if (isTimingQuery || isGeneralHostelQuery) {
+                // If it's a general hostel/timing query, handle locally unless it's a food quality query
+                if(isGeneralHostelQuery && !isHostelFoodQualityQuery) {
+                    const timingResponse = handleTimingQuery(queryToHandle);
+                    if (timingResponse) {
+                        hideLoading();
+                        addMessage(`<div>${timingResponse}</div>`, false);
+                        showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
+                        return;
+                    }
+                } else if (isTimingQuery && !isHostelFoodQualityQuery) {
+                     const timingResponse = handleTimingQuery(queryToHandle);
+                    if (timingResponse) {
+                        hideLoading();
+                        addMessage(`<div>${timingResponse}</div>`, false);
+                        showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
+                        return;
+                    }
                 }
             }
             
@@ -2818,7 +2910,7 @@
                 showPlacementGraph();
                 showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
                 return;
-            } else if (isGeneralPlacementQuery) {
+            } else if (isGeneralPlacementQuery && !isSubjectivePlacementQuery) {
                 // GENERAL placement query (e.g., "tell me about placements")
                 hideLoading();
                 addMessage(`<div>${getPlacementSummary()}</div>`, false);
@@ -2850,8 +2942,9 @@
             // If the query is about subjective opinion (hostel food, etc.), use a general search
             const contents = [{ role: "user", parts: [{ text: messageText + " at Pragati Engineering College" }] }];
             showTyping(); 
-
-            const result = await fetchGeminiResponse(contents);
+            
+            // Use the isHostelQuery flag for the API call to inject the custom prompt
+            const result = await fetchGeminiResponse(contents, 2, 100, false, isGeneralHostelQuery); 
             
             const botResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
             
