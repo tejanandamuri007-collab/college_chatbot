@@ -1818,7 +1818,7 @@
 
         // --- TIER 0: ABSOLUTE ROLE MATCH (Priority 0) ---
         // Handles queries like "who is the principal" or "hod number"
-        const roleKeywords = ['principal', 'hod', 'dean', 'warden', 'discipline officer', 'reception', 'xerox', 'civil', 'eee', 'mech', 'ece', 'cse', 'it', 'bsh', 'administrative office', 'admin office'];
+        const roleKeywords = ['principal', 'hod', 'dean', 'warden', 'discipline officer', 'reception', 'xerox', 'civil', 'eee', 'mech', 'ece', 'cse', 'it', 'bsh', 'administrative office', 'admin office', 'exam section'];
         let matchedRole = null;
         let matchedRoleKey = null; // Store the key (e.g., 'principal', 'former principal')
 
@@ -1918,6 +1918,10 @@
                 } else if (queryLower.includes('discipline officer')) {
                     // Match Discipline Officer contact specifically
                     roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes('discipline officer'));
+                } else if (queryLower.includes('exam section') || queryLower.includes('examination section') || queryLower.includes('coe')) {
+                     // *** CRITICAL EXAM SECTION FIX: Prioritize Exam Section Staff ***
+                     // Find the primary exam staff member 
+                     roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes('exam section staff'));
                 } else if (queryLower.includes('administrative office') || queryLower.includes('admin office') || queryLower.includes('admin number')) {
                      // *** CRITICAL ADMIN OFFICE FIX: Prioritize Admin Office contact ***
                      // Find the Office Supdt, as they are the primary administrative POC
@@ -2259,7 +2263,7 @@
         const isScheduleQuery = /when|time|schedule|\bhours\b|\bstarts\b|\bends\b/i.test(queryLower);
         
         // NEW INTELLIGENCE CHECK: If the query contains "hostel" or "food" but is NOT asking for quality, use this timing handler.
-        const isHostelTimingQuery = (queryLower.includes('hostel') || queryLower.includes('food')) && !(/how is|quality|reviews|good|bad/i.test(queryLower));
+        const isHostelTimingQuery = (queryLower.includes('hostel') || queryLower.includes('food')) && !(/how is|quality|reviews|good|bad|do we have/i.test(queryLower));
 
         if (!isScheduleQuery && !isHostelTimingQuery) {
             return null;
@@ -2756,9 +2760,10 @@
 
 
             // --- CRITICAL INTELLIGENCE GATE 1: Subjective Food/Hostel/Placement Queries ---
-            if (isHostelFoodQualityQuery || isSubjectivePlacementQuery) {
+            if (isHostelFoodQualityQuery || isSubjectivePlacementQuery || isGeneralHostelQuery) {
+                // If the query is about subjective opinion (hostel food, etc.), or general hostel/accommodation
                 // Fall through to step 7 (General AI Query)
-                console.log("INTENT: Subjective query detected. Deferring to Gemini for grounded search.");
+                console.log("INTENT: Subjective or General Hostel query detected. Deferring to Gemini for grounded search.");
             }
             // --- END INTELLIGENCE GATE 1 ---
 
@@ -2837,25 +2842,14 @@
             // --- END GENERAL ROLE INQUIRY ---
 
 
-            // --- 1. TIMING CHECK / GENERAL HOSTEL INFO ---
-            if (isTimingQuery || isGeneralHostelQuery) {
-                // If it's a general hostel/timing query, handle locally unless it's a food quality query
-                if(isGeneralHostelQuery && !isHostelFoodQualityQuery) {
-                    const timingResponse = handleTimingQuery(queryToHandle);
-                    if (timingResponse) {
-                        hideLoading();
-                        addMessage(`<div>${timingResponse}</div>`, false);
-                        showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
-                        return;
-                    }
-                } else if (isTimingQuery && !isHostelFoodQualityQuery) {
-                     const timingResponse = handleTimingQuery(queryToHandle);
-                    if (timingResponse) {
-                        hideLoading();
-                        addMessage(`<div>${timingResponse}</div>`, false);
-                        showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
-                        return;
-                    }
+            // --- 1. TIMING CHECK / GENERAL HOSTEL INFO (LOCAL TIMINGS) ---
+            if (isTimingQuery && !isHostelFoodQualityQuery) {
+                const timingResponse = handleTimingQuery(queryToHandle);
+                if (timingResponse) {
+                    hideLoading();
+                    addMessage(`<div>${timingResponse}</div>`, false);
+                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
+                    return;
                 }
             }
             
@@ -2939,7 +2933,7 @@
             // --- END CONTACTS CHECK ---
             
             // --- 7. GENERAL AI QUERY (FALLBACK for EVERYTHING else) ---
-            // If the query is about subjective opinion (hostel food, etc.), use a general search
+            // This catches: Subjective Hostel/Food, Subjective Placements, General Accommodation Queries, and anything else.
             const contents = [{ role: "user", parts: [{ text: messageText + " at Pragati Engineering College" }] }];
             showTyping(); 
             
