@@ -768,7 +768,7 @@
     
     // Core State Variables
     let recognition = null;
-    let placementChart = null;
+    let placementChart = null; // Stores the Chart.js instance
     let chatInitialized = false;
 
     // API Configuration (Placeholder/Default for Canvas environment)
@@ -1031,12 +1031,10 @@
                 sunIcon.classList.add('hidden');
             }
             // If the placement chart exists, destroy and redraw it to update colors
+            // NOTE: We only destroy and redraw *if* the chart element exists on the page.
             if (placementChart) {
-                placementChart.destroy();
-                let chartWrapper = document.querySelector('.chart-wrapper');
-                if (chartWrapper) {
-                    showPlacementGraph(true); // PASS TRUE: Silent Redraw
-                }
+                // We use true here to prevent the message bubble from popping up
+                showPlacementGraph(true); 
             }
         }
     }
@@ -1054,9 +1052,21 @@
         }
 
         // Check if a chart exists and redraw it with new theme colors
+        // NOTE: We use the existing chart check from applySavedTheme
         if (placementChart) {
+            // Destroy the old instance immediately before redraw
             placementChart.destroy();
-            showPlacementGraph(true); // PASS TRUE: Silent Redraw
+            placementChart = null; 
+            
+            // Find the parent wrapper and remove it to clean up the DOM thoroughly
+            let chartWrapper = document.querySelector('.chart-wrapper');
+            if (chartWrapper) {
+                chartWrapper.remove();
+            }
+            
+            // Re-call sendMessage to re-display the graph, but skip user interaction flags
+            // This is the clean way to re-display the graph in the new theme.
+            sendMessage('Show me the placement chart', false); 
         }
     }
     // --- END DARK MODE LOGIC ---
@@ -2423,30 +2433,36 @@
             "Time for some data visualization! This shows our continuous growth. 🤩",
         ];
         
-        // 1. Add chat confirmation message
+        // 1. Clear previous chart instance if it exists
         if (placementChart) {
              placementChart.destroy();
-        } else if (!isThemeUpdate) { // ONLY add message if NOT a theme update
-            const intro = graphIntros[Math.floor(Math.random() * graphIntros.length)]; // Correct variable use
+             placementChart = null;
+        }
+
+        // 2. Add chat confirmation message ONLY IF this is NOT a theme update
+        if (!isThemeUpdate) { 
+            const intro = graphIntros[Math.floor(Math.random() * graphIntros.length)]; 
             addMessage(`${intro}`, false);
         }
         
-        // 2. Create the wrapper div for the chart
+        // 3. Create or find the wrapper div for the chart
         let chartWrapper = chatHistory.querySelector('.chart-wrapper');
+        
+        // If the wrapper doesn't exist (initial graph display), create and append it.
         if (!chartWrapper) {
             chartWrapper = document.createElement('div');
             chartWrapper.className = 'bot-message message-bubble chart-wrapper flex flex-col items-start info-card w-full max-w-full';
+            chatHistory.appendChild(chartWrapper);
         } else {
              chartWrapper.innerHTML = ''; // Clear previous content if redrawing
-             chartWrapper.classList.remove('hidden');
         }
         
-        // 3. Add the canvas element
+        // 4. Add the canvas element
         const canvas = document.createElement('canvas');
         canvas.id = 'placementChart';
         chartWrapper.appendChild(canvas);
         
-        // 4. Create the summary text area
+        // 5. Create the summary text area
         const summaryDiv = document.createElement('div');
         summaryDiv.className = 'graph-summary';
         
@@ -2470,8 +2486,10 @@
         
         chartWrapper.appendChild(summaryDiv);
         
-        chatHistory.appendChild(chartWrapper);
-        scrollToBottom();
+        // Only scroll if it's not a silent redraw/theme update
+        if (!isThemeUpdate) {
+             scrollToBottom();
+        }
         
         // Set conversational redirect state
         if (!isThemeUpdate) { // ONLY set context if NOT a theme update
@@ -2481,7 +2499,7 @@
             };
         }
 
-        // 5. Render the chart
+        // 6. Render the chart
         
         const isDark = document.body.classList.contains('dark');
         const textColor = isDark ? '#e0e0e0' : '#333';
@@ -3083,18 +3101,23 @@
             // --- END PREVIOUS PAPERS CHECK ---
             
             // --- 6. GRAPH CHECK / PLACEMENT FACT CHECK ---
-            if (isGraphQueryExplicit) {
-                // EXPLICIT graph requested (e.g., "show chart")
-                hideLoading();
-                showPlacementGraph();
-                showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
-                return;
-            } else if (isGeneralPlacementQuery && !isSubjectivePlacementQuery) {
-                // GENERAL placement query (e.g., "tell me about placements")
-                hideLoading();
-                addMessage(`<div>${getPlacementSummary()}</div>`, false);
-                showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
-                return;
+            if (isGraphQueryExplicit || (isGeneralPlacementQuery && !isSubjectivePlacementQuery)) {
+                 // Check if the graph has been explicitly requested before OR if it's a new general placement query
+                 
+                // If the user didn't request the graph explicitly, let the summary handle it.
+                if (isGraphQueryExplicit) {
+                     showTyping(); // Only show typing for the brief moment of redraw if it was explicitly asked
+                     hideLoading();
+                     showPlacementGraph();
+                     showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
+                     return;
+                } else {
+                     // For general placement query, display the summary card (which prompts for the graph)
+                     hideLoading();
+                     addMessage(`<div>${getPlacementSummary()}</div>`, false);
+                     showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
+                     return;
+                }
             }
 
 
