@@ -611,6 +611,18 @@
         .dark .info-divider {
              border-top-color: #374151;
         }
+        /* Academic Alert Specific Styles */
+        .alert-status {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+            color: #FF4500; /* Orange-Red for alert */
+            display: block;
+        }
+        .alert-status.active {
+            color: #00C9A7; /* Teal for active */
+        }
     </style>
 </head>
 <body> <!-- REMOVED class="dark" HERE -->
@@ -760,7 +772,7 @@
     let chatInitialized = false;
 
     // API Configuration (Placeholder/Default for Canvas environment)
-    const API_KEY = typeof __api_key !== 'undefined' ? __api_key : "AIzaSyD0VriKBX6ekEN-hi6WM9VTuFrlxacGIqc";
+    const API_KEY = typeof __api_key !== 'undefined' ? __api_key : "";
     const MODEL_NAME = "gemini-2.5-flash-preview-09-2025";
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
     
@@ -814,7 +826,8 @@
         const branchDisplay = FULL_DEPT_NAMES[canonicalBranch] || canonicalBranch; 
         
         const number = staff.phone || staff.number || "N/A";
-        const fullName = staff.name || "N/A";
+        // CRITICAL FIX: Use overriden name if available, otherwise fallback to stored name
+        const fullName = staff.overridenName || staff.name || "N/A";
         const designation = staff.designation || "N/A";
 
         // NEW Internal marker structure: ✅|Name|Designation|BranchDisplay|Number
@@ -981,9 +994,9 @@
                     <div class="loading-logo-wrapper">
                         <!-- Logo Image URL (Same as header/login) -->
                         <img src="https://i.postimg.cc/B6v57Wfn/1727246051php-AX4sq7.jpg" 
-                             alt="Loading Logo" 
-                             class="loading-logo"
-                             onerror="this.onerror=null; this.src='https://placehold.co/40x40/00C9A7/ffffff?text=AI'">
+                            alt="Loading Logo" 
+                            class="loading-logo"
+                            onerror="this.onerror=null; this.src='https://placehold.co/40x40/00C9A7/ffffff?text=AI'">
                         <!-- Pulsing Ring -->
                         <div class="loading-ring"></div>
                     </div>
@@ -1022,7 +1035,7 @@
                 placementChart.destroy();
                 let chartWrapper = document.querySelector('.chart-wrapper');
                 if (chartWrapper) {
-                    showPlacementGraph();
+                    showPlacementGraph(true); // PASS TRUE: Silent Redraw
                 }
             }
         }
@@ -1043,7 +1056,7 @@
         // Check if a chart exists and redraw it with new theme colors
         if (placementChart) {
             placementChart.destroy();
-            showPlacementGraph(); // Redraws the chart with the current theme settings
+            showPlacementGraph(true); // PASS TRUE: Silent Redraw
         }
     }
     // --- END DARK MODE LOGIC ---
@@ -1216,7 +1229,6 @@
         
         // --- CSE (AI) DEPARTMENT STAFF ---
         { name: "Mrs. K Lakshmi Viveka", number: "9642788777", designation: "Associate Prof & HoD, CSE (AI)", email: "" },
-        { name: "Mrs. T Tejasvi", number: "9505150735", designation: "Assistant Professor, CSE (AI)", email: "" },
         { name: "Mr. M S V V Ramesh", number: "8639797917", designation: "Assistant Professor, CSE (AI)", email: "" },
         { name: "Mr. M Veerababu", number: "9491629344", designation: "Assistant Professor, CSE (AI)", email: "" },
         { name: "Mrs. Ch Sri Divya", number: "9492113320", designation: "Assistant Professor, CSE (AI)", email: "" },
@@ -1361,6 +1373,20 @@
         'hod mech': { name: "Dr Avinash G", designation: "HOD, MECH" }, // Updated for clarity
         'hod ma': { name: "Dr Avinash G", designation: "HOD, MECH" }, // Added 'HOD MA' synonym
         'hod eee': { name: "Prof. K. Rajasekhar", designation: "HOD, EEE" }, 
+        
+        // --- NEW HOD ENTRIES FOR NAME OVERRIDE (INCLUDES SPECIALIZATIONS) ---
+        'hod civil': { name: "Dr. G. Durga Prasad", designation: "HOD, CIVIL" },
+        'hod ece': { name: "Dr V Sailaja", designation: "HOD, ECE" },
+        'hod it': { name: "Dr. T. S. K. V. Lakshmi", designation: "HOD, IT" }, 
+        'hod bsh': { name: "Dr. T. Satyanarayana", designation: "HOD, BS&H" },
+        
+        // CSE Specializations HODs (using the HOD - CSE(X) designation from staff list, if available)
+        'hod cse (cs)': { name: "Dr. M. V. Rajesh", designation: "HOD, CSE (CS)" }, 
+        'hod cse (ds)': { name: "Mr. M. V. Rajesh", designation: "HOD, CSE (DS)" }, 
+        'hod cse (ai)': { name: "Mrs. K Lakshmi Viveka", designation: "HOD, CSE (AI)" }, 
+        'hod cse (ai&ml)': { name: "Dr. A. Radha Krishna", designation: "HOD, CSE (AI&ML)" },
+
+        // --- END NEW HOD ENTRIES ---
         'discipline officer': { name: "Adi Narayana", designation: "Discipline Officer" }
     };
 
@@ -1370,7 +1396,7 @@
         'cse': 'CSE', 'comp': 'CSE', 'cs': 'CSE', 'computer science': 'CSE', 'computer': 'CSE', 'comp sci': 'CSE', 'c s e': 'CSE',
         'ece': 'ECE', 'e&c': 'ECE', 'electronics': 'ECE', 'electroncs': 'ECE', 'ec': 'ECE', 'e c e': 'ECE',
         'eee': 'EEE', 'electrical': 'EEE', 'ee': 'EEE', 'e e e': 'EEE', 'elect and elec': 'EEE', 'elect. engg': 'EEE',
-        'mech': 'MECH', 'mechanical': 'MECH', 'ma': 'MECH', 'mechanic': 'MECH', 'me': 'MECH', 'm e': 'MECH', 'mecha': 'MECH', 'm.e.': 'MECH', 'mech engg': 'MECH',
+        'mech': 'MECH', 'mechanical': 'MECH', 'ma': 'MECH', 'mechanic': 'MECH', 'me': 'MECH', 'm e': 'MECH', 'm.e.': 'MECH', 'mech engg': 'MECH',
         'civil': 'CIVIL', 'ci': 'CIVIL', 'civil engg': 'CIVIL', 'c.e.': 'CIVIL', 'c. e.': 'CIVIL', 'civil engg': 'CIVIL',
         'it': 'IT', 'information technology': 'IT', 'info tech': 'IT', 'i t': 'IT', 'i.t.': 'IT',
         
@@ -1389,11 +1415,12 @@
         // Admin & General Staff
         'library': 'LIBRARY', 'lib': 'LIBRARY',
         'pd': 'PE', 'pe': 'PE', 'physical director': 'PE', 'sports': 'PE', 
-        'maintenance': 'MAINTENANCE', 'maintenance dept': 'MAINTENANCE', 'works': 'MAINTENANCE',
+        'maintenance': 'MAINTENANCE', 'works': 'MAINTENANCE',
         'security': 'SECURITY', 'guard': 'SECURITY',
         'xerox': 'XEROX', 'photocopy': 'XEROX',
         'admin': 'ADMIN', 'administrator': 'ADMIN', 'system admin': 'ADMIN', 'office': 'ADMIN', 'admn': 'ADMIN',
         'warden': 'HOSTEL', 'hostel': 'HOSTEL', 'hostler': 'HOSTEL',
+        'transport': 'TRANSPORT', 'bus': 'TRANSPORT',
     };
     
     // --- FULL DEPARTMENT NAME MAP (FOR OUTPUT FORMATTING) ---
@@ -1407,9 +1434,9 @@
         'BS&H': 'BS&H',
         'CDC': 'CDC',
         'MEFA': 'MEFA',
-        'EXAM': 'EXAM',
-        'ADMIN': 'Admin',
-        'SECURITY': 'Security',
+        'EXAM': 'Exam Section',
+        'ADMIN': 'Admin Office',
+        'SECURITY': 'Security/Maint.',
         'HOSTEL': 'Hostel (Boys)', // Corrected to explicitly state Boys
         'TRANSPORT': 'Transport',
         'RECEPTION': 'Reception',
@@ -1421,7 +1448,7 @@
         'CSE (AI&ML)': 'CSE (AI&ML)',
         // NEW CATEGORIES
         'LIBRARY': 'Library',
-        'PE': 'PE',
+        'PE': 'PE/Sports',
         'MAINTENANCE': 'Maintenance',
         'CLASS_IV': 'Class IV',
     };
@@ -1707,9 +1734,9 @@
                 } else if (filterType === 'name') {
                      // Standard name filtering (only runs if the user didn't use a department keyword or if the department filtering failed to narrow it down)
                      filteredMatches = filterMatchesByNewQuery(initialMatches, followUpQuery, 'name');
-                } else {
+                 } else {
                      filteredMatches = initialMatches; // Keep current list if no useful filter found
-                }
+                 }
             } else {
                 filteredMatches = initialMatches;
             }
@@ -1732,7 +1759,7 @@
                 // Prepare for next clarification state
                 lastStaffQuery.matches = filteredMatches; // Keep the smaller set
                 
-                if (lastStaffQuery.clarulationAttempts === 1) {
+                if (lastStaffQuery.clarificationAttempts === 1) {
                     // Fail on Department filter, move to Name filter
                     lastStaffQuery.state = 'prompting_for_clarification'; 
                     // Ask for Full Name only
@@ -1748,7 +1775,7 @@
                 // ZERO MATCHES (After filtering)
                 // Final reset after a failed clarification attempt
                 lastStaffQuery = { originalQuery: null, matches: [], state: 'idle', singleMatchFound: null, clarificationAttempts: 0 }; 
-                return `❌ **Not Found:** Sorry, I couldn't find a staff member matching that specific combination of details in the remaining list. Please try a new search with the **full name** or **department**.`;
+                return `❌ **Not Found:** Sorry, I couldn’t find a staff member matching that specific combination of details in the remaining list. Please try a new search with the **full name** or **department**.`;
             }
         }
 
@@ -1791,11 +1818,11 @@
 
 
     // --- State-aware contact search function ---
-    const findStaffContactAndManageContext = (query) => {
+    const findStaffContactAndManageContext = (query, queryLowerNormalized) => {
         const queryLower = query.toLowerCase();
         
-        // FIX: Define queryNormalized at the start of the function
-        const queryNormalized = normalizeName(query); 
+        // --- CRITICAL FIX: queryLowerNormalized is now passed in and used directly ---
+        // const queryNormalized = normalizeName(query); 
         
         // 0. SPECIAL CASES (Akka/Discipline)
         if (queryLower.includes('akka')) {
@@ -1818,7 +1845,7 @@
 
         // --- TIER 0: ABSOLUTE ROLE MATCH (Priority 0) ---
         // Handles queries like "who is the principal" or "hod number"
-        const roleKeywords = ['principal', 'hod', 'dean', 'warden', 'discipline officer', 'reception', 'xerox', 'civil', 'eee', 'mech', 'ece', 'cse', 'it', 'bsh', 'administrative office', 'admin office', 'exam section'];
+        const roleKeywords = ['principal', 'hod', 'dean', 'warden', 'discipline officer', 'reception', 'xerox', 'civil', 'eee', 'mech', 'ece', 'cse', 'it', 'bsh', 'administrative office', 'admin office', 'exam section', 'transport'];
         let matchedRole = null;
         let matchedRoleKey = null; // Store the key (e.g., 'principal', 'former principal')
 
@@ -1851,18 +1878,34 @@
                  // Tighter check for key roles like Dean CDC or HODs
                  if (queryLower.includes('dean cdc') || (queryLower.includes('dean') && (queryLower.includes('cdc') || queryLower.includes('career')))) {
                      matchedRoleKey = 'dean cdc';
-                 } else if (queryLower.includes('hod cse') || (queryLower.includes('hod') && queryLower.includes('cse'))) {
+                 } else if (queryLower.includes('hod cse') || (queryLower.includes('hod') && queryLower.includes('cse') && !queryLower.includes('ai&ml') && !queryLower.includes('ds') && !queryLower.includes('(ai)') && !queryLower.includes('(ds)') && !queryLower.includes('(cs)'))) {
                      matchedRoleKey = 'hod cse';
-                 } else if (queryLower.includes('hod mech') || queryLower.includes('hod me') || queryLower.includes('hod ma') || (queryLower.includes('hod') && (queryLower.includes('mech') || queryLower.includes('mechanical')))) {
+                 } else if (queryLower.includes('hod mech') || queryLower.includes('hod me') || queryLower.includes('hod ma') || (queryLowerNormalized.includes('hod') && (queryLower.includes('mech') || queryLower.includes('mechanical')))) {
                      // NEW FIX: Robust check for HOD Mechanical / ME / MA
                      matchedRoleKey = 'hod mech';
-                 } else if (queryLower.includes('hod eee') || (queryLower.includes('hod') && queryLower.includes('eee'))) {
+                 } else if (queryLower.includes('hod eee') || (queryLowerNormalized.includes('hod') && queryLower.includes('eee'))) {
                      matchedRoleKey = 'hod eee';
-                 } else if (queryLower.includes('discipline officer') || (queryLower.includes('discipline') && queryLower.includes('officer'))) {
+                 } else if (queryLower.includes('discipline officer') || (queryLowerNormalized.includes('discipline') && queryLowerNormalized.includes('officer'))) {
                     // FIX for Discipline Officer name lookup
                     matchedRoleKey = 'discipline officer';
+                 } else if (queryLower.includes('hod civil') || (queryLowerNormalized.includes('hod') && queryLower.includes('civil'))) { // NEW HOD MATCH
+                    matchedRoleKey = 'hod civil';
+                 } else if (queryLower.includes('hod ece') || (queryLowerNormalized.includes('hod') && queryLower.includes('ece'))) { // NEW HOD MATCH
+                    matchedRoleKey = 'hod ece';
+                 } else if (queryLower.includes('hod it') || (queryLowerNormalized.includes('hod') && queryLower.includes('it'))) { // NEW HOD MATCH
+                    matchedRoleKey = 'hod it';
+                 } else if (queryLower.includes('hod bsh') || (queryLowerNormalized.includes('hod') && queryLower.includes('bsh'))) { // NEW HOD MATCH
+                    matchedRoleKey = 'hod bsh';
+                 } else if (queryLower.includes('hod cse (cs)') || queryLower.includes('hod cs') || queryLower.includes('hod cyber')) { // SPECIALIZATION
+                    matchedRoleKey = 'hod cse (cs)';
+                 } else if (queryLower.includes('hod cse (ds)') || queryLower.includes('hod ds') || queryLower.includes('hod data science')) { // SPECIALIZATION
+                    matchedRoleKey = 'hod cse (ds)';
+                 } else if (queryLower.includes('hod cse (ai&ml)') || queryLower.includes('hod aiml')) { // SPECIALIZATION
+                    matchedRoleKey = 'hod cse (ai&ml)';
+                 } else if (queryLower.includes('hod cse (ai)') || queryLower.includes('hod ai')) { // SPECIALIZATION
+                    matchedRoleKey = 'hod cse (ai)';
                  } else {
-                     matchedRoleKey = roleKeywords.find(r => queryLower.includes(r)); // Use queryLower here
+                     matchedRoleKey = roleKeywords.find(r => queryLowerNormalized.includes(r)); // Use queryLower here
                  }
 
                  
@@ -1875,71 +1918,103 @@
              
              // 2. Handle Contact Request (X number?) - Use STAFF_CONTACTS
              if (isContactRequest) {
-                // For a contact query, we only use the CURRENT role holder unless explicitly former contact is stored
-                const contactRoleKey = (matchedRoleKey === 'former principal') ? 'principal' : matchedRoleKey;
-                
-                // Use robust keyword matching for contact request against the whole contact list
-                let roleCandidate = null;
-                let targetDept = null;
-                let targetRole = null;
+                 // For a contact query, we only use the CURRENT role holder unless explicitly former contact is stored
+                 const contactRoleKey = (matchedRoleKey === 'former principal') ? 'principal' : matchedRoleKey;
+                 
+                 // Use robust keyword matching for contact request against the whole contact list
+                 let roleCandidate = null;
+                 let targetDept = null;
+                 let targetRole = null;
 
-                // --- HOD/DEPT Specific Logic (Updated for generalization) ---
-                if (queryLower.includes('hod') || queryLower.includes('department')) {
-                    // Try to extract the canonical department name from the query
-                    targetDept = Object.keys(DEPT_MAP).find(key => queryLower.includes(key));
-                    targetRole = 'HOD'; 
+                 // --- HOD/DEPT Specific Logic (Updated for generalization and FIX) ---
+                 if (queryLower.includes('hod') || queryLower.includes('department')) {
+                     
+                     // Try to extract the canonical department name from the query
+                     targetDept = Object.keys(DEPT_MAP).find(key => queryLower.includes(key));
+                     targetRole = 'HOD'; 
 
-                    if (targetDept) {
-                        const canonicalDept = DEPT_MAP[targetDept];
-                        const canonicalDeptLower = canonicalDept.toLowerCase();
-                        
-                        // *** CRITICAL HOD FIX: Prioritize personal HOD entry (excluding generic 'Main Dept Line') ***
-                        // Logic: Find the entry that has HOD and the department name, but NOT the general "main dept line" tag.
-                        roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => 
-                            s.designation.toLowerCase().includes('hod') && 
-                            s.designation.toLowerCase().includes(canonicalDeptLower) &&
-                            !s.designation.toLowerCase().includes('main dept line')
-                        );
+                     if (targetDept) {
+                         const canonicalDept = DEPT_MAP[targetDept];
+                         const canonicalDeptLower = canonicalDept.toLowerCase();
+                         
+                         // *** CRITICAL HOD FIX: Prioritize personal HOD entry (excluding generic 'Main Dept Line') ***
+                         // Logic: Find the entry that has HOD and the department name, but NOT the general "main dept line" tag.
+                         roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => 
+                             s.designation.toLowerCase().includes('hod') && 
+                             s.designation.toLowerCase().includes(canonicalDeptLower) &&
+                             !s.designation.toLowerCase().includes('main dept line')
+                         );
 
-                        // Priority 2: If no explicit HOD person is found, find the main department line
-                        if (!roleCandidate) {
-                             roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => 
-                                s.designation.toLowerCase().includes(canonicalDeptLower) && 
-                                s.designation.toLowerCase().includes('main dept line')
-                             );
-                        }
-                    }
-                } else if (queryLower.includes('sunil raj') && (queryLower.includes('transport') || queryLower.includes('bus') || queryLower.includes('route'))) {
-                    // *** SUNIL RAJ TRANSPORT FIX: Explicitly prioritize Transport Coordinator ***
-                    roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.name.toLowerCase().includes('sunil raj') && s.designation.toLowerCase().includes('transport'));
-                } else if (queryLower.includes('sunil raj') && (queryLower.includes('mech') || queryLower.includes('ma') || queryLower.includes('mechanical'))) {
-                    // *** SUNIL RAJ MECH FIX: Explicitly prioritize MECH Associate Professor ***
-                    roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.name.toLowerCase().includes('sunil raj') && s.designation.toLowerCase().includes('mech'));
-                } else if (queryLower.includes('discipline officer')) {
-                    // Match Discipline Officer contact specifically
-                    roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes('discipline officer'));
-                } else if (queryLower.includes('exam section') || queryLower.includes('examination section') || queryLower.includes('coe')) {
-                     // *** CRITICAL EXAM SECTION FIX: Prioritize Exam Section Staff ***
-                     // Find the primary exam staff member 
-                     roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes('exam section staff'));
-                } else if (queryLower.includes('administrative office') || queryLower.includes('admin office') || queryLower.includes('admin number')) {
-                     // *** CRITICAL ADMIN OFFICE FIX: Prioritize Admin Office contact ***
-                     // Find the Office Supdt, as they are the primary administrative POC
-                     roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes('office supdt, administrative office'));
-                } else {
-                     // Fallback to general role search (e.g., Principal, Warden, Exam Section)
-                     roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes(contactRoleKey));
-                }
-                
-                // If they asked for the contact of the former Principal, use the name lookup
-                if (matchedRoleKey === 'former principal') {
-                     roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.name.toLowerCase().includes('k. satyanarayana'));
-                }
+                         // Priority 2: If no explicit HOD person is found, find the main department line
+                         if (!roleCandidate) {
+                              // Find the generic department line contact
+                              let genericDeptLine = DEDUPLICATED_STAFF_CONTACTS.find(s => 
+                                 s.designation.toLowerCase().includes(canonicalDeptLower) && 
+                                 s.designation.toLowerCase().includes('main dept line')
+                              );
 
-                if (roleCandidate) {
-                    lastStaffQuery.singleMatchFound = roleCandidate;
-                    return getStrictContactOutput(roleCandidate);
-                }
+                              if(genericDeptLine) {
+                                  // Find the HOD name from the VERIFIED_ROLE_NAMES map
+                                  // This handles both main branches (cse) and specializations (cse (ds))
+                                  const hodKey = `hod ${canonicalDept.toLowerCase().replace(/[\(\)]/g, '')}`;
+                                  
+                                  // FIX for specializations: They should be stored as 'cse (ai)' not 'cse(ai)'
+                                  let finalHodKey = hodKey;
+                                  if (hodKey.includes('cse')) {
+                                       // Reconstruct key for specializations: 'hod cse (ds)'
+                                       if(canonicalDept.includes('(DS)')) finalHodKey = 'hod cse (ds)';
+                                       else if(canonicalDept.includes('(AI&ML)')) finalHodKey = 'hod cse (ai&ml)';
+                                       else if(canonicalDept.includes('(AI)')) finalHodKey = 'hod cse (ai)';
+                                       else if(canonicalDept.includes('(CS)')) finalHodKey = 'hod cse (cs)';
+                                  }
+
+                                  const hodInfo = VERIFIED_ROLE_NAMES[finalHodKey];
+                                  
+                                  if (hodInfo) {
+                                      // Clone the entry and inject the HOD's name
+                                      roleCandidate = { ...genericDeptLine, overridenName: hodInfo.name, designation: hodInfo.designation };
+                                  } else {
+                                      roleCandidate = genericDeptLine; // Use generic name if HOD name is missing
+                                  }
+                              }
+                         }
+                     }
+                 } else if (queryLower.includes('sunil raj') && (queryLower.includes('transport') || queryLower.includes('bus') || queryLower.includes('route'))) {
+                     // *** SUNIL RAJ TRANSPORT FIX: Explicitly prioritize Transport Coordinator ***
+                     roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.name.toLowerCase().includes('sunil raj') && s.designation.toLowerCase().includes('transport'));
+                 } else if (queryLower.includes('sunil raj') && (queryLower.includes('mech') || queryLower.includes('ma') || queryLower.includes('mechanical'))) {
+                     // *** SUNIL RAJ MECH FIX: Explicitly prioritize MECH Associate Professor ***
+                     roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.name.toLowerCase().includes('sunil raj') && s.designation.toLowerCase().includes('mech'));
+                 } else if (queryLower.includes('discipline officer')) {
+                     // Match Discipline Officer contact specifically
+                     roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes('discipline officer'));
+                 } else if (queryLower.includes('exam section') || queryLower.includes('examination section') || queryLower.includes('coe')) {
+                      // *** CRITICAL EXAM SECTION FIX: Prioritize Exam Section Staff ***
+                      // Find the primary exam staff member 
+                      roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes('exam section staff'));
+                 } else if (queryLower.includes('administrative office') || queryLower.includes('admin office') || queryLower.includes('admin number')) {
+                      // *** CRITICAL ADMIN OFFICE FIX: Prioritize Admin Office contact ***
+                      // Find the Office Supdt, as they are the primary administrative POC
+                      roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes('office supdt, administrative office'));
+                      
+                      // Fallback 2: If Office Supdt not found, find any staff mentioning "Administrative Office"
+                      if (!roleCandidate) {
+                           roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes('administrative office'));
+                      }
+                 } else {
+                      // Fallback to general role search (e.g., Principal, Warden, Exam Section)
+                      roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.designation.toLowerCase().includes(contactRoleKey));
+                 }
+                 
+                 // If they asked for the contact of the former Principal, use the name lookup
+                 if (matchedRoleKey === 'former principal') {
+                      roleCandidate = DEDUPLICATED_STAFF_CONTACTS.find(s => s.name.toLowerCase().includes('k. satyanarayana'));
+                 }
+
+                 if (roleCandidate) {
+                     lastStaffQuery.singleMatchFound = roleCandidate;
+                     return getStrictContactOutput(roleCandidate);
+                 }
              }
         }
         // --- END TIER 0 ---
@@ -2021,7 +2096,7 @@
     };
 
 
-    // --- PQP DOWNLOAD MAP ---
+    // --- PQP DOWNLOAD MAP (Keep the structure, but simplify the handler) ---
     const DOWNLOAD_MAP = {
         'BTECH-I-I': { 
             label: 'I B.Tech. I Sem', 
@@ -2047,6 +2122,11 @@
         const syllabusLink = 'https://pragati.ac.in/examination/course-structure-syllabus/';
         const academicCalendarLink = 'https://pragati.ac.in/examinations/academic-calendars/';
         
+        // --- ACADEMIC BUTTONS (FIXED: Compacted to single line) ---
+        const syllabusButton = `<a href="${syllabusLink}" target="_blank" class="block w-full text-center py-3 bg-[#006494] text-white font-extrabold rounded-lg shadow-lg hover:bg-[#004d73] transition duration-200 button-click-animation text-sm mb-2"><span class="mr-1">📚</span> VIEW COURSE STRUCTURE & SYLLABUS</a>`;
+        const academicCalendarButton = `<a href="${academicCalendarLink}" target="_blank" class="block w-full text-center py-3 bg-[#00C9A7] text-white font-extrabold rounded-lg shadow-lg hover:bg-[#00A887] transition duration-200 button-click-animation text-sm"><span class="mr-1">📅</span> LATEST ACADEMIC CALENDARS</a>`;
+        // --- END ACADEMIC BUTTONS ---
+        
         const contentHTML = `
             <p class="text-sm contact-designation-text">Find the complete curriculum and academic schedule here:</p>
             <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
@@ -2055,10 +2135,8 @@
                 <li class="contact-designation-text">**JNTUK Affiliation:** Follows **JNTUK Kakinada** exam system.</li>
             </ul>
             <div class="info-divider">
-                <ul class="link-list flex flex-col">
-                    <li><a href="${syllabusLink}" target="_blank">🔗 Official Course Structure & Syllabus</a></li>
-                    <li><a href="${academicCalendarLink}" target="_blank">🔗 Latest Academic Calendars</a></li>
-                </ul>
+                ${syllabusButton}
+                ${academicCalendarButton}
             </div>
             <p class="mt-3 text-sm font-bold accent-highlight">
                 Need the **Exam Section** number for quick clarifications? 🤔
@@ -2079,75 +2157,44 @@
         `;
     };
 
-    // --- PQP HANDLER (CRITICALLY REFACTORED FOR MINIMALIST LINK OUTPUT) ---
+    // --- PQP HANDLER (NEW ELEGANT CARD) ---
     const handlePaperQuery = (query) => {
-        const queryLower = query.toLowerCase();
         const officialPqpLink = 'https://pragati.ac.in/examination/previous-question-papers/';
 
-        // Check if the query is explicitly about PQP
+        // Intent check remains necessary to correctly trigger this block over the AI fallback
+        const queryLower = query.toLowerCase();
         const isPaperQueryIntent = /previous|question paper|papers|exam|m.tech|b.tech|btech|mtech/i.test(queryLower);
-        
-        // Do not handle if it's about Syllabus
-        if (/syllabus|academic/i.test(queryLower)) {
-            return { success: false, html: null, isMissingBranch: false };
-        }
-
-        if (!isPaperQueryIntent) {
+        if (!isPaperQueryIntent || /syllabus|academic/i.test(queryLower)) {
             return { success: false, html: null, isMissingBranch: false };
         }
         
-        // Logic to try and determine the target, but ultimately, the link is the same
-        let yearNum = null;
-        let semNum = null;
-        let isMTech = queryLower.includes('m.tech') || queryLower.includes('mtech');
-
-        const yearMatch = queryLower.match(/(1st|2nd|3rd|3rd|4th|\b[1-4]\b|i{1,4}\s?year|b\.?tech)/i);
-        if (yearMatch) {
-            const match = yearMatch[0].toLowerCase();
-            if (match.includes('1st') || /\b1\b/.test(match) || match.includes('i ')) yearNum = 'I';
-            else if (match.includes('2nd') || /\b2\b/.test(match) || match.includes('ii')) yearNum = 'II';
-            else if (match.includes('3rd') || /\b3\b/.test(match) || match.includes('iii')) yearNum = 'III';
-            else if (match.includes('4th') || /\b4\b/.test(match) || match.includes('iv')) yearNum = 'IV';
-        }
-        const semMatch = queryLower.match(/(i sem|ii sem|\b[1-2]\b\s?sem(ester)?)/i);
-        if (semMatch) {
-            const match = semMatch[0].toLowerCase();
-            if (match.includes('i') || match.includes('1')) semNum = 'I';
-            else if (match.includes('ii') || match.includes('2')) semNum = 'II';
-        }
-        
-        // Construct a specific description based on the detected parameters
-        let specificText = 'Previous Question Papers';
-        if (isMTech) {
-             specificText = 'M.Tech. Previous Question Papers (All Years)';
-        } else if (yearNum && semNum) {
-            const yearLabel = DOWNLOAD_MAP[`BTECH-${yearNum}-${semNum}`] ? DOWNLOAD_MAP[`BTECH-${yearNum}-${semNum}`].label : `${yearNum} B.Tech. ${semNum} Sem Papers`;
-            specificText = `${yearLabel} Question Paper Archive`;
-        } else if (yearNum || semNum) {
-             specificText = `B.Tech Previous Question Papers (General Search)`;
-        }
-
         // Set conversational redirect state
         conversationFlow = {
             state: 'awaiting_redirect',
-            targetQuery: 'Contact the Exam Section number', // Suggesting follow-up to Exam queries
+            targetQuery: 'Contact the Exam Section number', 
         };
 
-        // --- MINIMALIST OUTPUT GENERATION (CRITICAL FIX APPLIED HERE) ---
+        // --- FIXED HTML STRUCTURE for clean link display ---
         const html = `
-            <div class="info-card">
-                <p class="font-semibold text-lg text-[#006494] mb-1">📘 ${specificText} 📑</p>
+            <div class="info-card p-4 bg-white/95 border-2 border-dashed border-[#00C9A7]/50">
+                <div class="flex items-center mb-3">
+                    <span class="text-3xl text-[#006494] mr-3">📂</span>
+                    <div>
+                        <p class="font-extrabold text-xl text-[#006494] mb-0">Official PQP Archive</p>
+                        <p class="text-xs text-gray-500 mt-0">Updated Regularly by the Examination Section</p>
+                    </div>
+                </div>
                 
-                <p class="mt-2 text-sm contact-designation-text">
-                    Click the link below to go directly to the **Official College Portal**. All **B.Tech** and **M.Tech** papers are available there for download!
+                <p class="text-sm contact-designation-text mb-2">
+                    All past papers (R23, R20, etc., for B.Tech & M.Tech) are hosted on the secure college portal.
+                    **Use the button below to search the centralized archive.**
                 </p>
 
-                <div class="info-divider">
-                    <a href="${officialPqpLink}" target="_blank" class="text-sm font-extrabold text-blue-600 underline hover:text-blue-800 block">
-                        🔗 OFFICIAL PQP DOWNLOAD LINK (Click Here)
-                    </a>
-                    <p class="mt-3 text-sm font-bold accent-highlight">
-                        Need the **Exam Section contact** or **Syllabus** info? 🤔
+                <a href="${officialPqpLink}" target="_blank" class="block w-full text-center py-3 bg-[#00C9A7] text-white font-extrabold rounded-lg shadow-lg hover:bg-[#00A887] transition duration-200 button-click-animation"><span class="mr-1">⬇️</span> ACCESS DOWNLOAD PORTAL</a>
+
+                <div class="info-divider mt-4 pt-3">
+                    <p class="mt-0 text-sm font-bold accent-highlight">
+                        Need help finding papers for a specific subject? Or the **Exam Section contact**? 🤔
                     </p>
                 </div>
             </div>
@@ -2163,6 +2210,10 @@
         // --- 1. ADMISSIONS PROCESS ---
         if (queryLower.includes('admission') || queryLower.includes('how to join') || queryLower.includes('eligibility')) {
             title = '🚀 Ready to Join? Admission Process';
+            const link = 'https://pragati.ac.in/admissions/eligibility/';
+            // FIX: Compacted to single line
+            const button = `<a href="${link}" target="_blank" class="block w-full text-center py-3 bg-[#006494] text-white font-extrabold rounded-lg shadow-lg hover:bg-[#004d73] transition duration-200 button-click-animation text-sm mt-2"><span class="mr-1">✅</span> VIEW OFFICIAL ELIGIBILITY DETAILS</a>`;
+
             content = `
                 <p class="text-sm contact-designation-text">Getting admitted is primarily through the state-level **EAPCET** exam.</p>
                 <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
@@ -2172,7 +2223,7 @@
                     <li class="contact-designation-text">**Eligibility:** Min **45%** in PCM (10+2).</li>
                 </ul>
                 <div class="info-divider">
-                    <a href="https://pragati.ac.in/admissions/eligibility/" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block">🔗 View Official Eligibility Details</a>
+                    ${button}
                 </div>
             `;
             nextQuestion = `What exciting **courses** are offered here? 📚`;
@@ -2199,6 +2250,10 @@
         // --- 3. COURSES OFFERED ---
         else if (queryLower.includes('course') || queryLower.includes('branch') || queryLower.includes('stream')) {
             title = '🏛️ Explore Our B.Tech Courses!';
+            const link = 'https://pragati.ac.in/departments/';
+            // FIX: Compacted to single line
+            const button = `<a href="${link}" target="_blank" class="block w-full text-center py-3 bg-[#006494] text-white font-extrabold rounded-lg shadow-lg hover:bg-[#004d73] transition duration-200 button-click-animation text-sm mt-2"><span class="mr-1">🔗</span> VIEW ALL DEPARTMENTS & INTAKE DETAILS</a>`;
+            
             content = `
                 <p class="text-sm contact-designation-text">We offer a full spectrum of engineering programs to match your ambition:</p>
                 <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
@@ -2208,7 +2263,7 @@
                     <li class="contact-designation-text">**PG Programs:** M.Tech in CSE, Power Electronics, CAD/CAM, VLSI Design.</li>
                 </ul>
                 <div class="info-divider">
-                    <a href="https://pragati.ac.in/departments/" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block">🔗 View All Departments & Intake Details</a>
+                    ${button}
                 </div>
             `;
             nextQuestion = `Tell me about **placements** at Pragati? 💰`;
@@ -2325,6 +2380,9 @@
         const latestAverage = PLACEMENT_DATA.average[PLACEMENT_DATA.average.length - 1];
         const latestYear = PLACEMENT_DATA.years[PLACEMENT_DATA.years.length - 1];
         const officialLink = 'https://pragati.ac.in/placements/';
+        // FIX: Compacted to single line
+        const button = `<a href="${officialLink}" target="_blank" class="block w-full text-center py-3 bg-[#006494] text-white font-extrabold rounded-lg shadow-lg hover:bg-[#004d73] transition duration-200 button-click-animation text-sm mt-2"><span class="mr-1">🔗</span> VIEW OFFICIAL PLACEMENTS PAGE</a>`;
+
         
         const contentHTML = `
             <p class="text-sm contact-designation-text">The **CDC** team delivers strong recruitment results through dedicated training:</p>
@@ -2335,7 +2393,7 @@
                 <li class="contact-designation-text">**Preparation Focus:** Training covers **Aptitude, Verbal, Soft Skills**, and **Technical** rounds.</li>
             </ul>
             <div class="info-divider">
-                <a href="${officialLink}" target="_blank" class="text-sm text-blue-500 underline hover:text-blue-700 block">🔗 View Official Placements Page</a>
+                ${button}
                 <p class="mt-2 text-sm font-bold accent-highlight">
                     Want to check the **training schedule** or see the data trend as a **graph**? 📊
                 </p>
@@ -2357,20 +2415,18 @@
     };
 
     // --- CHART.JS RENDERING FUNCTION ---
-    const showPlacementGraph = () => {
+    const showPlacementGraph = (isThemeUpdate = false) => { // ADDED FLAG
         // CRITICAL FIX: Define graphIntros outside the conditional to resolve ReferenceError
         const graphIntros = [
             "Here comes the visual data! Watch that trend line climb! 📈",
-            "I'd be happy to show you the trend! Get ready for the graph view. 📊",
+            "I'd be happy to show you you the trend! Get ready for the graph view. 📊",
             "Time for some data visualization! This shows our continuous growth. 🤩",
         ];
         
         // 1. Add chat confirmation message
         if (placementChart) {
-            // If chart exists, destroy it before trying to find the element wrapper.
-            // Also, skip the confirmation message to prevent spam when redrawing the chart on theme change.
              placementChart.destroy();
-        } else {
+        } else if (!isThemeUpdate) { // ONLY add message if NOT a theme update
             const intro = graphIntros[Math.floor(Math.random() * graphIntros.length)]; // Correct variable use
             addMessage(`${intro}`, false);
         }
@@ -2418,10 +2474,12 @@
         scrollToBottom();
         
         // Set conversational redirect state
-        conversationFlow = {
-            state: 'awaiting_redirect',
-            targetQuery: 'Contact Dean CDC number',
-        };
+        if (!isThemeUpdate) { // ONLY set context if NOT a theme update
+            conversationFlow = {
+                state: 'awaiting_redirect',
+                targetQuery: 'Contact Dean CDC number',
+            };
+        }
 
         // 5. Render the chart
         
@@ -2554,7 +2612,7 @@
         // FIX: Ensure both views are defined before attempting to manipulate them
         if (!loginView || !chatView) {
              // Do not log a CONSOLE_ERROR here, as it might happen during initial load before setupDOMReferences runs fully
-             return;;
+             return;
         }
         
         if (viewId === 'login') {
@@ -2600,6 +2658,103 @@
             }
         }
     };
+    
+    // --- NEW FEATURE 1: ACADEMIC ALERT SYSTEM HANDLER ---
+    const handleAcademicAlertQuery = async (queryLowerNormalized) => {
+        const isResultQuery = /result|marks|grade/i.test(queryLowerNormalized);
+        const isMidExamQuery = /mid exam|i mid|ii mid|mid test/i.test(queryLowerNormalized);
+        const isEndExamQuery = /end exam|semester exam|final exam|eregistration|examination/i.test(queryLowerNormalized);
+        const isFeeQuery = /fee payment|exam fee|tuition fee deadline/i.test(queryLowerNormalized);
+        
+        let alertType = null;
+        let alertTitle = '';
+        let queryText = '';
+        let officialLink = 'https://pragati.ac.in/examination/';
+        let successEmoji = '✅';
+
+        if (isResultQuery) {
+            alertType = 'Result';
+            alertTitle = 'Latest Exam Results Status';
+            queryText = 'latest Pragati Engineering College JNTUK R20/R23 B.Tech exam result release date or link';
+            officialLink = 'https://pragati.ac.in/examination/results/';
+        } else if (isMidExamQuery) {
+            alertType = 'Mid-Exam';
+            alertTitle = 'Upcoming Mid-Exam Schedule';
+            queryText = 'latest notification for Pragati Engineering College B.Tech Mid-Exam schedule or circular';
+        } else if (isEndExamQuery) {
+            alertType = 'End-Exam';
+            alertTitle = 'End-Exam Registration/Time Table Status';
+            queryText = 'latest Pragati Engineering College B.Tech end exam time table or fee notification';
+        } else if (isFeeQuery) {
+            alertType = 'Fee Payment';
+            alertTitle = 'Fee Payment Deadlines';
+            queryText = 'latest notification for Pragati Engineering College tuition or examination fee payment deadline';
+        } else {
+            return null; // Not an academic alert query
+        }
+
+        // 1. Run Grounded Search to find the most current date/link
+        const contents = [{ role: "user", parts: [{ text: queryText }] }];
+        
+        let resultFoundText = '';
+        let resultStatus = 'NO ACTIVE ALERT'; // Default to inactive
+        let statusClass = '';
+
+        try {
+            const result = await fetchGeminiResponse(contents, 2, 100, false, false);
+            const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            const sources = result.candidates?.[0]?.groundingMetadata?.groundingAttributions || [];
+            
+            if (text && text.length > 0) {
+                // Heuristic: If Gemini provides a date, a URL, or mentions "released/announced", assume an active alert.
+                if (/(date|link|announced|released|posted|notification|circular|due|available)/i.test(text) || sources.length > 0) {
+                    resultStatus = 'ACTIVE ALERT';
+                    statusClass = 'active';
+                    resultFoundText = text;
+                    successEmoji = '🔔';
+                } else {
+                    resultFoundText = "I found recent information, but it doesn't indicate an immediate, live announcement. The status is likely: **Not Yet Announced**.";
+                }
+            } else {
+                 resultFoundText = "I couldn't find a recent, official notification online. Please check the college website manually.";
+            }
+
+        } catch (e) {
+            resultFoundText = `An error occurred while connecting to the official database. Please try again later.`;
+            resultStatus = 'CONNECTION ERROR';
+            statusClass = '';
+            successEmoji = '❌';
+        }
+
+        // 2. Build the Alert Card
+        const cardHtml = `
+            <div class="info-card p-4 bg-white/95 border-2 border-dashed border-[#006494]/50">
+                <div class="flex items-center mb-1">
+                    <span class="text-3xl text-[#006494] mr-3">${successEmoji}</span>
+                    <div>
+                        <p class="font-extrabold text-xl text-[#006494] mb-0">${alertTitle}</p>
+                        <span class="alert-status ${statusClass}">${resultStatus}</span>
+                    </div>
+                </div>
+                
+                <p class="text-sm contact-designation-text mb-2">
+                    ${resultFoundText}
+                </p>
+
+                <div class="info-divider mt-2 pt-2">
+                    <a href="${officialLink}" target="_blank" class="block w-full text-center py-3 bg-[#FF4500] text-white font-extrabold rounded-lg shadow-lg hover:bg-[#CC3700] transition duration-200 button-click-animation text-sm">
+                        <span class="mr-1">🔗</span> GO TO OFFICIAL EXAMINATION PAGE
+                    </a>
+                </div>
+            </div>
+        `;
+        
+        // No conversational redirect needed for this feature.
+        conversationFlow = { state: 'idle', targetQuery: null };
+
+        return { success: true, html: cardHtml };
+    };
+    // --- END NEW FEATURE 1 ---
 
     // --- API CALL LOGIC WITH EXPONENTIAL BACKOFF ---
 
@@ -2656,6 +2811,7 @@
         const messageText = input || userInput.value.trim();
         // CRITICAL FIX: Normalize the query once at the start for robust matching across ALL handlers
         const queryLower = messageText.toLowerCase().replace(/\s+/g, ' ').trim(); 
+        const queryLowerNormalized = queryLower; // Use queryLower as the normalized version since it's already lowercased and trimmed.
 
         if (!messageText) return;
 
@@ -2674,8 +2830,8 @@
         let queryToHandle = messageText;
         if (conversationContext.state === 'awaiting_branch' && userInitiated) {
              // If we were waiting for the branch, append the new message to the original query
-            queryToHandle = conversationContext.originalQuery + ' ' + messageText;
-            conversationContext = { state: 'idle', originalQuery: null }; // Reset immediately
+             queryToHandle = conversationContext.originalQuery + ' ' + messageText;
+             conversationContext = { state: 'idle', originalQuery: null }; // Reset immediately
         }
         
         // --- A. CONVERSATIONAL BRIDGE CHECK (Highest Priority for conversational flow) ---
@@ -2699,7 +2855,7 @@
 
 
         // Re-run flags based on the possibly combined/normalized query
-        const queryLowerNormalized = queryToHandle.toLowerCase().replace(/\s+/g, ' ').trim();
+        // Already defined: const queryLowerNormalized = queryToHandle.toLowerCase().replace(/\s+/g, ' ').trim();
         const isSyllabusQuery = /syllabus|academic calendar|regulations|course structure/i.test(queryLowerNormalized);
         const isPaperQuery = /previous|question paper|papers|exam|m.tech|b.tech|btech|mtech/i.test(queryLowerNormalized);
         // CRITICAL FIX: Changed timing regex to use use only time/schedule words and remove officer ambiguity.
@@ -2716,7 +2872,7 @@
 
 
         const isGeneralCollegeQuery = /admission|fee|fees|tuition|course|branch|stream|affiliate|rank|rating|eligibility/i.test(queryLowerNormalized);
-        const wantsContactDetails = /(number|phone|contact|call|line|whatsapp|cell|tell me the)/i.test(queryLowerNormalized) || /hod|principal|dean|warden|discipline officer/i.test(queryLowerNormalized); // Explicit roles imply contact
+        const wantsContactDetails = /(number|phone|contact|call|line|whatsapp|cell|tell me the)/i.test(queryLowerNormalized) || /hod|principal|dean|warden|discipline officer|admin office|exam section|transport/i.test(queryLowerNormalized); // Explicit roles imply contact
         const isContactNameMentioned = /(hod|principal|dean|warden|discip|officer|professor|technician|admin|assistant|akka|sir|madam|name|staff|attender|guard)/i.test(queryLowerNormalized);
         const isContactQuery = wantsContactDetails || isContactNameMentioned; 
         // CRITICAL PLACEMENT FIX: Only trigger graph for explicit graph/chart request
@@ -2725,7 +2881,10 @@
         const isSubjectivePlacementQuery = /(best|worth|is it good|packages)/i.test(queryLowerNormalized) && /(placement|package|salary)/i.test(queryLowerNormalized);
         const isGeneralPlacementQuery = /(package|salary|placement)/i.test(queryLowerNormalized);
 
-        // --- NEW: OUT OF CONTEXT CHECK ---
+        // NEW: ACADEMIC ALERT QUERY (for results, exam fee, mid/end dates)
+        const isAcademicAlertQuery = /mid exam|end exam|result|marks|grade|fee payment|tuition fee deadline/i.test(queryLowerNormalized);
+
+        // NEW: OUT OF CONTEXT CHECK
         const isOOCQuery = /weather|movie|recipe|sports|celebrity|news|political|game|joke|song|music|travel|vacation|hobbies|stock|finance|crypto|gossip|general knowledge/i.test(queryLowerNormalized);
         
         try {
@@ -2733,8 +2892,8 @@
             if (isGreeting(queryLowerNormalized)) {
                 hideLoading();
                 const friendlyResponses = [
-                    "Hey! What's up? Ready to find some information! ✨",
-                    "Hi there! What can I help you look up today? 🤓",
+                    "Hey there! What's up? Ready to find some information! ✨",
+                    "Hi! What can I help you look up today? 🤓",
                     "Hello! Ask me anything about Pragati College. I'm here to help! 🚀",
                     "Yo! Ask away! 👍",
                 ];
@@ -2762,7 +2921,7 @@
             // --- CRITICAL INTELLIGENCE GATE 1: Subjective Food/Hostel/Placement Queries ---
             if (isHostelFoodQualityQuery || isSubjectivePlacementQuery || isGeneralHostelQuery) {
                 // If the query is about subjective opinion (hostel food, etc.), or general hostel/accommodation
-                // Fall through to step 7 (General AI Query)
+                // Fall through to step 8 (General AI Query)
                 console.log("INTENT: Subjective or General Hostel query detected. Deferring to Gemini for grounded search.");
             }
             // --- END INTELLIGENCE GATE 1 ---
@@ -2792,29 +2951,41 @@
             if (asksForRole && isGeneralRoleInquiry && !wantsContactDetails) { 
                 
                 let roleQueryKey = null;
-                if (queryLowerNormalized.includes('former principal') || queryLowerNormalized.includes('previous principal') || queryLowerNormalized.includes('past principal')) {
-                     roleQueryKey = 'former principal';
-                } else if (queryLowerNormalized.includes('principal')) {
-                     roleQueryKey = 'principal';
-                } else if (queryLowerNormalized.includes('dean cdc') || (queryLowerNormalized.includes('dean') && (queryLowerNormalized.includes('cdc') || queryLowerNormalized.includes('career')))) {
-                     // FIX: Ensures 'Dean CDC' matches correctly
-                     roleQueryKey = 'dean cdc';
-                } else if (queryLowerNormalized.includes('hod cse') || (queryLowerNormalized.includes('hod') && queryLowerNormalized.includes('cse'))) {
-                     roleQueryKey = 'hod cse';
-                } else if (queryLowerNormalized.includes('hod mech') || queryLowerNormalized.includes('hod me') || queryLowerNormalized.includes('hod ma') || (queryLowerNormalized.includes('hod') && (queryLowerNormalized.includes('mech') || queryLowerNormalized.includes('mechanical')))) {
+                 // Tighter check for key roles like Dean CDC or HODs
+                 if (queryLower.includes('dean cdc') || (queryLower.includes('dean') && (queryLower.includes('cdc') || queryLower.includes('career')))) {
+                     matchedRoleKey = 'dean cdc';
+                 } else if (queryLower.includes('hod cse') || (queryLower.includes('hod') && queryLower.includes('cse') && !queryLower.includes('ai&ml') && !queryLower.includes('ds') && !queryLower.includes('(ai)') && !queryLower.includes('(ds)') && !queryLower.includes('(cs)'))) {
+                     matchedRoleKey = 'hod cse';
+                 } else if (queryLower.includes('hod mech') || queryLower.includes('hod me') || queryLower.includes('hod ma') || (queryLowerNormalized.includes('hod') && (queryLower.includes('mech') || queryLower.includes('mechanical')))) {
                      // NEW FIX: Robust check for HOD Mechanical / ME / MA
-                     roleQueryKey = 'hod mech';
-                } else if (queryLowerNormalized.includes('hod eee') || (queryLowerNormalized.includes('hod') && queryLowerNormalized.includes('eee'))) {
-                     roleQueryKey = 'hod eee';
-                } else if (queryLowerNormalized.includes('discipline officer') || (queryLowerNormalized.includes('discipline') && queryLowerNormalized.includes('officer'))) {
+                     matchedRoleKey = 'hod mech';
+                 } else if (queryLower.includes('hod eee') || (queryLowerNormalized.includes('hod') && queryLower.includes('eee'))) {
+                     matchedRoleKey = 'hod eee';
+                 } else if (queryLower.includes('discipline officer') || (queryLowerNormalized.includes('discipline') && queryLowerNormalized.includes('officer'))) {
                     // FIX for Discipline Officer name lookup
-                    roleQueryKey = 'discipline officer';
-                } else {
-                     roleQueryKey = roleKeywords.find(r => queryLowerNormalized.includes(r)); // Use queryLower here
+                    matchedRoleKey = 'discipline officer';
+                 } else if (queryLower.includes('hod civil') || (queryLowerNormalized.includes('hod') && queryLower.includes('civil'))) { // NEW HOD MATCH
+                    matchedRoleKey = 'hod civil';
+                 } else if (queryLower.includes('hod ece') || (queryLowerNormalized.includes('hod') && queryLower.includes('ece'))) { // NEW HOD MATCH
+                    matchedRoleKey = 'hod ece';
+                 } else if (queryLower.includes('hod it') || (queryLowerNormalized.includes('hod') && queryLower.includes('it'))) { // NEW HOD MATCH
+                    matchedRoleKey = 'hod it';
+                 } else if (queryLower.includes('hod bsh') || (queryLowerNormalized.includes('hod') && queryLower.includes('bsh'))) { // NEW HOD MATCH
+                    matchedRoleKey = 'hod bsh';
+                 } else if (queryLower.includes('hod cse (cs)') || queryLower.includes('hod cs') || queryLower.includes('hod cyber')) { // SPECIALIZATION
+                    matchedRoleKey = 'hod cse (cs)';
+                 } else if (queryLower.includes('hod cse (ds)') || queryLower.includes('hod ds') || queryLower.includes('hod data science')) { // SPECIALIZATION
+                    matchedRoleKey = 'hod cse (ds)';
+                 } else if (queryLower.includes('hod cse (ai&ml)') || queryLower.includes('hod aiml')) { // SPECIALIZATION
+                    matchedRoleKey = 'hod cse (ai&ml)';
+                 } else if (queryLower.includes('hod cse (ai)') || queryLower.includes('hod ai')) { // SPECIALIZATION
+                    matchedRoleKey = 'hod cse (ai)';
+                 } else {
+                     matchedRoleKey = roleKeywords.find(r => queryLowerNormalized.includes(r)); // Use queryLower here
                  }
 
                  
-                 const candidate = VERIFIED_ROLE_NAMES[roleQueryKey] || null;
+                 const candidate = VERIFIED_ROLE_NAMES[matchedRoleKey] || null;
                  if(candidate) {
                      hideLoading();
                      addMessage(getGeneralRoleOutput(candidate.name, candidate.designation), false);
@@ -2822,27 +2993,41 @@
                      return;
                  }
                  // 3. Fallback to Gemini if not locally verified (e.g., 'director')
-                const contents = [{ role: "user", parts: [{ text: messageText + " at Pragati Engineering College" }] }]; 
-                showTyping(); 
+                 const contents = [{ role: "user", parts: [{ text: messageText + " at Pragati Engineering College" }] }]; 
+                 showTyping(); 
 
-                const result = await fetchGeminiResponse(contents, 2, 100, false, false);
-                
-                const botResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
-                
-                if (botResponse) {
-                    hideLoading();
-                    addMessage(botResponse, false); 
-                    showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
-                } else {
-                    hideLoading();
-                    addMessage("I am having trouble finding that specific piece of general information online right now. Could you please ask for the contact number instead, or check the official college website?", false);
-                }
-                return;
-            }
+                 const result = await fetchGeminiResponse(contents, 2, 100, false, false);
+                 
+                 const botResponse = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                 
+                 if (botResponse) {
+                     hideLoading();
+                     addMessage(botResponse, false); 
+                     showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
+                 } else {
+                     hideLoading();
+                     addMessage("I am having trouble finding that specific piece of general information online right now. Could you please ask for the contact number instead, or check the official college website?", false);
+                 }
+                 return;
+             }
             // --- END GENERAL ROLE INQUIRY ---
 
 
-            // --- 1. TIMING CHECK / GENERAL HOSTEL INFO (LOCAL TIMINGS) ---
+            // --- 1. ACADEMIC ALERT CHECK (NEW FEATURE) ---
+            if (isAcademicAlertQuery) {
+                showTyping();
+                const alertResult = await handleAcademicAlertQuery(queryLowerNormalized);
+                
+                if (alertResult && alertResult.success) {
+                    hideLoading();
+                    addMessage(`<div>${alertResult.html}</div>`, false);
+                    showSuggestions(["Check latest Placement Trend", "Contact Exam Section number"]);
+                    return;
+                }
+                // If failed internally, let it fall through to General AI Query for manual search/error message.
+            }
+
+            // --- 2. TIMING CHECK / GENERAL HOSTEL INFO (LOCAL TIMINGS) ---
             if (isTimingQuery && !isHostelFoodQualityQuery) {
                 const timingResponse = handleTimingQuery(queryToHandle);
                 if (timingResponse) {
@@ -2853,7 +3038,7 @@
                 }
             }
             
-            // --- 2. GENERAL COLLEGE INFO CHECK (NEW) ---
+            // --- 3. GENERAL COLLEGE INFO CHECK (NEW) ---
             if (isGeneralCollegeQuery) {
                 const generalResponse = handleGeneralCollegeQuery(queryToHandle);
                 if (generalResponse) {
@@ -2865,7 +3050,7 @@
             }
 
 
-            // --- 3. SYLLABUS CHECK ---
+            // --- 4. SYLLABUS CHECK ---
             if (isSyllabusQuery && !isPaperQuery) {
                 hideLoading();
                 addMessage(`<div>${handleSyllabusQuery()}</div>`, false); 
@@ -2874,7 +3059,7 @@
             }
 
 
-            // --- 4. PREVIOUS PAPERS CHECK ---
+            // --- 5. PREVIOUS PAPERS CHECK ---
             if (isPaperQuery) {
                 
                 const paperResult = handlePaperQuery(queryToHandle);
@@ -2897,7 +3082,7 @@
             }
             // --- END PREVIOUS PAPERS CHECK ---
             
-            // --- 5. GRAPH CHECK / PLACEMENT FACT CHECK ---
+            // --- 6. GRAPH CHECK / PLACEMENT FACT CHECK ---
             if (isGraphQueryExplicit) {
                 // EXPLICIT graph requested (e.g., "show chart")
                 hideLoading();
@@ -2913,10 +3098,12 @@
             }
 
 
-            // --- 6. CONTACTS CHECK (PRIMARY SEARCH) ---
+            // --- 7. CONTACTS CHECK (PRIMARY SEARCH) ---
             if (wantsContactDetails || (isContactNameMentioned && !isGeneralRoleInquiry)) {
-                const localContactResponse = findStaffContactAndManageContext(queryToHandle);
+                // CRITICAL FIX: Pass the necessary argument (queryLowerNormalized)
+                const localContactResponse = findStaffContactAndManageContext(queryToHandle, queryLowerNormalized);
                 
+                showTyping(); // Always show typing while the contact logic runs (even if fast)
                 hideLoading();
                 
                 if (localContactResponse && localContactResponse.startsWith('✅|')) {
@@ -2932,7 +3119,7 @@
             }
             // --- END CONTACTS CHECK ---
             
-            // --- 7. GENERAL AI QUERY (FALLBACK for EVERYTHING else) ---
+            // --- 8. GENERAL AI QUERY (FALLBACK for EVERYTHING else) ---
             // This catches: Subjective Hostel/Food, Subjective Placements, General Accommodation Queries, and anything else.
             const contents = [{ role: "user", parts: [{ text: messageText + " at Pragati Engineering College" }] }];
             showTyping(); 
