@@ -1052,21 +1052,29 @@
         }
 
         // Check if a chart exists and redraw it with new theme colors
-        // NOTE: We use the existing chart check from applySavedTheme
+        // NOTE: We only redraw if the chart instance is active and the user is toggling the theme.
         if (placementChart) {
-            // Destroy the old instance immediately before redraw
-            placementChart.destroy();
-            placementChart = null; 
+            // Find the old chart element
+            const oldCanvas = document.getElementById('placementChart');
             
-            // Find the parent wrapper and remove it to clean up the DOM thoroughly
-            let chartWrapper = document.querySelector('.chart-wrapper');
-            if (chartWrapper) {
-                chartWrapper.remove();
+            // 1. Destroy the old Chart.js instance immediately
+            if (placementChart) {
+                 placementChart.destroy();
+                 placementChart = null; 
             }
             
-            // Re-call sendMessage to re-display the graph, but skip user interaction flags
-            // This is the clean way to re-display the graph in the new theme.
-            sendMessage('Show me the placement chart', false); 
+            // 2. Re-render the chart by creating a new canvas element in the old wrapper
+            let chartWrapper = document.querySelector('.chart-wrapper');
+            if (chartWrapper) {
+                chartWrapper.innerHTML = ''; // Clear contents of the wrapper
+                
+                const newCanvas = document.createElement('canvas');
+                newCanvas.id = 'placementChart';
+                chartWrapper.appendChild(newCanvas);
+                
+                // 3. Re-render the chart logic with the new colors (silent update)
+                showPlacementGraph(true); 
+            }
         }
     }
     // --- END DARK MODE LOGIC ---
@@ -1968,14 +1976,27 @@
                                   // This handles both main branches (cse) and specializations (cse (ds))
                                   const hodKey = `hod ${canonicalDept.toLowerCase().replace(/[\(\)]/g, '')}`;
                                   
-                                  // FIX for specializations: They should be stored as 'cse (ai)' not 'cse(ai)'
+                                  // FIX for specializations: They should be stored as 'hod cse (ds)' etc.
                                   let finalHodKey = hodKey;
-                                  if (hodKey.includes('cse')) {
-                                       // Reconstruct key for specializations: 'hod cse (ds)'
+                                  if (canonicalDept.startsWith('CSE')) {
                                        if(canonicalDept.includes('(DS)')) finalHodKey = 'hod cse (ds)';
                                        else if(canonicalDept.includes('(AI&ML)')) finalHodKey = 'hod cse (ai&ml)';
                                        else if(canonicalDept.includes('(AI)')) finalHodKey = 'hod cse (ai)';
                                        else if(canonicalDept.includes('(CS)')) finalHodKey = 'hod cse (cs)';
+                                       // Handle general CSE
+                                       else if(canonicalDept === 'CSE') finalHodKey = 'hod cse';
+                                  } else if (canonicalDept === 'CIVIL') {
+                                       finalHodKey = 'hod civil';
+                                  } else if (canonicalDept === 'EEE') {
+                                       finalHodKey = 'hod eee';
+                                  } else if (canonicalDept === 'MECH') {
+                                       finalHodKey = 'hod mech';
+                                  } else if (canonicalDept === 'ECE') {
+                                       finalHodKey = 'hod ece';
+                                  } else if (canonicalDept === 'IT') {
+                                       finalHodKey = 'hod it';
+                                  } else if (canonicalDept === 'BS&H') {
+                                       finalHodKey = 'hod bsh';
                                   }
 
                                   const hodInfo = VERIFIED_ROLE_NAMES[finalHodKey];
@@ -2454,7 +2475,7 @@
             chartWrapper.className = 'bot-message message-bubble chart-wrapper flex flex-col items-start info-card w-full max-w-full';
             chatHistory.appendChild(chartWrapper);
         } else {
-             chartWrapper.innerHTML = ''; // Clear previous content if redrawing
+             chartWrapper.innerHTML = ''; // Clear contents of the wrapper
         }
         
         // 4. Add the canvas element
@@ -2894,7 +2915,7 @@
         const isContactNameMentioned = /(hod|principal|dean|warden|discip|officer|professor|technician|admin|assistant|akka|sir|madam|name|staff|attender|guard)/i.test(queryLowerNormalized);
         const isContactQuery = wantsContactDetails || isContactNameMentioned; 
         // CRITICAL PLACEMENT FIX: Only trigger graph for explicit graph/chart request
-        const isGraphQueryExplicit = /(graph|chart|comparison|trend)/i.test(queryLowerNormalized);
+        const isGraphQueryExplicit = /(graph|chart|comparison|trend|placement trend)/i.test(queryLowerNormalized);
         // NEW INTELLIGENCE CHECK: For subjective placement queries, trigger AI search
         const isSubjectivePlacementQuery = /(best|worth|is it good|packages)/i.test(queryLowerNormalized) && /(placement|package|salary)/i.test(queryLowerNormalized);
         const isGeneralPlacementQuery = /(package|salary|placement)/i.test(queryLowerNormalized);
@@ -3104,7 +3125,7 @@
             if (isGraphQueryExplicit || (isGeneralPlacementQuery && !isSubjectivePlacementQuery)) {
                  // Check if the graph has been explicitly requested before OR if it's a new general placement query
                  
-                // If the user didn't request the graph explicitly, let the summary handle it.
+                // If the user explicitly asks for the graph or chart, draw it.
                 if (isGraphQueryExplicit) {
                      showTyping(); // Only show typing for the brief moment of redraw if it was explicitly asked
                      hideLoading();
@@ -3112,7 +3133,7 @@
                      showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
                      return;
                 } else {
-                     // For general placement query, display the summary card (which prompts for the graph)
+                     // For general placement query (e.g., "tell me about placements"), display the summary card (which prompts for the graph)
                      hideLoading();
                      addMessage(`<div>${getPlacementSummary()}</div>`, false);
                      showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
