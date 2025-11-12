@@ -1842,15 +1842,7 @@
         // --- CRITICAL FIX: queryLowerNormalized is now passed in and used directly ---
         // const queryNormalized = normalizeName(query); 
         
-        // 0. SPECIAL CASES (Akka/Discipline)
-        if (queryLower.includes('akka')) {
-            // Personalization: Using the user-provided contact for Akka
-            const contactNumber = "798993489";
-            const staff = { name: "Akka", number: contactNumber, designation: "Special Contact, N/A", email: "" };
-            lastStaffQuery.singleMatchFound = staff;
-            return getStrictContactOutput(staff);
-        }
-        
+        // 0. SPECIAL CASES (Akka/Discipline) 
         // Reset non-single-match context variables for a new primary search
         lastStaffQuery.matches = [];
         lastStaffQuery.state = 'idle';
