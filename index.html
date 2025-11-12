@@ -2318,6 +2318,10 @@
             nextQuestion = `What are the **hostel timings**? ⏰`;
             redirectQuery = 'What are the hostel timings?';
         }
+        // --- 5. FACILITIES / INFRASTRUCTURE ---
+        else if (queryLower.includes('facility') || queryLower.includes('facilities') || queryLower.includes('infrastructure') || queryLower.includes('campus')) {
+            return handleFacilitiesQuery();
+        }
         else {
             return null;
         }
@@ -2338,6 +2342,43 @@
             </div>
         `;
     };
+
+    // --- FACILITIES HANDLER (NEW ELEGANT CARD) ---
+    const handleFacilitiesQuery = () => {
+        const facilitiesLink = 'https://pragati.ac.in/infrastructure/';
+        const button = `<a href="${facilitiesLink}" target="_blank" class="block w-full text-center py-3 bg-[#00C9A7] text-white font-extrabold rounded-lg shadow-lg hover:bg-[#00A887] transition duration-200 button-click-animation text-sm mt-2"><span class="mr-1">🏗️</span> EXPLORE CAMPUS INFRASTRUCTURE</a>`;
+        
+        const contentHTML = `
+            <p class="text-sm contact-designation-text">Pragati College offers a robust infrastructure designed for holistic learning:</p>
+            <ul class="mt-2 text-sm space-y-0 pl-4 list-disc list-inside compact-list">
+                <li class="contact-designation-text">**Smart Classrooms:** All equipped with digital displays and high-speed internet.</li>
+                <li class="contact-designation-text">**Library:** A large central library with **1,11,000+** volumes and digital access.</li>
+                <li class="contact-designation-text">**Hostel:** Separate well-maintained **Boys Hostel** facility is available.</li>
+                <li class="contact-designation-text">**Transportation:** College-owned bus fleet for transport across the region.</li>
+                <li class="contact-designation-text">**Recreation:** Sports facilities including a cricket/football field and indoor games.</li>
+            </ul>
+            <div class="info-divider">
+                ${button}
+            </div>
+            <p class="mt-3 text-sm font-bold accent-highlight">
+                Want to check the **transport routes** or find the **Warden's contact**? 🚌
+            </p>
+        `;
+
+        // Set conversational redirect state
+        conversationFlow = {
+            state: 'awaiting_redirect',
+            targetQuery: 'Contact the Warden number',
+        };
+        
+        return `
+            <div class="info-card">
+                <p class="font-semibold text-lg text-[#006494] mb-1">🏛️ Campus Facilities & Infrastructure ✨</p>
+                ${contentHTML}
+            </div>
+        `;
+    };
+    // --- END FACILITIES HANDLER ---
 
     // --- TIMING HANDLER (REFACTORED for comprehensive timings) ---
     const handleTimingQuery = (query) => {
@@ -2911,6 +2952,9 @@
 
 
         const isGeneralCollegeQuery = /admission|fee|fees|tuition|course|branch|stream|affiliate|rank|rating|eligibility/i.test(queryLowerNormalized);
+        // --- NEW FACILITY CHECK HERE ---
+        const isFacilitiesQuery = /facility|facilities|infrastructure|campus/i.test(queryLowerNormalized);
+        // ------------------------------
         const wantsContactDetails = /(number|phone|contact|call|line|whatsapp|cell|tell me the)/i.test(queryLowerNormalized) || /hod|principal|dean|warden|discipline officer|admin office|exam section|transport/i.test(queryLowerNormalized); // Explicit roles imply contact
         const isContactNameMentioned = /(hod|principal|dean|warden|discip|officer|professor|technician|admin|assistant|akka|sir|madam|name|staff|attender|guard)/i.test(queryLowerNormalized);
         const isContactQuery = wantsContactDetails || isContactNameMentioned; 
@@ -3087,9 +3131,20 @@
                     return;
                 }
             }
+            
+            // --- 4. FACILITIES CHECK (NEW) ---
+            if (isFacilitiesQuery) {
+                showTyping();
+                // handleFacilitiesQuery is already set up to return the HTML string
+                const facilitiesResponse = handleFacilitiesQuery();
+                hideLoading();
+                addMessage(`<div>${facilitiesResponse}</div>`, false);
+                showSuggestions(SUGGESTION_POOL[Math.floor(Math.random() * SUGGESTION_POOL.length)]);
+                return;
+            }
 
 
-            // --- 4. SYLLABUS CHECK ---
+            // --- 5. SYLLABUS CHECK ---
             if (isSyllabusQuery && !isPaperQuery) {
                 hideLoading();
                 addMessage(`<div>${handleSyllabusQuery()}</div>`, false); 
@@ -3098,7 +3153,7 @@
             }
 
 
-            // --- 5. PREVIOUS PAPERS CHECK ---
+            // --- 6. PREVIOUS PAPERS CHECK ---
             if (isPaperQuery) {
                 
                 const paperResult = handlePaperQuery(queryToHandle);
@@ -3121,7 +3176,7 @@
             }
             // --- END PREVIOUS PAPERS CHECK ---
             
-            // --- 6. GRAPH CHECK / PLACEMENT FACT CHECK ---
+            // --- 7. GRAPH CHECK / PLACEMENT FACT CHECK ---
             if (isGraphQueryExplicit || (isGeneralPlacementQuery && !isSubjectivePlacementQuery)) {
                  // Check if the graph has been explicitly requested before OR if it's a new general placement query
                  
@@ -3142,7 +3197,7 @@
             }
 
 
-            // --- 7. CONTACTS CHECK (PRIMARY SEARCH) ---
+            // --- 8. CONTACTS CHECK (PRIMARY SEARCH) ---
             if (wantsContactDetails || (isContactNameMentioned && !isGeneralRoleInquiry)) {
                 // CRITICAL FIX: Pass the necessary argument (queryLowerNormalized)
                 const localContactResponse = findStaffContactAndManageContext(queryToHandle, queryLowerNormalized);
@@ -3163,7 +3218,7 @@
             }
             // --- END CONTACTS CHECK ---
             
-            // --- 8. GENERAL AI QUERY (FALLBACK for EVERYTHING else) ---
+            // --- 9. GENERAL AI QUERY (FALLBACK for EVERYTHING else) ---
             // This catches: Subjective Hostel/Food, Subjective Placements, General Accommodation Queries, and anything else.
             const contents = [{ role: "user", parts: [{ text: messageText + " at Pragati Engineering College" }] }];
             showTyping(); 
